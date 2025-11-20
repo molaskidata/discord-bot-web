@@ -1,0 +1,60 @@
+:root {
+  font-family: 'Balloo 2', Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+  color: rgba(255, 255, 255, 0.87);
+  background: linear-gradient(135deg, #1a2332, #2c3e50, #34495e, #1a2332);
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-width: 320px;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #1a2332, #2c3e50, #34495e, #1a2332);
+}
+
+h1 {
+  font-size: 3.2em;
+  line-height: 1.1;
+  color: #74c0fc;
+  text-shadow: 0 0 25px rgba(116, 192, 252, 0.6);
+}
+
+#app {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid #245785;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+}
+
+button {
+  border-radius: 25px;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 0.8em 1.5em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background: linear-gradient(145deg, #245785, #4a90e2);
+  color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+button:hover {
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 12px 35px rgba(36, 87, 133, 0.5);
+  border-color: rgba(255, 255, 255, 0.6);
+}

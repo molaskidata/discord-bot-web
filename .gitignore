@@ -1,0 +1,59 @@
+# Environment Variables - NEVER COMMIT THESE!
+.env
+.env.local
+.env.*.local
+*.env
+
+# Subfolder env files
+2.Bot/.env
+
+# Dependencies
+node_modules/
+.env
+.DS_Store
+npm-debug.log
+*.log
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+npm-debug.log
+
+# OS Files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Build outputs
+dist/
+build/
+*.tsbuildinfo
+
+# Deployment credentials - NEVER COMMIT!
+deploy-website.ps1
+*-credentials.txt
+*-secrets.*
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# --- from BOTS/.gitignore ---
+node_modules/
+.env
+.DS_Store
+npm-debug.log
+*.log
+# --- end BOTS/.gitignore ---
