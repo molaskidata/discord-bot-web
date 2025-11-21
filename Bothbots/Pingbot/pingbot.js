@@ -4,8 +4,8 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 // Channel and guild IDs for pinging
-const PING_GUILD_ID = '1358882135284519113'; // Coffee & Codes server ID
-const PING_CHANNEL_ID = '1440688647207649460'; // Channel ID
+const PING_GUILD_ID = '1415044198792691858'; // Neuer Server ID
+const PING_CHANNEL_ID = '1440998057016557619'; // Neuer Channel ID
 
 client.on('ready', () => {
     console.log('PingBot is online!');
