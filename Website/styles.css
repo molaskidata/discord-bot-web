@@ -397,14 +397,55 @@ body {
 
 @media (max-width: 600px) {
     .site-header {
-        flex-direction: column;
-        gap: 15px;
-    }
-    .header-img-container {
-        width: 80px;  /* Vorher: 66px */
-        height: 80px; /* Vorher: 66px */
+        flex-direction: row;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
     }
     #main-title {
-        font-size: 3rem;
+        text-align: center;
+        margin: 0 auto;
+        width: 100%;
+        font-size: 2.2rem;
+    }
+    .header-img-container {
+        width: 60px;
+        height: 60px;
+    }
+    .container,
+    .content-feed-section {
+        flex-direction: column;
+        align-items: center;
+    }
+    .column,
+    .content-feed-card {
+        width: 90%;
+        max-width: 400px;
+        margin: 16px auto;
+        text-align: center;
+    }
+    .button-container,
+    .github-button-container,
+    .discord-profile-button-container {
+        text-align: center;
+        margin: 12px auto;
+        width: 100%;
+    }
+    .discord-button,
+    .github-button,
+    .discord-profile-button {
+        display: block;
+        margin: 12px auto;
+        width: 80%;
+        max-width: 300px;
+    }
+    .gallery-container {
+        grid-template-columns: 1fr;
+        justify-items: center;
+    }
+    .gallery-img,
+    .header-img {
+        display: block;
+        margin: 0 auto;
     }
 }
