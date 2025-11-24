@@ -1,77 +1,133 @@
-# Coffee & Codes Discord Bot Project
+# Discord Bot Website Setup Guide
 
-## Overview
+## 1. Prerequisites
 
-This project contains a Discord bot and a simple website for the Coffee & Codes community. The main focus is the Discord bot, which provides interactive commands, community engagement, and a status bar feature. The website serves as an informational landing page and includes links to the Discord server, privacy policy, and terms of service.
+Before you start, you need:
+- A Hetzner server (Ubuntu recommended)
+- A registered domain (e.g. `your_domain_here`)
+- A Discord account
+- Your own Discord server
 
-## Features
+## 2. Deploying the Website
 
-- Discord bot with multiple custom commands
-- Status bar showing bot activity and uptime
-- Website with community information and Discord invite
-- Privacy policy and terms of service included
-- Example deployment scripts and Nginx configuration
+### Server Preparation
+- Connect to your Hetzner server via SSH:
+  ```sh
+  ssh root@your_server_ip
+  ```
+- Update and install required packages:
+  ```sh
+  apt update
+  apt install nginx certbot python3-certbot-nginx
+  ```
 
-## Use Cases
+### DNS & Domain Setup
+- Set A-records for your domain to point to your Hetzner server IP.
+- Example DNS record:
+  ```
+  Type: A
+  Name: @
+  Value: your_server_ip
+  TTL: 600
+  ```
 
-- Use the Discord bot to enhance your community server with fun and useful commands
-- Display bot status and uptime for transparency
-- Provide users with easy access to legal information and community guidelines
-- Deploy the website as a landing page for your Discord community
+### Upload Website Files
+- Use SCP or SFTP to upload your website files:
+  ```sh
+  scp -r /local/path/to/website/* root@your_server_ip:/var/www/your_domain_here/
+  ```
 
-## Getting Started
+### Nginx Configuration
+- Create a new Nginx site config:
+  ```sh
+  nano /etc/nginx/sites-available/your_domain_here
+  ```
+- Example config:
+  ```nginx
+  server {
+      listen 80;
+      server_name your_domain_here www.your_domain_here;
+      root /var/www/your_domain_here;
+      index index.html;
+      location / {
+          try_files $uri $uri/ =404;
+      }
+  }
+  ```
+- Enable the site and reload Nginx:
+  ```sh
+  ln -s /etc/nginx/sites-available/your_domain_here /etc/nginx/sites-enabled/
+  nginx -t
+  systemctl reload nginx
+  ```
 
-### 1. Clone the Repository
+### HTTPS Setup
+- Issue SSL certificate with Certbot:
+  ```sh
+  certbot --nginx -d your_domain_here -d www.your_domain_here
+  ```
+- Test your site at `https://your_domain_here`
 
-```
-git clone https://github.com/molaskidata/discord-bot-webproject.git
-cd discord-bot-webproject/Discord Bot
-```
+## 3. Discord Bots Setup
 
-### 2. Install Dependencies
+### Discord Developer Portal
+- Create a new application and bot at [Discord Developer Portal](https://discord.com/developers/applications)
+- Copy your bot token: `your_token_here`
+- Add your bot to your server using OAuth2 URL Generator.
 
-```
-npm install
-```
+### Bot Code Example (Ping-Pong)
+- Example command handler in Node.js:
+  ```js
+  client.on('messageCreate', (message) => {
+      if (message.content === '!pingme') {
+          message.channel.send('!ponggg');
+      }
+  });
+  ```
+- Set your bot token in `.env`:
+  ```
+  DISCORD_TOKEN=your_token_here
+  ```
 
-### 3. Configure Environment Variables
+### Running Bots on Hetzner Server
+- Upload your bot files to the server.
+- Install Node.js and dependencies:
+  ```sh
+  apt install nodejs npm
+  npm install
+  ```
+- Use pm2 to keep bots running:
+  ```sh
+  npm install -g pm2
+  pm2 start your_bot.js --name mainbot
+  pm2 save
+  pm2 startup
+  ```
 
-Create a `.env` file in the `Discord Bot` directory and add your Discord bot token:
+### Custom Commands & Prefixes
+- Example for custom prefix:
+  ```js
+  const PREFIX = '!';
+  client.on('messageCreate', (message) => {
+      if (!message.content.startsWith(PREFIX)) return;
+      // handle commands
+  });
+  ```
 
-```
-DISCORD_TOKEN=your-bot-token-here
-```
+### Privacy Policy & Terms of Service
+- Create `privacy-policy.html` and `terms-of-service.html` in your website directory.
+- Link them in your website footer.
 
-### 4. Start the Bot
+### Bot-to-Bot Communication
+- To let one bot observe another:
+  ```js
+  client.on('messageCreate', (message) => {
+      if (message.author.id === other_bot_id) {
+          // Forward message to website or process it
+      }
+  });
+  ```
 
-```
-npm start
-```
+---
 
-The bot will connect to Discord and become active in your server. The status bar will show the bot's activity and uptime.
-
-### 5. Deploy the Website (Optional)
-
-- Use the provided PowerShell script (`deploy-website.ps1`) to upload the website files to your server
-- Configure your web server using the sample `nginx-config.conf`
-
-### 6. Access Legal Documents
-
-- Privacy policy and terms of service are located in the `terms&privacy` folder
-- Update the content as needed for your community
-
-## Project Structure
-
-- `Discord Bot/` - Main bot code and configuration
-- `Website/` - Static website files
-- `terms&privacy/` - Legal documents
-- `deploy-website.ps1` - Deployment script for the website
-- `nginx-config.conf` - Example Nginx configuration
-
-## Notes
-
-- The main focus is the Discord bot and its features
-- The status bar provides real-time information about the bot's activity
-- The project is designed for easy customization and deployment
-
-For questions or support, please use the Discord link provided on the website.
+Replace placeholders like `your_domain_here`, `your_server_ip`, `your_token_here`, etc. with your own values when deploying. This README is safe for public repositories and does not expose any private data.
