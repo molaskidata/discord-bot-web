@@ -70,10 +70,74 @@ Before you start, you need:
 
 ## 3. Discord Bots Setup
 
+
+### Node.js dependencies (`node_modules`) for the bots
+
+To make the Discord bots work, you need to install all required Node.js packages. These packages are defined in each bot's `package.json` (e.g., in `Bothbots/Mainbot` and `Bothbots/Pingbot`). Install them with:
+
+```powershell
+npm install
+```
+
+**Important notes:**
+- Run the command in the respective bot folder, e.g.:
+  ```powershell
+  cd Bothbots\Mainbot
+  npm install
+  ```
+- This creates the `node_modules` folder, where all dependencies are stored.
+- The `package.json` file lists all required packages like `discord.js`, `dotenv`, `axios`, etc.
+- Without `node_modules`, the bot cannot start because the packages are missing.
+
+**Starting the bot:**
+- After installation, you can start the bot with:
+  ```powershell
+  node infobot.js
+  ```
+  or, if a start script is defined:
+  ```powershell
+  npm start
+  ```
+
+**Tip:**  
+If you have multiple bots, repeat the installation in every bot folder that has its own `package.json`.
+
+**Troubleshooting:**  
+If you get an error like `Cannot find module 'discord.js'` when starting the bot, you probably forgot to run `npm install` or you are in the wrong folder.
+
 ### Discord Developer Portal
 - Create a new application and bot at [Discord Developer Portal](https://discord.com/developers/applications)
 - Copy your bot token: `your_token_here`
 - Add your bot to your server using OAuth2 URL Generator.
+
+### Bot Code Example (Ping-Pong)
+- Example command handler in Node.js:
+  ```js
+  client.on('messageCreate', (message) => {
+      if (message.content === '!pingme') {
+          message.channel.send('!ponggg');
+      }
+  });
+  ```
+- Set your bot token in `.env`:
+  ```
+  DISCORD_TOKEN=your_token_here
+  ```
+
+### Running Bots on Hetzner Server
+- Upload your bot files to the server.
+- Install Node.js and dependencies:
+  ```sh
+  apt install nodejs npm
+  npm install
+  ```
+- Use pm2 to keep bots running:
+  ```sh
+  npm install -g pm2
+  pm2 start your_bot.js --name mainbot
+  pm2 save
+  pm2 startup
+  ```
 
 ### Bot Code Example (Ping-Pong)
 - Example command handler in Node.js:
