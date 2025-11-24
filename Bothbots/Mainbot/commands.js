@@ -3,6 +3,7 @@ const fs = require('fs');
 // All Discord bot command logic is moved here for better structure and overview.
 
 const { getRandomResponse } = require('./utils');
+const { EmbedBuilder } = require('discord.js');
 
 // Response arrays (can be moved to a separate file if needed)
 const programmingMemes = [
@@ -61,7 +62,23 @@ const commandHandlers = {
     '!motivation': (message) => message.reply(getRandomResponse(motivationQuotes)),
     '!gg': (message) => message.reply("GG WP! 🎉"),
     '!goodnight': (message) => message.reply(getRandomResponse(goodnightResponses)),
-    '!help': (message) => message.reply('**Available Commands:**\n`!hi` - Say hello\n`!coffee` - Time for coffee!\n`!meme` - Programming memes\n`!github` - Bots Owner Github and my Repo!\n`!motivation` - Get motivated\n`!goodnight` - Good night messages\n`!ping` - Test bot\n`!info` - Bot info'),
+    '!help': (message) => {
+        const embed = new EmbedBuilder()
+            .setColor('#168aad') // Dunkel-türkis
+            .setTitle('Available Commands')
+            .setDescription(
+                '\n' + // Leerzeile nach Header
+                '`!hi` - Say hello\n' +
+                '`!coffee` - Time for coffee!\n' +
+                '`!meme` - Programming memes\n' +
+                '`!github` - Bots Owner Github and my Repo!\n' +
+                '`!motivation` - Get motivated\n' +
+                '`!goodnight` - Good night messages\n' +
+                '`!ping` - Test bot\n' +
+                '`!info` - Bot info'
+            );
+        message.reply({ embeds: [embed] });
+    },
     '!ping': (message) => message.reply('Pong! Bot is running 24/7'),
     '!pingmeee': (message) => {
         message.channel.send('!pongez');
