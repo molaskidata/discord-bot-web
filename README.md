@@ -194,4 +194,77 @@ If you get an error like `Cannot find module 'discord.js'` when starting the bot
 
 ---
 
-Replace placeholders like `your_domain_here`, `your_server_ip`, `your_token_here`, etc. with your own values when deploying. This README is safe for public repositories and does not expose any private data.
+
+
+## 4. Updating Bots and Website (Hetzner Server)
+
+### How to update and restart bots after code changes
+
+**If you changed bot code (e.g. Mainbot or Pingbot):**
+
+1. **Commit and push your changes locally:**
+  ```bash
+  git add Bothbots/Mainbot/* Bothbots/Pingbot/*
+  git commit -m "Update bot code"
+  git push
+  ```
+
+2. **On your Hetzner server (via SSH):**
+  ```bash
+  cd /root/discord-bot-web
+  git pull
+  ```
+
+3. **Restart the bot (if using pm2):**
+  ```bash
+  pm2 restart mainbot
+  pm2 restart pingbot
+  ```
+  Or, if you run bots directly:
+  ```bash
+  pkill -f infobot.js
+  nohup node Bothbots/Mainbot/infobot.js > mainbot.log 2>&1 &
+
+  pkill -f pingbot.js
+  nohup node Bothbots/Pingbot/pingbot.js > pingbot.log 2>&1 &
+  ```
+
+---
+
+### How to update the website after changes
+
+**If you changed website files (e.g. `Website/index.html`, `Website/styles.css`):**
+
+1. **Commit and push your changes locally:**
+  ```bash
+  git add Website/index.html Website/styles.css
+  git commit -m "Update website files"
+  git push
+  ```
+
+2. **On your Hetzner server (via SSH):**
+  ```bash
+  cd /root/discord-bot-web
+  git pull
+  ```
+
+3. **No need to restart nginx or the webserver unless you changed the config.**
+  - If you changed `nginx-config.conf`, restart nginx:
+    ```bash
+    systemctl restart nginx
+    ```
+
+---
+
+### Summary of update workflow
+
+- Edit code or website files locally
+- Commit and push changes to your git repository
+- SSH into your Hetzner server and run `git pull`
+- Restart bots if needed (with pm2 or node)
+- For website: changes are live after `git pull` (unless config changed)
+
+---
+
+**Tip:**
+You can use `tail -f mainbot.log` or `tail -f pingbot.log` to monitor bot output after restart.
