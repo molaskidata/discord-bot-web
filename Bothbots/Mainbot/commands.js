@@ -61,7 +61,7 @@ const commandHandlers = {
     '!motivation': (message) => message.reply(getRandomResponse(motivationQuotes)),
     '!gg': (message) => message.reply("GG WP! 🎉"),
     '!goodnight': (message) => message.reply(getRandomResponse(goodnightResponses)),
-    '!help': (message) => message.reply('**Available Commands:**\n`!hi` - Say hello\n`!coffee` - Time for coffee!\n`!meme` - Programming memes\n `!github` - Bots Owner Github and my Repo! \n`!motivation` - Get motivated\n`!goodnight` - Good night messages\n`!ping` - Test bot\n`!info` - Bot info'),
+    '!help': (message) => message.reply('**Available Commands:**\n`!hi` - Say hello\n`!coffee` - Time for coffee!\n`!meme` - Programming memes\n`!github` - Bots Owner Github and my Repo!\n`!motivation` - Get motivated\n`!goodnight` - Good night messages\n`!ping` - Test bot\n`!info` - Bot info'),
     '!ping': (message) => message.reply('Pong! Bot is running 24/7'),
     '!pingmeee': (message) => {
         message.channel.send('!pongez');
