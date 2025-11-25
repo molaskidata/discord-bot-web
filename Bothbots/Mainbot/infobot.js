@@ -83,13 +83,13 @@ app.get('/github/callback', async (req, res) => {
                 code,
                 redirect_uri: 'http://localhost:3000/github/callback'
             },
-            { headers: { Accept: 'application/json' } }
+            { Accept: 'application/json' }
         );
         const accessToken = tokenRes.data.access_token;
 
         // Get GitHub username
-        const userRes = await axios.get('https://api.github.com/user', {
-            headers: { Authorization: `token ${accessToken}` }
+        const userRes = await axios.get('https://api.github.com/user', null, {
+            Authorization: `token ${accessToken}`
         });
         const githubUsername = userRes.data.login;
 
