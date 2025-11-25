@@ -51,6 +51,7 @@ const client = new Client({
     ]
 });
 
+
 let gameTimer = 0;
 const MAX_HOURS = 20;
 
