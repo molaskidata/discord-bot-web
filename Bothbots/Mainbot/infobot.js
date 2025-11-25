@@ -161,14 +161,14 @@ function updateGameStatus() {
     
     client.user.setPresence({
         activities: [{
-            name: 'Battlefield 6',
+            name: 'Dead by Daylight',
             type: ActivityType.Playing,
             details: `${gameTimer}h gespielt`,
-            state: `Multiplayer Match`,
+            state: `Playing Killer for ${gameTimer} hours`,
             applicationId: '1435244593301159978',
             assets: {
-                large_image: 'battlefield',
-                large_text: 'Battlefield 6'
+                large_image: 'deadbydaylight',
+                large_text: 'Dead by Daylight'
             },
             timestamps: {
                 start: Date.now() - (gameTimer * 3600000)

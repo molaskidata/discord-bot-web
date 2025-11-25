@@ -54,7 +54,64 @@ const goodnightResponses = [
 
 // Command handler map
 
+// Birthday data storage
+const BIRTHDAY_FILE = 'birthdays.json';
+function loadBirthdays() {
+    if (fs.existsSync(BIRTHDAY_FILE)) {
+        return JSON.parse(fs.readFileSync(BIRTHDAY_FILE));
+    }
+    return { channelId: null, users: {} };
+}
+function saveBirthdays(data) {
+    fs.writeFileSync(BIRTHDAY_FILE, JSON.stringify(data, null, 2));
+}
+
 const commandHandlers = {
+        '!birthdaychannel': async (message) => {
+            await message.delete();
+            // Only allow admins to set channel (optional, remove if not needed)
+            // if (!message.member.permissions.has('ADMINISTRATOR')) return;
+            const birthdays = loadBirthdays();
+            birthdays.channelId = message.channel.id;
+            saveBirthdays(birthdays);
+            message.channel.send({
+                content: `Set a Channel where I will send the birthday wishes. Format (<#${message.channel.id}>) The channel must be in the server where the command was sent. And the bot must have access to write and send messages.`,
+                ephemeral: true
+            });
+        },
+        '!birthdayset': async (message) => {
+            await message.delete();
+            message.channel.send({
+                content: 'Write your birthday date in this format (dd/mm/yyyy) and click enter. The bot will save it for you.',
+                ephemeral: true
+            });
+            // Listen for next message from user
+            const filter = m => m.author.id === message.author.id && /^\d{2}\/\d{2}\/\d{4}$/.test(m.content);
+            const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+            collector.on('collect', m => {
+                const birthdays = loadBirthdays();
+                birthdays.users[m.author.id] = m.content;
+                saveBirthdays(birthdays);
+                m.channel.send({ content: 'Your birthday has been saved!', ephemeral: true });
+                m.delete();
+            });
+        },
+    // Daily birthday check (run once per day)
+    setInterval(() => {
+        const birthdays = loadBirthdays();
+        if (!birthdays.channelId) return;
+        const today = new Date();
+        const todayStr = `${String(today.getDate()).padStart(2, '0')}/${String(today.getMonth()+1).padStart(2, '0')}`;
+        Object.entries(birthdays.users).forEach(([userId, dateStr]) => {
+            const [day, month, year] = dateStr.split('/');
+            if (`${day}/${month}` === todayStr) {
+                const channel = global.client.channels.cache.get(birthdays.channelId);
+                if (channel) {
+                    channel.send(`Happy Birthdayyyy <@${userId}> ! We wish you only the best!`);
+                }
+            }
+        });
+    }, 60 * 60 * 1000); // Check every hour
     '!hi': (message) => message.reply(getRandomResponse(hiResponses)),
     '!github': (message) => message.reply("Check that out my friend! `https://github.com/molaskidata`"),
     '!coffee': (message) => message.reply(getRandomResponse(coffeeResponses)),
@@ -71,7 +128,11 @@ const commandHandlers = {
                 '`!hi` - Say hello\n' +
                 '`!coffee` - Time for coffee!\n' +
                 '`!meme` - Programming memes\n' +
-                '`!github` - Bots Owner Github and my Repo!\n' +
+                '`!github` - Bot owner GitHub and repo\n' +
+                '`!congithubacc` - Connect your GitHub account\n' +
+                '`!discongithubacc` - Disconnect your GitHub account\n' +
+                '`!gitrank` - Show your GitHub commit level\n' +
+                '`!gitleader` - Show the top 10 committers\n' +
                 '`!motivation` - Get motivated\n' +
                 '`!goodnight` - Good night messages\n' +
                 '`!ping` - Test bot\n' +
