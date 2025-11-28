@@ -121,23 +121,29 @@ const commandHandlers = {
     '!goodnight': (message) => message.reply(getRandomResponse(goodnightResponses)),
     '!help': (message) => {
         const embed = new EmbedBuilder()
-            .setColor('#168aad') // Dunkel-türkis
-            .setTitle('Available Commands')
-            .setDescription(
-                '\n' + // Leerzeile nach Header
-                '`!hi` - Say hello\n' +
-                '`!coffee` - Time for coffee!\n' +
-                '`!meme` - Programming memes\n' +
-                '`!github` - Bot owner GitHub and repo\n' +
-                '`!congithubacc` - Connect your GitHub account\n' +
-                '`!discongithubacc` - Disconnect your GitHub account\n' +
-                '`!gitrank` - Show your GitHub commit level\n' +
-                '`!gitleader` - Show the top 10 committers\n' +
-                '`!motivation` - Get motivated\n' +
-                '`!goodnight` - Good night messages\n' +
-                '`!ping` - Test bot\n' +
-                '`!info` - Bot info'
-            );
+            .setColor('#168aad') // Dunkles Türkis
+            .setTitle('Bot Command Help')
+            .setDescription('Hier sind alle verfügbaren Commands:')
+            .addFields(
+                { name: 'Allgemein', value:
+                    '`!hi` - Say hello\n' +
+                    '`!coffee` - Time for coffee!\n' +
+                    '`!meme` - Programming memes\n' +
+                    '`!motivation` - Get motivated\n' +
+                    '`!goodnight` - Good night messages\n' +
+                    '`!ping` - Test bot\n' +
+                    '`!info` - Bot info', inline: false },
+                { name: 'GitHub', value:
+                    '`!github` - Bot owner GitHub and repo\n' +
+                    '`!congithubacc` - Connect your GitHub account\n' +
+                    '`!discongithubacc` - Disconnect your GitHub account\n' +
+                    '`!gitrank` - Show your GitHub commit level\n' +
+                    '`!gitleader` - Show the top 10 committers', inline: false },
+                { name: 'Birthday', value:
+                    '`!birthdaychannel` - Set the birthday channel\n' +
+                    '`!birthdayset` - Save your birthday', inline: false }
+            )
+            .setFooter({ text: 'Powered by CoderMaster', iconURL: undefined });
         message.reply({ embeds: [embed] });
     },
     '!ping': (message) => message.reply('Pong! Bot is running 24/7'),
