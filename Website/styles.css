@@ -11,9 +11,6 @@ body {
     position: relative;
     overflow-x: hidden;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    max-width: 400px;
-    margin-left: auto;
-    margin-right: auto;
 }
 
 @keyframes gradientShimmer {
