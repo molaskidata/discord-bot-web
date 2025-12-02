@@ -39,7 +39,7 @@ const axios = require('axios');
 const BOT_INFO = {
     name: "CoderMaster",
     version: "1.0.0",
-    author: "mola"
+    author: "ozzygirl/mungabee"
     // Note: publicKey removed for security - store in .env if needed
 };
 
