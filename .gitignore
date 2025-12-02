@@ -5,7 +5,8 @@
 *.env
 
 # Subfolder env files
-2.Bot/.env
+Bothbots/Mainbot/.env
+Bothbots/Pingbot/.env
 
 # Dependencies
 node_modules/
