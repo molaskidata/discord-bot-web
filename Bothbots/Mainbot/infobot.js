@@ -51,6 +51,8 @@ const client = new Client({
     ]
 });
 
+// Make client globally accessible for commands.js
+global.client = client;
 
 let gameTimer = 0;
 const MAX_HOURS = 20;
