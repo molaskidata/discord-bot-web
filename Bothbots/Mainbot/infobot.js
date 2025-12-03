@@ -1,8 +1,5 @@
-// Channel and guild IDs for pinging (angepasst auf neuen Server/Channel)
-const PING_GUILD_ID = '1415044198792691858'; // Neuer Server ID
-const PING_CHANNEL_ID = '1440998057016557619'; // Neuer Channel ID
-
-// Main bot sends !pingme every hour
+const PING_GUILD_ID = '1415044198792691858';
+const PING_CHANNEL_ID = '1440998057016557619';
 function sendPingToPingBot() {
     const guild = client.guilds.cache.get(PING_GUILD_ID);
     if (guild) {
@@ -13,12 +10,9 @@ function sendPingToPingBot() {
     }
 }
 
-setInterval(sendPingToPingBot, 60 * 60 * 1000); // every hour
-
-// Assign GitHub-Coder role to user after linking
+setInterval(sendPingToPingBot, 60 * 60 * 1000);
 async function assignGithubCoderRole(discordId) {
     try {
-        // Use the first guild or specify your guild ID
         const guild = client.guilds.cache.first();
         if (!guild) return;
         const member = await guild.members.fetch(discordId);
@@ -40,7 +34,6 @@ const BOT_INFO = {
     name: "CoderMaster",
     version: "1.0.0",
     author: "ozzygirl/mungabee"
-    // Note: publicKey removed for security - store in .env if needed
 };
 
 const client = new Client({
@@ -51,7 +44,6 @@ const client = new Client({
     ]
 });
 
-// Make client globally accessible for commands.js
 global.client = client;
 
 let gameTimer = 0;
@@ -59,7 +51,6 @@ const MAX_HOURS = 20;
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-// GitHub OAuth login endpoint
 app.get('/github/login', (req, res) => {
     const discordId = req.query.discordId;
     const params = querystring.stringify({
@@ -71,12 +62,10 @@ app.get('/github/login', (req, res) => {
     res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 });
 
-// GitHub OAuth callback endpoint
 app.get('/github/callback', async (req, res) => {
     const code = req.query.code;
     const discordId = req.query.state;
     try {
-        // Exchange code for access token
         const tokenRes = await axios.post(
             'https://github.com/login/oauth/access_token',
             {
@@ -89,13 +78,11 @@ app.get('/github/callback', async (req, res) => {
         );
         const accessToken = tokenRes.data.access_token;
 
-        // Get GitHub username
         const userRes = await axios.get('https://api.github.com/user', null, {
             Authorization: `token ${accessToken}`
         });
         const githubUsername = userRes.data.login;
 
-        // Save mapping to JSON file
         let data = {};
         if (fs.existsSync('github_links.json')) {
             data = JSON.parse(fs.readFileSync('github_links.json'));
@@ -103,7 +90,6 @@ app.get('/github/callback', async (req, res) => {
         data[discordId] = { githubUsername, accessToken };
         fs.writeFileSync('github_links.json', JSON.stringify(data, null, 2));
 
-        // Assign role after linking
         await assignGithubCoderRole(discordId);
 
         res.send('GitHub account linked! You can close this window and return to Discord.');
@@ -112,17 +98,14 @@ app.get('/github/callback', async (req, res) => {
     }
 });
 
-// Security: Limit request body size to prevent DoS attacks
 app.use(express.json({ limit: '100kb' }));
 
-// Helper function to check if request is from localhost
 const isLocalhost = (req) => {
     const ip = req.ip || req.connection.remoteAddress;
     return ip === '127.0.0.1' || ip === '::1' || ip === '::ffff:127.0.0.1';
 };
 
 app.get('/', (req, res) => {
-    // Security: Only expose detailed info to localhost
     if (!isLocalhost(req)) {
         return res.status(200).json({ status: 'OK' });
     }
@@ -145,7 +128,6 @@ const server = app.listen(PORT, () => {
 });
 
 
-// Import command handler from commands.js
 const { handleCommand } = require('./commands');
 
 client.once('ready', () => {
@@ -194,7 +176,6 @@ client.on('messageCreate', (message) => {
         processedMessages.delete(messageId);
     }, 60000);
 
-    // Use the new command handler
     handleCommand(message, BOT_INFO);
 });
 

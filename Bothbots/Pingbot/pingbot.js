@@ -4,11 +4,10 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 // Channel and guild IDs for pinging
-const PING_GUILD_ID = '1415044198792691858'; // Neuer Server ID
-const PING_CHANNEL_ID = '1440998057016557619'; // Neuer Channel ID
+const PING_GUILD_ID = '1415044198792691858';
+const PING_CHANNEL_ID = '1440998057016557619';
 
-// Bump reminder system
-const DISBOARD_BOT_ID = '302050872383242240'; // Official Disboard bot ID
+const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map(); // Store active reminders by channel ID
 
 client.on('ready', () => {
@@ -23,7 +22,6 @@ client.on('ready', () => {
         status: 'online'
     });
 
-    // Pingbot sends !pingmeee every 1.5 hours
     function sendPingToMainBot() {
         const guild = client.guilds.cache.get(PING_GUILD_ID);
         if (guild) {
@@ -33,9 +31,7 @@ client.on('ready', () => {
             }
         }
     }
-    // Sofort beim Start einmal senden (optional)
     sendPingToMainBot();
-    // Dann alle 1,5 Stunden
     setInterval(sendPingToMainBot, 90 * 60 * 1000);
 });
 
@@ -103,18 +99,15 @@ function setBumpReminder(channel, guild) {
         clearTimeout(bumpReminders.get(channelId));
     }
     
-    // Set new 2-hour reminder (2 hours = 2 * 60 * 60 * 1000 ms)
     const reminderTimeout = setTimeout(() => {
         channel.send('⏰ **Bump Reminder!** ⏰\n\nThe server can be bumped again now! Use `/bump` to bump the server on Disboard! 🚀');
         bumpReminders.delete(channelId);
-    }, 2 * 60 * 60 * 1000); // 2 hours
+    }, 2 * 60 * 60 * 1000);
     
-    // Store the timeout reference
+
     bumpReminders.set(channelId, reminderTimeout);
     
-    // Send confirmation message
     channel.send('✅ Bump reminder set! I\'ll remind you in 2 hours when the next bump is available.');
 }
 
 client.login(process.env.PINGBOT_TOKEN);
-//yess i got it, look i am a genius!

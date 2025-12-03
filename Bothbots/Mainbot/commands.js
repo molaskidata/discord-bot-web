@@ -1,6 +1,4 @@
 const fs = require('fs');
-// commands.js
-// All Discord bot command logic is moved here for better structure and overview.
 
 const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
@@ -21,7 +19,7 @@ const programmingMemes = [
     "Programming is 10% science, 20% ingenuity, and 70% getting the ingenuity to work with the science! ⚗️",
     "I don't always test my code, but when I do, I do it in production! 🚀",
     "Roses are red, violets are blue, unexpected '{' on line 32! 🌹",
-    "Git commit -m 'fixed bug' // creates 5 new bugs 🔄"
+    "Git commit -m 'fixed bug'"
 ];
 
 const hiResponses = [
@@ -52,9 +50,7 @@ const goodnightResponses = [
     "Rest well, coding warrior! 🛡️💤"
 ];
 
-// Command handler map
-
-// Birthday data storage
+const
 const BIRTHDAY_FILE = 'birthdays.json';
 function loadBirthdays() {
     if (fs.existsSync(BIRTHDAY_FILE)) {
@@ -174,7 +170,6 @@ const commandHandlers = {
     }
 };
 
-// Birthday check runs every hour
 setInterval(() => {
     const birthdays = loadBirthdays();
     if (!birthdays.channelId) return;
@@ -194,7 +189,6 @@ setInterval(() => {
 function handleCommand(message, BOT_INFO) {
     const handler = commandHandlers[message.content];
     if (handler) {
-        // Some commands need BOT_INFO
         if (message.content === '!info') {
             handler(message, BOT_INFO);
         } else {

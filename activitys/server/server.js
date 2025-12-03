@@ -6,7 +6,6 @@ dotenv.config({ path: "../.env" });
 const app = express();
 const port = 3002;
 
-// Security: Limit request body size to prevent DoS attacks
 app.use(express.json({ limit: '100kb' }));
 
 app.get('/', (req, res) => {
@@ -22,13 +21,10 @@ app.post("/api/token", async (req, res) => {
   try {
     const { code } = req.body;
     
-    // Input validation - prevent DoS and injection attacks
     if (!code || typeof code !== 'string') {
       return res.status(400).json({ error: 'Invalid request: code required' });
     }
     
-    // Discord OAuth codes are typically 30 chars, alphanumeric with dashes/underscores
-    // Reject suspicious inputs
     if (code.length > 100 || code.length < 10) {
       return res.status(400).json({ error: 'Invalid code format: length' });
     }
@@ -53,14 +49,12 @@ app.post("/api/token", async (req, res) => {
     const data = await response.json();
     
     if (!response.ok) {
-      // Don't expose Discord's error details to prevent info leakage
       return res.status(401).json({ error: 'Authentication failed' });
     }
     
     const { access_token } = data;
     res.send({access_token});
   } catch (error) {
-    // Don't log full error object - may contain sensitive data
     console.error('Discord OAuth error:', error.message);
     res.status(500).json({ error: 'OAuth authentication failed' });
   }
