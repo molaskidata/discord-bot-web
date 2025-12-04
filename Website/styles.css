@@ -316,9 +316,9 @@ body {
 }
 
 .tab-button.active {
-    background: linear-gradient(145deg, #4a90e2, #74c0fc);
-    border-color: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 8px 30px rgba(116, 192, 252, 0.4);
+    background: linear-gradient(145deg, #245785, #4a90e2);
+    border-color: rgba(255, 255, 255, 0.2);
+    box-shadow: 0 6px 20px rgba(36, 87, 133, 0.3);
 }
 
 .button-container {
