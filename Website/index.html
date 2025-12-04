@@ -109,16 +109,29 @@
                         Loading latest content...
                     </div>
                 </div>
+        </div>
+    </div>
+        
+        <!-- GITHUB CONNECT PAGE -->
+        <div id="github-connect-page" class="page">
+            <div class="github-connect-container">
+                <div class="github-connect-card">
+                    <div class="github-connect-icon">🔗</div>
+                    <h2 class="github-connect-title">Connect your GitHub for Discord XP & Leveling!</h2>
+                    <p class="github-connect-description">
+                        Log in with your GitHub account to link it with your Discord profile. Your GitHub activity (commits, contributions) will be used to rank you and award XP/levels in our Discord server!<br><br>
+                        Click below to securely connect your GitHub account and unlock exclusive roles and rewards.
+                    </p>
+                    <a href="#" class="connect-button" id="connectBtn">Connect GitHub Account</a>
+                </div>
             </div>
         </div>
-    
+    </div>
 
     <div class="gallery-section">
         <div class="gallery-container">
         </div>
-    </div>
-    
-    <footer class="site-footer">
+    </div>    <footer class="site-footer">
         <div class="site-footer-inner">
             <span>© 2025 MOLA | </span>
             <a href="terms&privacy/terms-of-service.html" target="_blank">AGB</a> |
@@ -183,14 +196,16 @@
 
             const connectBtn = document.getElementById('connectBtn');
             
-            if (discordId) {
-                // If Discord ID is provided, initiate GitHub OAuth
-                connectBtn.href = `https://github.com/login/oauth/authorize?client_id=YOUR_GITHUB_CLIENT_ID&redirect_uri=${encodeURIComponent(window.location.origin + '/github-callback.html')}&scope=user:email&state=${discordId}`;
-            } else {
-                // Show error if no Discord ID
-                connectBtn.textContent = 'Error: No Discord ID provided';
-                connectBtn.style.pointerEvents = 'none';
-                connectBtn.style.opacity = '0.6';
+            if (connectBtn) {
+                if (discordId) {
+                    // If Discord ID is provided, initiate GitHub OAuth
+                    connectBtn.href = `http://localhost:3000/github/auth?discordId=${discordId}`;
+                } else {
+                    // Show error if no Discord ID
+                    connectBtn.textContent = 'ERROR: NO DISCORD ID PROVIDED';
+                    connectBtn.style.pointerEvents = 'none';
+                    connectBtn.style.opacity = '0.6';
+                }
             }
 
             // Handle initial route
