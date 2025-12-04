@@ -50,7 +50,6 @@ const goodnightResponses = [
     "Rest well, coding warrior! 🛡️💤"
 ];
 
-const
 const BIRTHDAY_FILE = 'birthdays.json';
 function loadBirthdays() {
     if (fs.existsSync(BIRTHDAY_FILE)) {
@@ -141,7 +140,7 @@ const commandHandlers = {
     },
     '!congithubacc': (message) => {
         const discordId = message.author.id;
-        const loginUrl = `http://localhost:3000/github/login?discordId=${discordId}`;
+        const loginUrl = `https://thecoffeylounge.com/github-connect.html?discordId=${discordId}`;
         message.reply(
             `To connect your GitHub account, click this link: ${loginUrl}\n` +
             'Authorize the app, then return to Discord!'
