@@ -22,17 +22,19 @@
     </header>
 
     <div class="tabs-container">
-        <button class="tab-button active">🏠 Home</button>
-        <a href="github-connect.html" class="tab-button">🔗 GitHub Connect</a>
+        <button class="tab-button active" data-page="home">🏠 Home</button>
+        <button class="tab-button" data-page="github-connect">🔗 GitHub Connect</button>
     </div>
     
-    <div class="button-container">
+    <div class="button-container" id="homeButtonContainer">
         <a href="https://discord.gg/Xvqa7GFJGN" class="discord-button" target="_blank">
             🍩 Zur Discord Community
         </a>
     </div>
-    
-    <div class="container">
+
+    <div id="page-container">
+        <!-- HOME PAGE -->
+        <div id="home-page" class="page active">
         <div class="column">
             <h1 class="col-headline">Coffey & Codes</h1>
             <div class="col-head-sep" aria-hidden="true"></div>
@@ -129,12 +131,76 @@
     
     <script src="shades.js"></script>
     <script>
-  document.addEventListener("DOMContentLoaded", function() {
-    const footer = document.querySelector('.site-footer-inner');
-    if (footer) {
-      footer.innerHTML = footer.innerHTML.replace(/© \\d{4}/, `© ${new Date().getFullYear()}`);
-    }
-  });
-</script>
+        // Page Navigation
+        document.querySelectorAll('.tab-button').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const page = this.getAttribute('data-page');
+                navigateTo(page);
+            });
+        });
+
+        function navigateTo(page) {
+            // Hide all pages
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            
+            // Show selected page
+            document.getElementById(page + '-page').classList.add('active');
+            
+            // Update active tab
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-page') === page) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update URL
+            if (page === 'home') {
+                window.history.pushState(null, '', '/');
+            } else {
+                window.history.pushState(null, '', '/' + page + '/');
+            }
+        }
+
+        // Handle browser back/forward
+        window.addEventListener('popstate', function() {
+            const path = window.location.pathname;
+            if (path.includes('github-connect')) {
+                navigateTo('github-connect');
+            } else {
+                navigateTo('home');
+            }
+        });
+
+        // GitHub Connect Button
+        document.addEventListener("DOMContentLoaded", function() {
+            const footer = document.querySelector('.site-footer-inner');
+            if (footer) {
+                footer.innerHTML = footer.innerHTML.replace(/© \d{4}/, `© ${new Date().getFullYear()}`);
+            }
+
+            // Get Discord ID from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const discordId = urlParams.get('discordId');
+
+            const connectBtn = document.getElementById('connectBtn');
+            
+            if (discordId) {
+                // If Discord ID is provided, initiate GitHub OAuth
+                connectBtn.href = `https://github.com/login/oauth/authorize?client_id=YOUR_GITHUB_CLIENT_ID&redirect_uri=${encodeURIComponent(window.location.origin + '/github-callback.html')}&scope=user:email&state=${discordId}`;
+            } else {
+                // Show error if no Discord ID
+                connectBtn.textContent = 'Error: No Discord ID provided';
+                connectBtn.style.pointerEvents = 'none';
+                connectBtn.style.opacity = '0.6';
+            }
+
+            // Handle initial route
+            const path = window.location.pathname;
+            if (path.includes('github-connect')) {
+                navigateTo('github-connect');
+            }
+        });
+    </script>
 </body>
 </html>

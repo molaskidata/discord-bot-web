@@ -410,6 +410,99 @@ body {
     color: #74c0fc;
 }
 
+/* PAGE CONTAINER */
+#page-container {
+    width: 100%;
+    position: relative;
+    z-index: 2;
+}
+
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* GITHUB CONNECT PAGE */
+.github-connect-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    position: relative;
+    z-index: 2;
+    padding: 20px;
+}
+
+.github-connect-card {
+    background: rgba(255, 255, 255, 0.05);
+    border: 2px solid #245785;
+    border-radius: 25px;
+    padding: 60px 40px;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    max-width: 500px;
+    width: 100%;
+}
+
+.github-connect-card:hover {
+    border-color: #4a90e2;
+    background: rgba(255, 255, 255, 0.08);
+    transform: translateY(-5px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+.github-connect-title {
+    font-family: 'Balloo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 2rem;
+    color: #e8f4f8;
+    margin: 0 0 1rem 0;
+    font-weight: 600;
+    text-shadow: 0 0 15px rgba(232, 244, 248, 0.4);
+    letter-spacing: 1px;
+}
+
+.github-connect-description {
+    font-size: 1.1rem;
+    color: #fff;
+    margin-bottom: 2rem;
+    line-height: 1.6;
+}
+
+.github-connect-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+}
+
+.connect-button {
+    display: inline-block;
+    background: linear-gradient(145deg, #245785, #4a90e2);
+    color: #ffffff;
+    padding: 16px 40px;
+    border-radius: 25px;
+    text-decoration: none;
+    font-family: 'Balloo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    font-size: 1.2rem;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 8px 25px rgba(36, 87, 133, 0.3);
+    border: 2px solid rgba(255, 255, 255, 0.2);
+    cursor: pointer;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.connect-button:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 35px rgba(36, 87, 133, 0.5);
+    border-color: rgba(255, 255, 255, 0.6);
+    background: linear-gradient(145deg, #4a90e2, #74c0fc);
+}
+
 
 .loading-message, .error-message {
     text-align: center;
@@ -512,6 +605,27 @@ body {
         object-fit: cover;
         border-radius: 50%;
         display: block;
+        margin: 0 auto;
+    }
+
+    .github-connect-card {
+        padding: 40px 20px;
+    }
+
+    .github-connect-title {
+        font-size: 1.5rem;
+    }
+
+    .github-connect-description {
+        font-size: 1rem;
+    }
+
+    .connect-button {
+        padding: 14px 30px;
+        font-size: 1rem;
+        display: block;
+        width: 100%;
+        max-width: 300px;
         margin: 0 auto;
     }
 }
