@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Connect - Coffee & Codes</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Balloo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .tabs-container {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 20px 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        .tab-button {
+            display: inline-block;
+            background: linear-gradient(145deg, #245785, #4a90e2);
+            color: #ffffff;
+            padding: 12px 30px;
+            border-radius: 20px;
+            text-decoration: none;
+            font-family: 'Balloo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 6px 20px rgba(36, 87, 133, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            letter-spacing: 0.5px;
+        }
+
+        .tab-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(36, 87, 133, 0.5);
+            border-color: rgba(255, 255, 255, 0.6);
+            background: linear-gradient(145deg, #4a90e2, #74c0fc);
+        }
+
+        .tab-button.active {
+            background: linear-gradient(145deg, #4a90e2, #74c0fc);
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 8px 30px rgba(116, 192, 252, 0.4);
+        }
+
+        .github-connect-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 60vh;
+            position: relative;
+            z-index: 2;
+            padding: 20px;
+        }
+
+        .github-connect-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid #245785;
+            border-radius: 25px;
+            padding: 60px 40px;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            max-width: 500px;
+            width: 100%;
+        }
+
+        .github-connect-card:hover {
+            border-color: #4a90e2;
+            background: rgba(255, 255, 255, 0.08);
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .github-connect-title {
+            font-family: 'Balloo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 2rem;
+            color: #e8f4f8;
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+            text-shadow: 0 0 15px rgba(232, 244, 248, 0.4);
+            letter-spacing: 1px;
+        }
+
+        .github-connect-description {
+            font-size: 1.1rem;
+            color: #fff;
+            margin-bottom: 2rem;
+            line-height: 1.6;
+        }
+
+        .github-connect-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+        }
+
+        .connect-button {
+            display: inline-block;
+            background: linear-gradient(145deg, #245785, #4a90e2);
+            color: #ffffff;
+            padding: 16px 40px;
+            border-radius: 25px;
+            text-decoration: none;
+            font-family: 'Balloo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(36, 87, 133, 0.3);
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .connect-button:hover {
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 12px 35px rgba(36, 87, 133, 0.5);
+            border-color: rgba(255, 255, 255, 0.6);
+            background: linear-gradient(145deg, #4a90e2, #74c0fc);
+        }
+
+        @media (max-width: 600px) {
+            .tabs-container {
+                flex-direction: column;
+                gap: 10px;
+            }
+
+            .tab-button {
+                display: block;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+            }
+
+            .github-connect-card {
+                padding: 40px 20px;
+            }
+
+            .github-connect-title {
+                font-size: 1.5rem;
+            }
+
+            .github-connect-description {
+                font-size: 1rem;
+            }
+
+            .connect-button {
+                padding: 14px 30px;
+                font-size: 1rem;
+                display: block;
+                width: 100%;
+                max-width: 300px;
+                margin: 0 auto;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="site-header">
+        <div class="header-img-container">
+            <img src="https://i.imgur.com/WhFdlYv.jpg" alt="Katze links" class="header-img left">
+        </div>
+        <h1 id="main-title">Coffee and Codes</h1>
+        <div class="header-img-container">
+            <img src="https://i.imgur.com/vy9sUhr.jpg" alt="Katze rechts" class="header-img right">
+        </div>
+    </header>
+
+    <div class="tabs-container">
+        <a href="index.html" class="tab-button">🏠 Home</a>
+        <button class="tab-button active">🔗 GitHub Connect</button>
+    </div>
+
+    <div class="github-connect-container">
+        <div class="github-connect-card">
+            <div class="github-connect-icon">🔗</div>
+            <h2 class="github-connect-title">Connect GitHub with Discord</h2>
+            <p class="github-connect-description">
+                Connect your GitHub account with the Coffee & Codes Discord Server to unlock exclusive roles and features!
+            </p>
+            <a href="#" class="connect-button" id="connectBtn">Connect GitHub Account</a>
+        </div>
+    </div>
+
+    <footer class="site-footer">
+        <div class="site-footer-inner">
+            <span>© 2025 MOLA | </span>
+            <a href="terms&privacy/terms-of-service.html" target="_blank">AGB</a> |
+            <a href="terms&privacy/privacy-policy.html" target="_blank">Dataprotection</a> |
+            <a href="https://discord.gg/Xvqa7GFJGN" target="_blank" rel="noopener noreferrer">Coffee & Codes</a>
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const footer = document.querySelector('.site-footer-inner');
+            if (footer) {
+                footer.innerHTML = footer.innerHTML.replace(/© \d{4}/, `© ${new Date().getFullYear()}`);
+            }
+
+            // Get Discord ID from URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const discordId = urlParams.get('discordId');
+
+            const connectBtn = document.getElementById('connectBtn');
+            
+            if (discordId) {
+                // If Discord ID is provided, initiate GitHub OAuth
+                connectBtn.href = `https://github.com/login/oauth/authorize?client_id=YOUR_GITHUB_CLIENT_ID&redirect_uri=${encodeURIComponent(window.location.origin + '/github-callback.html')}&scope=user:email&state=${discordId}`;
+            } else {
+                // Show error if no Discord ID
+                connectBtn.textContent = 'Error: No Discord ID provided';
+                connectBtn.style.pointerEvents = 'none';
+                connectBtn.style.opacity = '0.6';
+            }
+        });
+    </script>
+</body>
+</html>
