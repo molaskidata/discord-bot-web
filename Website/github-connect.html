@@ -213,11 +213,11 @@
             const connectBtn = document.getElementById('connectBtn');
             
             if (discordId) {
-                // If Discord ID is provided, initiate GitHub OAuth
-                connectBtn.href = `https://github.com/login/oauth/authorize?client_id=YOUR_GITHUB_CLIENT_ID&redirect_uri=${encodeURIComponent(window.location.origin + '/github-callback.html')}&scope=user:email&state=${discordId}`;
+                // If Discord ID is provided, redirect to OAuth server
+                connectBtn.href = `http://your-hetzner-ip:3000/github/auth?discordId=${discordId}`;
             } else {
                 // Show error if no Discord ID
-                connectBtn.textContent = 'Error: No Discord ID provided';
+                connectBtn.textContent = 'ERROR: NO DISCORD ID PROVIDED';
                 connectBtn.style.pointerEvents = 'none';
                 connectBtn.style.opacity = '0.6';
             }
