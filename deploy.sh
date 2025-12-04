@@ -156,9 +156,9 @@ install_activity_server() {
     cd "$PROJECT_ROOT/activitys/server"
 
     if [ ! -d "node_modules" ]; then
-        npm install --quiet
+        npm install 
     else
-        npm update --quiet
+        npm update 
     fi
 
     log_success "Activity Server dependencies installed"
@@ -170,9 +170,9 @@ install_mainbot() {
     cd "$PROJECT_ROOT/Bothbots/Mainbot"
 
     if [ ! -d "node_modules" ]; then
-        npm install --quiet
+        npm install 
     else
-        npm update --quiet
+        npm update 
     fi
 
     log_success "Main Bot dependencies installed"
@@ -184,9 +184,9 @@ install_pingbot() {
     cd "$PROJECT_ROOT/Bothbots/Pingbot"
 
     if [ ! -d "node_modules" ]; then
-        npm install --quiet
+        npm install 
     else
-        npm update --quiet
+        npm update 
     fi
 
     log_success "Ping Bot dependencies installed"
