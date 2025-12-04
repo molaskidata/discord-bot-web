@@ -199,7 +199,7 @@
             if (connectBtn) {
                 if (discordId) {
                     // If Discord ID is provided, initiate GitHub OAuth
-                    connectBtn.href = `http://localhost:3000/github/auth?discordId=${discordId}`;
+                    connectBtn.href = `https://thecoffeylounge.com:3000/github/auth?discordId=${discordId}`;
                 } else {
                     // Show error if no Discord ID
                     connectBtn.textContent = 'ERROR: NO DISCORD ID PROVIDED';
@@ -208,10 +208,14 @@
                 }
             }
 
-            // Handle initial route
-            const path = window.location.pathname;
-            if (path.includes('github-connect')) {
+            // Handle initial route - if discordId is present, go to github-connect page
+            if (discordId) {
                 navigateTo('github-connect');
+            } else {
+                const path = window.location.pathname;
+                if (path.includes('github-connect')) {
+                    navigateTo('github-connect');
+                }
             }
         });
     </script>
