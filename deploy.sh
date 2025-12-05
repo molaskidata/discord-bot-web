@@ -397,33 +397,21 @@ setup_pm2_services() {
     pm2 start "activitys/server/server.js" \
         --name "activity-server" \
         --log "$LOG_DIR/activity-server.log" \
-        --error "$LOG_DIR/activity-server-error.log" \
-        --merge-logs \
-        --autorestart \
-        --watch "$PROJECT_ROOT/activitys/server" \
-        --ignore-watch "node_modules"
+        --error "$LOG_DIR/activity-server-error.log"
 
     # Start Main Bot
     log_info "Starting Main Bot..."
     pm2 start "Bothbots/Mainbot/infobot.js" \
         --name "mainbot" \
         --log "$LOG_DIR/mainbot.log" \
-        --error "$LOG_DIR/mainbot-error.log" \
-        --merge-logs \
-        --autorestart \
-        --watch "$PROJECT_ROOT/Bothbots/Mainbot" \
-        --ignore-watch "node_modules"
+        --error "$LOG_DIR/mainbot-error.log"
 
     # Start Ping Bot
     log_info "Starting Ping Bot..."
     pm2 start "Bothbots/Pingbot/pingbot.js" \
         --name "pingbot" \
         --log "$LOG_DIR/pingbot.log" \
-        --error "$LOG_DIR/pingbot-error.log" \
-        --merge-logs \
-        --autorestart \
-        --watch "$PROJECT_ROOT/Bothbots/Pingbot" \
-        --ignore-watch "node_modules"
+        --error "$LOG_DIR/pingbot-error.log"
 
     # Save PM2 processes
     pm2 save
