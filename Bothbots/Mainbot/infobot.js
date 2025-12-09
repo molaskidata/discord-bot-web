@@ -23,7 +23,8 @@ async function assignGithubCoderRole(discordId) {
     }
 }
 
-require('dotenv').config();
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
 const express = require('express');
 const querystring = require('querystring');
