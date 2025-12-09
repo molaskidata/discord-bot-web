@@ -291,34 +291,38 @@ body {
     z-index: 2;
 }
 
-.tab-button {
+.tab-button,
+.nav-button {
     display: inline-block;
     background: linear-gradient(145deg, #245785, #4a90e2);
     color: #ffffff;
-    padding: 12px 30px;
-    border-radius: 20px;
+    padding: 14px 28px;
+    margin: 0 10px;
+    border-radius: 25px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
     text-decoration: none;
     font-family: 'Balloo 2', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 1rem;
+    font-size: 1.1rem;
     font-weight: 600;
     transition: all 0.3s ease;
-    box-shadow: 0 6px 20px rgba(36, 87, 133, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 8px 25px rgba(36, 87, 133, 0.3);
     cursor: pointer;
     letter-spacing: 0.5px;
 }
 
-.tab-button:hover {
+.tab-button:hover,
+.nav-button:hover {
     transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 8px 25px rgba(36, 87, 133, 0.5);
+    box-shadow: 0 12px 35px rgba(36, 87, 133, 0.5);
     border-color: rgba(255, 255, 255, 0.6);
     background: linear-gradient(145deg, #4a90e2, #74c0fc);
 }
 
-.tab-button.active {
+.tab-button.active,
+.nav-button.active {
     background: linear-gradient(145deg, #245785, #4a90e2);
     border-color: rgba(255, 255, 255, 0.2);
-    box-shadow: 0 6px 20px rgba(36, 87, 133, 0.3);
+    box-shadow: 0 8px 25px rgba(36, 87, 133, 0.3);
 }
 
 .button-container {
@@ -326,28 +330,6 @@ body {
     margin: 20px 0;
     position: relative;
     z-index: 2;
-}
-
-.discord-button {
-    display: inline-block;
-    background: linear-gradient(145deg, #245785, #4a90e2);
-    color: #ffffff;
-    padding: 14px 28px;
-    border-radius: 25px;
-    text-decoration: none;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    font-size: 1.1rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 25px rgba(36, 87, 133, 0.3);
-    border: 2px solid rgba(255, 255, 255, 0.2);
-}
-
-.discord-button:hover {
-    transform: translateY(-3px) scale(1.05);
-    box-shadow: 0 12px 35px rgba(36, 87, 133, 0.5);
-    border-color: rgba(255, 255, 255, 0.6);
-    background: linear-gradient(145deg, #4a90e2, #74c0fc);
 }
 
 .github-button, .discord-profile-button {
