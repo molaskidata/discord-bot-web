@@ -1,5 +1,6 @@
 
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
@@ -9,6 +10,50 @@ const PING_CHANNEL_ID = '1440998057016557619';
 
 const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();
+
+const BUMP_FILE = 'bump_reminders_ping.json';
+function loadBumpReminders() {
+    if (fs.existsSync(BUMP_FILE)) {
+        return JSON.parse(fs.readFileSync(BUMP_FILE));
+    }
+    return {};
+}
+function saveBumpRemindersToFile(data) {
+    fs.writeFileSync(BUMP_FILE, JSON.stringify(data, null, 2));
+}
+
+function restoreBumpReminders() {
+    const storedReminders = loadBumpReminders();
+    const now = Date.now();
+    
+    Object.entries(storedReminders).forEach(([channelId, data]) => {
+        const timeLeft = data.triggerTime - now;
+        
+        if (timeLeft <= 0) {
+            delete storedReminders[channelId];
+            saveBumpRemindersToFile(storedReminders);
+            return;
+        }
+        
+        const channel = client.channels.cache.get(channelId);
+        if (!channel) {
+            delete storedReminders[channelId];
+            saveBumpRemindersToFile(storedReminders);
+            return;
+        }
+        
+        const reminderTimeout = setTimeout(() => {
+            channel.send('⏰ **Bump Reminder!** ⏰\n\nThe server can be bumped again now! Use `/bump` to bump the server on Disboard! 🚀');
+            bumpReminders.delete(channelId);
+            
+            const currentReminders = loadBumpReminders();
+            delete currentReminders[channelId];
+            saveBumpRemindersToFile(currentReminders);
+        }, timeLeft);
+        
+        bumpReminders.set(channelId, reminderTimeout);
+    });
+}
 
 client.on('ready', () => {
     console.log('PingBot is online!');
@@ -21,6 +66,9 @@ client.on('ready', () => {
         }],
         status: 'online'
     });
+
+    restoreBumpReminders();
+    console.log('✅ Bump reminders restored from file');
 
     function sendPingToMainBot() {
         const guild = client.guilds.cache.get(PING_GUILD_ID);
@@ -93,18 +141,31 @@ client.on('messageCreate', (message) => {
 
 function setBumpReminder(channel, guild) {
     const channelId = channel.id;
+    const guildId = guild.id;
     
     if (bumpReminders.has(channelId)) {
         clearTimeout(bumpReminders.get(channelId));
     }
     
+    const triggerTime = Date.now() + (2 * 60 * 60 * 1000);
+    
     const reminderTimeout = setTimeout(() => {
         channel.send('⏰ **Bump Reminder!** ⏰\n\nThe server can be bumped again now! Use `/bump` to bump the server on Disboard! 🚀');
         bumpReminders.delete(channelId);
+        
+        const storedReminders = loadBumpReminders();
+        delete storedReminders[channelId];
+        saveBumpRemindersToFile(storedReminders);
     }, 2 * 60 * 60 * 1000);
     
-
     bumpReminders.set(channelId, reminderTimeout);
+    
+    const storedReminders = loadBumpReminders();
+    storedReminders[channelId] = {
+        guildId: guildId,
+        triggerTime: triggerTime
+    };
+    saveBumpRemindersToFile(storedReminders);
     
     channel.send('✅ Bump reminder set! I\'ll remind you in 2 hours when the next bump is available.');
 }

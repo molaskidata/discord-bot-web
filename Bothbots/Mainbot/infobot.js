@@ -129,11 +129,14 @@ const server = app.listen(PORT, () => {
 });
 
 
-const { handleCommand } = require('./commands');
+const { handleCommand, restoreBumpReminders } = require('./commands');
 
 client.once('ready', () => {
     console.log(`${BOT_INFO.name} v${BOT_INFO.version} is online!`);
     console.log(`Logged in as ${client.user.tag}`);
+    
+    restoreBumpReminders(client);
+    console.log('✅ Bump reminders restored from file');
     
     updateGameStatus();
     setInterval(updateGameStatus, 3600000);

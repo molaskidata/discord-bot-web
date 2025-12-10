@@ -81,23 +81,82 @@ function saveTwitchLinks(data) {
     fs.writeFileSync(TWITCH_FILE, JSON.stringify(data, null, 2));
 }
 
+const BUMP_FILE = 'bump_reminders.json';
+function loadBumpReminders() {
+    if (fs.existsSync(BUMP_FILE)) {
+        return JSON.parse(fs.readFileSync(BUMP_FILE));
+    }
+    return {};
+}
+function saveBumpRemindersToFile(data) {
+    fs.writeFileSync(BUMP_FILE, JSON.stringify(data, null, 2));
+}
+
 const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();
 
 function setBumpReminder(channel, guild) {
     const channelId = channel.id;
+    const guildId = guild.id;
     
     if (bumpReminders.has(channelId)) {
         clearTimeout(bumpReminders.get(channelId));
     }
     
+    const triggerTime = Date.now() + (2 * 60 * 60 * 1000);
+    
     const reminderTimeout = setTimeout(() => {
         channel.send('⏰ **Bump Reminder!** ⏰\n\nThe server can be bumped again now! Use `/bump` to bump the server on Disboard! 🚀');
         bumpReminders.delete(channelId);
+        
+        const storedReminders = loadBumpReminders();
+        delete storedReminders[channelId];
+        saveBumpRemindersToFile(storedReminders);
     }, 2 * 60 * 60 * 1000);
     
     bumpReminders.set(channelId, reminderTimeout);
+    
+    const storedReminders = loadBumpReminders();
+    storedReminders[channelId] = {
+        guildId: guildId,
+        triggerTime: triggerTime
+    };
+    saveBumpRemindersToFile(storedReminders);
+    
     channel.send('✅ Bump reminder set! I\'ll remind you in 2 hours when the next bump is available.');
+}
+
+function restoreBumpReminders(client) {
+    const storedReminders = loadBumpReminders();
+    const now = Date.now();
+    
+    Object.entries(storedReminders).forEach(([channelId, data]) => {
+        const timeLeft = data.triggerTime - now;
+        
+        if (timeLeft <= 0) {
+            delete storedReminders[channelId];
+            saveBumpRemindersToFile(storedReminders);
+            return;
+        }
+        
+        const channel = client.channels.cache.get(channelId);
+        if (!channel) {
+            delete storedReminders[channelId];
+            saveBumpRemindersToFile(storedReminders);
+            return;
+        }
+        
+        const reminderTimeout = setTimeout(() => {
+            channel.send('⏰ **Bump Reminder!** ⏰\n\nThe server can be bumped again now! Use `/bump` to bump the server on Disboard! 🚀');
+            bumpReminders.delete(channelId);
+            
+            const currentReminders = loadBumpReminders();
+            delete currentReminders[channelId];
+            saveBumpRemindersToFile(currentReminders);
+        }, timeLeft);
+        
+        bumpReminders.set(channelId, reminderTimeout);
+    });
 }
 
 const commandHandlers = {
@@ -599,5 +658,6 @@ function handleCommand(message, BOT_INFO) {
 module.exports = {
     handleCommand,
     commandHandlers,
-    setBumpReminder
+    setBumpReminder,
+    restoreBumpReminders
 };
