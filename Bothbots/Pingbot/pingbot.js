@@ -4,19 +4,18 @@ require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
-// Channel and guild IDs for pinging
 const PING_GUILD_ID = '1415044198792691858';
 const PING_CHANNEL_ID = '1440998057016557619';
 
 const DISBOARD_BOT_ID = '302050872383242240';
-let bumpReminders = new Map(); // Store active reminders by channel ID
+let bumpReminders = new Map();
 
 client.on('ready', () => {
     console.log('PingBot is online!');
     client.user.setPresence({
         activities: [{
             name: '"Das große Buch der Herzschlag-Bots"',
-            type: 1, // Streaming/Streamt
+            type: 1,
             details: 'Seite 102 von 376',
             state: 'Vorlesen: auf Seite 171 von 304'
         }],
@@ -37,7 +36,6 @@ client.on('ready', () => {
 });
 
 client.on('messageCreate', (message) => {
-    // Handle ping command
     if (message.content === '!pingme') {
         message.channel.send('!ponggg');
         return;
@@ -78,12 +76,9 @@ client.on('messageCreate', (message) => {
         return;
     }
 
-    // Monitor for Disboard bump confirmations
     if (message.author.id === DISBOARD_BOT_ID) {
-        // Check if it's a successful bump message (Disboard sends embeds)
         if (message.embeds.length > 0) {
             const embed = message.embeds[0];
-            // Look for bump confirmation messages (they usually contain "Bump done" or similar)
             if (embed.description && 
                 (embed.description.includes('Bump done') || 
                  embed.description.includes(':thumbsup:') ||
@@ -96,11 +91,9 @@ client.on('messageCreate', (message) => {
     }
 });
 
-// Function to set a 2-hour bump reminder
 function setBumpReminder(channel, guild) {
     const channelId = channel.id;
     
-    // Clear any existing reminder for this channel
     if (bumpReminders.has(channelId)) {
         clearTimeout(bumpReminders.get(channelId));
     }
