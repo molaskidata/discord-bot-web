@@ -570,8 +570,7 @@ const commandHandlers = {
                     '`(use during !settwitch setup)` *- only admin*\n' +
                     '`!testingtwitch` - Test clip posting by fetching latest clip *- only admin*', inline: false },
                 { name: 'Utilities *- only admin*', value:
-                    '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message anonymously \n' +
-                    '`*- only admin*`', inline: false },
+                    '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message anonymously *- only admin*', inline: false },
                 { name: 'Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder *- only admin*\n' +
                     '`!bumpstatus` - Check bump reminder status *- only admin*\n' +
