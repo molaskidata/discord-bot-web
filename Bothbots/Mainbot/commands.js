@@ -411,7 +411,7 @@ const commandHandlers = {
     },
     '!help': (message) => {
         const embed = new EmbedBuilder()
-            .setColor('#0e79718b')
+            .setColor('#1E1EC7')
             .setTitle('Bot Command Help')
             .setDescription('Hier sind alle verfügbaren Commands:')
             .addFields(
