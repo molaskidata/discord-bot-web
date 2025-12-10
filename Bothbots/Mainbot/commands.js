@@ -3,7 +3,6 @@ const fs = require('fs');
 const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
 
-// Response arrays (can be moved to a separate file if needed)
 const programmingMemes = [
     "It works on my machine! 🤷‍♂️",
     "Copy from Stack Overflow? It's called research! 📚",
@@ -81,7 +80,6 @@ function saveTwitchLinks(data) {
     fs.writeFileSync(TWITCH_FILE, JSON.stringify(data, null, 2));
 }
 
-// Bump reminder system
 const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();
 
@@ -103,7 +101,6 @@ function setBumpReminder(channel, guild) {
 
 const commandHandlers = {
     '!birthdaychannel': async (message) => {
-        // Check if user has Administrator permission
         if (!message.member.permissions.has('Administrator')) {
             message.reply('❌ This command can only be used by administrators!');
             return;
@@ -138,11 +135,9 @@ const commandHandlers = {
         usernameCollector.on('collect', async (m) => {
             const twitchUsername = m.content.trim();
             
-            // Check if THIS USER already has a Twitch username saved
             const twitchLinks = loadTwitchLinks();
             if (!twitchLinks[guildId]) twitchLinks[guildId] = {};
             
-            // Check if current user already has a saved configuration
             const existingData = twitchLinks[guildId][userId];
             
             if (existingData) {
@@ -189,7 +184,6 @@ const commandHandlers = {
                         delete twitchLinks[guildId][userId];
                         saveTwitchLinks(twitchLinks);
                         message.channel.send('Previous configuration deleted. Starting fresh setup...');
-                        // Continue with new setup below
                     }
                 });
                 
@@ -197,28 +191,25 @@ const commandHandlers = {
                     if (collected.size === 0) {
                         message.channel.send('Setup timed out. Please try again with `!settwitch`.');
                     } else if (collected.first().content.toLowerCase() !== 'new') {
-                        return; // Stop if not 'new'
+                        return;
                     }
                 });
                 
-                // Wait for choice collector to finish before continuing
                 await new Promise(resolve => {
                     choiceCollector.on('end', (collected) => {
                         if (collected.size > 0 && collected.first().content.toLowerCase() === 'new') {
                             resolve();
                         }
                     });
-                    setTimeout(resolve, 61000); // Timeout fallback
+                    setTimeout(resolve, 61000);
                 });
                 
-                // If not 'new', stop here
                 const lastChoice = choiceCollector.collected.first();
                 if (!lastChoice || lastChoice.content.toLowerCase() !== 'new') {
                     return;
                 }
             }
             
-            // Simulate validation delay (max 5 seconds)
             await new Promise(resolve => setTimeout(resolve, 2000));
             
             message.channel.send('Successfully connected to Discord.');
@@ -232,24 +223,22 @@ const commandHandlers = {
                 
                 if (channelMsg.content === '!setchannel') {
                     try {
-                        // Create forum/thread channel - only bot can post threads
                         const newChannel = await message.guild.channels.create({
                             name: `${twitchUsername}-clips`,
-                            type: 15, // GuildForum (Thread-only channel)
+                            type: 15,
                             permissionOverwrites: [
                                 {
-                                    id: message.guild.id, // @everyone
+                                    id: message.guild.id,
                                     deny: ['SendMessages', 'CreatePublicThreads', 'CreatePrivateThreads', 'SendMessagesInThreads'],
                                     allow: ['ViewChannel', 'ReadMessageHistory']
                                 },
                                 {
-                                    id: message.client.user.id, // Bot
+                                    id: message.client.user.id,
                                     allow: ['SendMessages', 'CreatePublicThreads', 'SendMessagesInThreads', 'ViewChannel', 'ReadMessageHistory', 'ManageThreads']
                                 }
                             ]
                         });
                         
-                        // Add admin permissions
                         const adminRole = message.guild.roles.cache.find(r => r.permissions.has('Administrator'));
                         if (adminRole) {
                             await newChannel.permissionOverwrites.create(adminRole, { SendMessages: true });
@@ -262,7 +251,6 @@ const commandHandlers = {
                         return;
                     }
                 } else {
-                    // Extract channel ID from <#channelId>
                     const match = channelMsg.content.match(/<#(\d+)>/);
                     if (!match) {
                         message.channel.send('Invalid channel format. Please use <#channel> or !setchannel.');
@@ -270,7 +258,6 @@ const commandHandlers = {
                     }
                     clipChannelId = match[1];
                     
-                    // Verify channel exists in guild
                     const channel = message.guild.channels.cache.get(clipChannelId);
                     if (!channel) {
                         message.channel.send('Channel not found in this server. Please provide a valid channel.');
@@ -278,7 +265,6 @@ const commandHandlers = {
                     }
                 }
                 
-                // Save to twitch_links.json
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 const twitchLinks = loadTwitchLinks();
                 if (!twitchLinks[guildId]) twitchLinks[guildId] = {};

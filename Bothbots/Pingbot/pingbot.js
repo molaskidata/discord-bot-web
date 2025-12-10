@@ -43,14 +43,20 @@ client.on('messageCreate', (message) => {
         return;
     }
 
-    // Manual bump reminder command
     if (message.content === '!setbumpreminder') {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
         setBumpReminder(message.channel, message.guild);
         return;
     }
 
-    // Check bump reminder status
     if (message.content === '!bumpstatus') {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
         if (bumpReminders.has(message.channel.id)) {
             message.channel.send('⏳ Bump reminder is active for this channel. You\'ll be notified when the next bump is available.');
         } else {
@@ -59,14 +65,13 @@ client.on('messageCreate', (message) => {
         return;
     }
 
-    // Help command for bump system
     if (message.content === '!bumphelp') {
         message.channel.send(
             '**🤖 Bump Reminder System Help**\n\n' +
             '**Automatic Detection:** I automatically detect when you use `/bump` and set a 2-hour reminder!\n\n' +
             '**Manual Commands:**\n' +
-            '`!setbumpreminder` - Manually set a 2-hour bump reminder\n' +
-            '`!bumpstatus` - Check if there\'s an active reminder for this channel\n' +
+            '`!setbumpreminder` - Manually set a 2-hour bump reminder *(admin only)*\n' +
+            '`!bumpstatus` - Check if there\'s an active reminder for this channel *(admin only)*\n' +
             '`!bumphelp` - Show this help message\n\n' +
             '**How it works:** After a successful bump, I\'ll remind you exactly when the next bump is available (2 hours later)! 🚀'
         );

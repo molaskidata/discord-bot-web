@@ -167,7 +167,6 @@ function updateGameStatus() {
 const processedMessages = new Set();
 
 client.on('messageCreate', (message) => {
-    // Check for Disboard bump confirmations (from bot)
     if (message.author.id === '302050872383242240') {
         if (message.embeds.length > 0) {
             const embed = message.embeds[0];
