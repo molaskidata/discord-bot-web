@@ -112,6 +112,91 @@ const commandHandlers = {
             const twitchUsername = m.content.trim();
             await m.delete();
             
+            // Check if username already exists in this server
+            const twitchLinks = loadTwitchLinks();
+            if (!twitchLinks[guildId]) twitchLinks[guildId] = {};
+            
+            // Find if username already exists
+            const existingUser = Object.entries(twitchLinks[guildId]).find(
+                ([uid, data]) => data.twitchUsername.toLowerCase() === twitchUsername.toLowerCase()
+            );
+            
+            if (existingUser) {
+                const [existingUserId, existingData] = existingUser;
+                const existingChannel = message.guild.channels.cache.get(existingData.clipChannelId);
+                
+                const embed = new EmbedBuilder()
+                    .setColor('#9b59b6')
+                    .setTitle('⚠️ Username Already Exists')
+                    .setDescription(`The Twitch username **${twitchUsername}** is already linked in this server.`)
+                    .addFields(
+                        { name: 'Linked User', value: `<@${existingUserId}>`, inline: true },
+                        { name: 'Clip Channel', value: existingChannel ? `<#${existingData.clipChannelId}>` : 'Channel not found', inline: true }
+                    )
+                    .setFooter({ text: 'Y = View Stats | N = Cancel | New = Reset & Start Over' });
+                
+                message.channel.send({ embeds: [embed] });
+                message.channel.send('Type **Y** to view stats, **N** to cancel, or **New** to delete and restart setup.');
+                
+                const choiceFilter = msg => msg.author.id === userId && ['y', 'n', 'new'].includes(msg.content.toLowerCase());
+                const choiceCollector = message.channel.createMessageCollector({ filter: choiceFilter, time: 60000, max: 1 });
+                
+                choiceCollector.on('collect', async (choiceMsg) => {
+                    const choice = choiceMsg.content.toLowerCase();
+                    await choiceMsg.delete();
+                    
+                    if (choice === 'n') {
+                        message.channel.send('Setup cancelled. The existing configuration remains unchanged.');
+                        return;
+                    }
+                    
+                    if (choice === 'y') {
+                        const statsEmbed = new EmbedBuilder()
+                            .setColor('#9b59b6')
+                            .setTitle('📊 Twitch Connection Stats')
+                            .addFields(
+                                { name: 'Twitch Username', value: existingData.twitchUsername, inline: false },
+                                { name: 'Clip Channel', value: existingChannel ? `<#${existingData.clipChannelId}>` : 'Channel deleted', inline: false },
+                                { name: 'Linked User', value: `<@${existingUserId}>`, inline: false }
+                            )
+                            .setTimestamp();
+                        message.channel.send({ embeds: [statsEmbed] });
+                        return;
+                    }
+                    
+                    if (choice === 'new') {
+                        delete twitchLinks[guildId][existingUserId];
+                        saveTwitchLinks(twitchLinks);
+                        message.channel.send('Previous configuration deleted. Starting fresh setup...');
+                        // Continue with new setup below
+                    }
+                });
+                
+                choiceCollector.on('end', (collected) => {
+                    if (collected.size === 0) {
+                        message.channel.send('Setup timed out. Please try again with `!settwitch`.');
+                    } else if (collected.first().content.toLowerCase() !== 'new') {
+                        return; // Stop if not 'new'
+                    }
+                });
+                
+                // Wait for choice collector to finish before continuing
+                await new Promise(resolve => {
+                    choiceCollector.on('end', (collected) => {
+                        if (collected.size > 0 && collected.first().content.toLowerCase() === 'new') {
+                            resolve();
+                        }
+                    });
+                    setTimeout(resolve, 61000); // Timeout fallback
+                });
+                
+                // If not 'new', stop here
+                const lastChoice = choiceCollector.collected.first();
+                if (!lastChoice || lastChoice.content.toLowerCase() !== 'new') {
+                    return;
+                }
+            }
+            
             // Simulate validation delay (max 5 seconds)
             await new Promise(resolve => setTimeout(resolve, 2000));
             
