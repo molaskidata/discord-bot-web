@@ -562,19 +562,19 @@ const commandHandlers = {
                     '`!gitrank` - Show your GitHub commit level\n' +
                     '`!gitleader` - Show the top 10 committers', inline: false },
                 { name: 'Birthday', value:
-                    '`!birthdaychannel` - Set the birthday channel *-only admin*\n' +
+                    '`!birthdaychannel` - Set the birthday channel -*only admin*\n' +
                     '`!birthdayset` - Save your birthday', inline: false },
                 { name: 'Twitch *-only admin*', value:
-                    '`!settwitch` - Link Twitch account and configure clip notifications *-only admin*\n' +
+                    '`!settwitch` - Link Twitch account and configure clip notifications -*only admin*\n' +
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
-                    '`(use during !settwitch setup)` *- only admin*\n' +
-                    '`!testingtwitch` - Test clip posting by fetching latest clip *-only admin*', inline: false },
+                    '`(use during !settwitch setup)` -*only admin*\n' +
+                    '`!testingtwitch` - Test clip posting by fetching latest clip -*only admin*', inline: false },
                 { name: 'Utilities *- only admin*', value:
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message anonymously\n' +
                     '`-*only admin*`', inline: false },
                 { name: 'Bump Reminders', value:
-                    '`!setbumpreminder` - Set 2-hour bump reminder *- only admin*\n' +
-                    '`!bumpstatus` - Check bump reminder status *- only admin*\n' +
+                    '`!setbumpreminder` - Set 2-hour bump reminder -*only admin*\n' +
+                    '`!bumpstatus` - Check bump reminder status -*only admin*\n' +
                     '`!bumphelp` - Show bump system help', inline: false }
             )
             .setFooter({ text: 'Powered by CoderMaster', iconURL: undefined });
