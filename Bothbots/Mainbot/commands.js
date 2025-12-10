@@ -127,19 +127,19 @@ const commandHandlers = {
                 
                 if (channelMsg.content === '!setchannel') {
                     try {
-                        // Create thread-only text channel
+                        // Create forum/thread channel - only bot can post threads
                         const newChannel = await message.guild.channels.create({
                             name: `${twitchUsername}-clips`,
-                            type: 0, // Text channel
+                            type: 15, // GuildForum (Thread-only channel)
                             permissionOverwrites: [
                                 {
                                     id: message.guild.id, // @everyone
-                                    deny: ['SendMessages'],
-                                    allow: ['ViewChannel']
+                                    deny: ['SendMessages', 'CreatePublicThreads', 'CreatePrivateThreads', 'SendMessagesInThreads'],
+                                    allow: ['ViewChannel', 'ReadMessageHistory']
                                 },
                                 {
                                     id: message.client.user.id, // Bot
-                                    allow: ['SendMessages', 'ViewChannel']
+                                    allow: ['SendMessages', 'CreatePublicThreads', 'SendMessagesInThreads', 'ViewChannel', 'ReadMessageHistory', 'ManageThreads']
                                 }
                             ]
                         });
