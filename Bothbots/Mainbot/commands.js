@@ -577,7 +577,7 @@ const commandHandlers = {
                     '`!bumpstatus` - Check bump reminder status -*only admin*\n' +
                     '`!bumphelp` - Show bump system help', inline: false }
             )
-            .setFooter({ text: 'Powered by CoderMaster', iconURL: undefined });
+            .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
         message.reply({ embeds: [embed] });
     },
     '!ping': (message) => message.reply('Pong! Bot is running 24/7'),
