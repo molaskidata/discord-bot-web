@@ -371,8 +371,16 @@ const commandHandlers = {
                     .setImage(clip.thumbnail_url)
                     .setFooter({ text: `Streamer: ${twitchUsername}` });
                 
-                clipChannel.send({ content: clipUrl, embeds: [embed] });
-                message.channel.send(`✅ Test successful! Latest Twitch clip posted in <#${clipChannelId}>`);
+                if (clipChannel.type === 15) {
+                    const thread = await clipChannel.threads.create({
+                        name: `${clip.title.substring(0, 50)}`,
+                        message: { content: clipUrl, embeds: [embed] }
+                    });
+                    message.channel.send(`✅ Test successful! Clip posted in thread: <#${thread.id}>`);
+                } else {
+                    await clipChannel.send({ content: clipUrl, embeds: [embed] });
+                    message.channel.send(`✅ Test successful! Latest Twitch clip posted in <#${clipChannelId}>`);
+                }
             } else {
                 message.reply(`❌ No clips found for **${twitchUsername}** on Twitch. The channel may not have any clips yet.`);
             }
