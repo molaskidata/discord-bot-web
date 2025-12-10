@@ -78,10 +78,9 @@ const commandHandlers = {
         const birthdays = loadBirthdays();
         birthdays.channelId = message.channel.id;
         saveBirthdays(birthdays);
-        message.channel.send({
-            content: `Set a Channel where I will send the birthday wishes. Format (<#${message.channel.id}>) The channel must be in the server where the command was sent. And the bot must have access to write and send messages.`,
-            ephemeral: true
-        });
+        message.channel.send(
+            `✅ Birthday channel set to <#${message.channel.id}>! I will send birthday wishes here. Make sure I have permission to write in this channel.`
+        );
     },
     '!birthdayset': async (message) => {
         await message.delete();
