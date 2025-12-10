@@ -543,10 +543,10 @@ const commandHandlers = {
     '!help': (message) => {
         const embed = new EmbedBuilder()
             .setColor('#1E1EC7')
-            .setTitle('Bot Command Help')
+            .setTitle('🤖 Bot Command Help')
             .setDescription('Hier sind alle verfügbaren Commands:')
             .addFields(
-                { name: 'Allgemein', value:
+                { name: '📌 Allgemein', value:
                     '`!info` - Bot info\n' +
                     '`!ping` - Testing the pingspeed of the bot\n' +
                     '`!mot` - Get motivated for the day\n' +
@@ -555,24 +555,24 @@ const commandHandlers = {
                     '`!hi` - Say hello and get an hello of me\n' +
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
                     '`!devmeme` - Let me give you a programming meme\n', inline: false },
-                { name: 'GitHub', value:
+                { name: '💻 GitHub', value:
                     '`!github` - Bot owners GitHub and Repos\n' +
                     '`!congithubacc` - Connect your GitHub account with the bot\n' +
                     '`!discongithubacc` - Disconnect your GitHub account\n' +
                     '`!gitrank` - Show your GitHub commit level\n' +
                     '`!gitleader` - Show the top 10 committers', inline: false },
-                { name: 'Birthday', value:
+                { name: '🎂 Birthday', value:
                     '`!birthdaychannel` - Set the birthday channel -*only admin*\n' +
                     '`!birthdayset` - Save your birthday', inline: false },
-                { name: 'Twitch *-only admin*', value:
+                { name: '🎮 Twitch *-only admin*', value:
                     '`!settwitch` - Link Twitch account and configure clip notifications -*only admin*\n' +
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
                     '`(use during !settwitch setup)` -*only admin*\n' +
                     '`!testingtwitch` - Test clip posting by fetching latest clip -*only admin*', inline: false },
-                { name: 'Utilities *- only admin*', value:
+                { name: '🔧 Utilities *- only admin*', value:
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n' +
                     '`anonymously` -*only admin*', inline: false },
-                { name: 'Bump Reminders', value:
+                { name: '⏰ Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder -*only admin*\n' +
                     '`!bumpstatus` - Check bump reminder status -*only admin*\n' +
                     '`!bumphelp` - Show bump system help', inline: false }
