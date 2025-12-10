@@ -281,6 +281,11 @@ const commandHandlers = {
         });
     },
     '!testingtwitch': async (message) => {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
+        
         const guildId = message.guild.id;
         const userId = message.author.id;
         
@@ -300,41 +305,69 @@ const commandHandlers = {
             return;
         }
         
-        message.channel.send(`🔍 Fetching latest clip from **${twitchUsername}**...`);
+        message.channel.send(`🔍 Fetching latest clip from Twitch for **${twitchUsername}**...`);
         
         try {
-            const response = await axios.get(`https://clips.twitch.tv/api/v2/clips/top`, {
+            const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
                 params: {
-                    channel: twitchUsername,
-                    period: 'all',
-                    limit: 1
+                    client_id: process.env.TWITCH_CLIENT_ID || 'your_client_id',
+                    client_secret: process.env.TWITCH_CLIENT_SECRET || 'your_client_secret',
+                    grant_type: 'client_credentials'
                 }
             });
             
-            if (response.data && response.data.clips && response.data.clips.length > 0) {
-                const clip = response.data.clips[0];
-                const clipUrl = `https://clips.twitch.tv/${clip.slug}`;
+            const accessToken = tokenResponse.data.access_token;
+            
+            const userResponse = await axios.get('https://api.twitch.tv/helix/users', {
+                params: { login: twitchUsername },
+                headers: {
+                    'Client-ID': process.env.TWITCH_CLIENT_ID || 'your_client_id',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            
+            if (!userResponse.data.data || userResponse.data.data.length === 0) {
+                message.reply(`❌ Twitch user **${twitchUsername}** not found.`);
+                return;
+            }
+            
+            const broadcasterId = userResponse.data.data[0].id;
+            
+            const clipsResponse = await axios.get('https://api.twitch.tv/helix/clips', {
+                params: {
+                    broadcaster_id: broadcasterId,
+                    first: 1
+                },
+                headers: {
+                    'Client-ID': process.env.TWITCH_CLIENT_ID || 'your_client_id',
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
+            
+            if (clipsResponse.data.data && clipsResponse.data.data.length > 0) {
+                const clip = clipsResponse.data.data[0];
+                const clipUrl = clip.url;
                 
                 const embed = new EmbedBuilder()
-                    .setColor('#5c1dbbff')
+                    .setColor('#9146FF')
                     .setTitle(`🎬 Latest Clip: ${clip.title}`)
                     .setURL(clipUrl)
-                    .setDescription(`Clipped by: ${clip.curator.display_name}`)
+                    .setDescription(`Clipped by: ${clip.creator_name}`)
                     .addFields(
-                        { name: 'Views', value: clip.views.toString(), inline: true },
+                        { name: 'Views', value: clip.view_count.toString(), inline: true },
                         { name: 'Created', value: new Date(clip.created_at).toLocaleDateString(), inline: true }
                     )
-                    .setThumbnail(clip.thumbnails.medium)
+                    .setImage(clip.thumbnail_url)
                     .setFooter({ text: `Streamer: ${twitchUsername}` });
                 
                 clipChannel.send({ content: clipUrl, embeds: [embed] });
-                message.channel.send(`✅ Test successful! Clip posted in <#${clipChannelId}>`);
+                message.channel.send(`✅ Test successful! Latest Twitch clip posted in <#${clipChannelId}>`);
             } else {
-                message.reply(`❌ No clips found for **${twitchUsername}**. Make sure the channel has clips.`);
+                message.reply(`❌ No clips found for **${twitchUsername}** on Twitch. The channel may not have any clips yet.`);
             }
         } catch (error) {
             console.error('Twitch API error:', error);
-            message.reply(`❌ Failed to fetch clips. Error: ${error.message}`);
+            message.reply(`❌ Failed to fetch clips from Twitch. Error: ${error.response?.data?.message || error.message}`);
         }
     },
     '!hi': (message) => message.reply(getRandomResponse(hiResponses)),
@@ -378,7 +411,7 @@ const commandHandlers = {
     },
     '!help': (message) => {
         const embed = new EmbedBuilder()
-            .setColor('#1E1EC7')
+            .setColor('#0e79718b')
             .setTitle('Bot Command Help')
             .setDescription('Hier sind alle verfügbaren Commands:')
             .addFields(
@@ -403,7 +436,8 @@ const commandHandlers = {
                 { name: 'Twitch *- only admin*', value:
                     '`!settwitch` - Link Twitch account and configure clip notifications *- only admin*\n' +
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
-                    '(use during !settwitch setup) *- only admin*', inline: false },
+                    '`(use during !settwitch setup)` *- only admin*\n' +
+                    '`!testingtwitch` - Test clip posting by fetching latest clip *- only admin*', inline: false },
                 { name: 'Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder *- only admin*\n' +
                     '`!bumpstatus` - Check bump reminder status *- only admin*\n' +
