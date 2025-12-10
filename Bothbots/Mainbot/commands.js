@@ -1,4 +1,5 @@
 const fs = require('fs');
+const axios = require('axios');
 
 const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
@@ -278,6 +279,63 @@ const commandHandlers = {
                 message.channel.send(`Your clips will be now sent in the #${channelName} channel. Have fun ${twitchUsername}.`);
             });
         });
+    },
+    '!testingtwitch': async (message) => {
+        const guildId = message.guild.id;
+        const userId = message.author.id;
+        
+        const twitchLinks = loadTwitchLinks();
+        if (!twitchLinks[guildId] || !twitchLinks[guildId][userId]) {
+            message.reply('❌ You don\'t have a Twitch account linked. Use `!settwitch` first.');
+            return;
+        }
+        
+        const userData = twitchLinks[guildId][userId];
+        const twitchUsername = userData.twitchUsername;
+        const clipChannelId = userData.clipChannelId;
+        
+        const clipChannel = message.guild.channels.cache.get(clipChannelId);
+        if (!clipChannel) {
+            message.reply('❌ Clip channel not found. Please run `!settwitch` again.');
+            return;
+        }
+        
+        message.channel.send(`🔍 Fetching latest clip from **${twitchUsername}**...`);
+        
+        try {
+            const response = await axios.get(`https://clips.twitch.tv/api/v2/clips/top`, {
+                params: {
+                    channel: twitchUsername,
+                    period: 'all',
+                    limit: 1
+                }
+            });
+            
+            if (response.data && response.data.clips && response.data.clips.length > 0) {
+                const clip = response.data.clips[0];
+                const clipUrl = `https://clips.twitch.tv/${clip.slug}`;
+                
+                const embed = new EmbedBuilder()
+                    .setColor('#5c1dbbff')
+                    .setTitle(`🎬 Latest Clip: ${clip.title}`)
+                    .setURL(clipUrl)
+                    .setDescription(`Clipped by: ${clip.curator.display_name}`)
+                    .addFields(
+                        { name: 'Views', value: clip.views.toString(), inline: true },
+                        { name: 'Created', value: new Date(clip.created_at).toLocaleDateString(), inline: true }
+                    )
+                    .setThumbnail(clip.thumbnails.medium)
+                    .setFooter({ text: `Streamer: ${twitchUsername}` });
+                
+                clipChannel.send({ content: clipUrl, embeds: [embed] });
+                message.channel.send(`✅ Test successful! Clip posted in <#${clipChannelId}>`);
+            } else {
+                message.reply(`❌ No clips found for **${twitchUsername}**. Make sure the channel has clips.`);
+            }
+        } catch (error) {
+            console.error('Twitch API error:', error);
+            message.reply(`❌ Failed to fetch clips. Error: ${error.message}`);
+        }
     },
     '!hi': (message) => message.reply(getRandomResponse(hiResponses)),
     '!github': (message) => message.reply("Check that out my friend! `https://github.com/molaskidata`"),
