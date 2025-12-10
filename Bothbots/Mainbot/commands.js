@@ -61,6 +61,17 @@ function saveBirthdays(data) {
     fs.writeFileSync(BIRTHDAY_FILE, JSON.stringify(data, null, 2));
 }
 
+const TWITCH_FILE = 'twitch_links.json';
+function loadTwitchLinks() {
+    if (fs.existsSync(TWITCH_FILE)) {
+        return JSON.parse(fs.readFileSync(TWITCH_FILE));
+    }
+    return {};
+}
+function saveTwitchLinks(data) {
+    fs.writeFileSync(TWITCH_FILE, JSON.stringify(data, null, 2));
+}
+
 const commandHandlers = {
     '!birthdaychannel': async (message) => {
         await message.delete();
@@ -86,6 +97,95 @@ const commandHandlers = {
             saveBirthdays(birthdays);
             m.channel.send({ content: 'Your birthday has been saved!', ephemeral: true });
             m.delete();
+        });
+    },
+    '!settwitch': async (message) => {
+        const guildId = message.guild.id;
+        const userId = message.author.id;
+        
+        message.channel.send('Write your correct Twitch username in the Channel to synchronize and connect with Discord. Format: example');
+        
+        const usernameFilter = m => m.author.id === userId && !m.content.startsWith('!');
+        const usernameCollector = message.channel.createMessageCollector({ filter: usernameFilter, time: 60000, max: 1 });
+        
+        usernameCollector.on('collect', async (m) => {
+            const twitchUsername = m.content.trim();
+            await m.delete();
+            
+            // Simulate validation delay (max 5 seconds)
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+            message.channel.send('Successfully connected to Discord.');
+            message.channel.send('Set your Channel where I should send the Clips in. Format <#example> or use `!setchannel` to create a new one.');
+            
+            const channelFilter = msg => msg.author.id === userId && (msg.content.startsWith('<#') || msg.content === '!setchannel');
+            const channelCollector = message.channel.createMessageCollector({ filter: channelFilter, time: 60000, max: 1 });
+            
+            channelCollector.on('collect', async (channelMsg) => {
+                await channelMsg.delete();
+                let clipChannelId;
+                
+                if (channelMsg.content === '!setchannel') {
+                    try {
+                        // Create thread-only text channel
+                        const newChannel = await message.guild.channels.create({
+                            name: `${twitchUsername}-clips`,
+                            type: 0, // Text channel
+                            permissionOverwrites: [
+                                {
+                                    id: message.guild.id, // @everyone
+                                    deny: ['SendMessages'],
+                                    allow: ['ViewChannel']
+                                },
+                                {
+                                    id: message.client.user.id, // Bot
+                                    allow: ['SendMessages', 'ViewChannel']
+                                }
+                            ]
+                        });
+                        
+                        // Add admin permissions
+                        const adminRole = message.guild.roles.cache.find(r => r.permissions.has('Administrator'));
+                        if (adminRole) {
+                            await newChannel.permissionOverwrites.create(adminRole, { SendMessages: true });
+                        }
+                        
+                        clipChannelId = newChannel.id;
+                        message.channel.send(`Created new channel <#${clipChannelId}> for your clips!`);
+                    } catch (err) {
+                        message.channel.send('Failed to create channel. Please provide an existing channel instead.');
+                        return;
+                    }
+                } else {
+                    // Extract channel ID from <#channelId>
+                    const match = channelMsg.content.match(/<#(\d+)>/);
+                    if (!match) {
+                        message.channel.send('Invalid channel format. Please use <#channel> or !setchannel.');
+                        return;
+                    }
+                    clipChannelId = match[1];
+                    
+                    // Verify channel exists in guild
+                    const channel = message.guild.channels.cache.get(clipChannelId);
+                    if (!channel) {
+                        message.channel.send('Channel not found in this server. Please provide a valid channel.');
+                        return;
+                    }
+                }
+                
+                // Save to twitch_links.json
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                const twitchLinks = loadTwitchLinks();
+                if (!twitchLinks[guildId]) twitchLinks[guildId] = {};
+                twitchLinks[guildId][userId] = {
+                    twitchUsername,
+                    clipChannelId
+                };
+                saveTwitchLinks(twitchLinks);
+                
+                const channelName = message.guild.channels.cache.get(clipChannelId)?.name || 'your channel';
+                message.channel.send(`Your clips will be now sent in the #${channelName} channel. Have fun ${twitchUsername}.`);
+            });
         });
     },
     '!hi': (message) => message.reply(getRandomResponse(hiResponses)),
@@ -117,7 +217,9 @@ const commandHandlers = {
                     '`!gitleader` - Show the top 10 committers', inline: false },
                 { name: 'Birthday', value:
                     '`!birthdaychannel` - Set the birthday channel\n' +
-                    '`!birthdayset` - Save your birthday', inline: false }
+                    '`!birthdayset` - Save your birthday', inline: false },
+                { name: 'Twitch', value:
+                    '`!settwitch` - Connect your Twitch account and set clip channel', inline: false }
             )
             .setFooter({ text: 'Powered by CoderMaster', iconURL: undefined });
         message.reply({ embeds: [embed] });
