@@ -282,7 +282,9 @@ const commandHandlers = {
     '!hi': (message) => message.reply(getRandomResponse(hiResponses)),
     '!github': (message) => message.reply("Check that out my friend! `https://github.com/molaskidata`"),
     '!coffee': (message) => message.reply(getRandomResponse(coffeeResponses)),
+    '!devmeme': (message) => message.reply(getRandomResponse(programmingMemes)),
     '!meme': (message) => message.reply(getRandomResponse(programmingMemes)),
+    '!mot': (message) => message.reply(getRandomResponse(motivationQuotes)),
     '!motivation': (message) => message.reply(getRandomResponse(motivationQuotes)),
     '!gg': (message) => message.reply("GG WP! 🎉"),
     '!gn': (message) => message.reply(getRandomResponse(goodnightResponses)),
@@ -323,14 +325,14 @@ const commandHandlers = {
             .setDescription('Hier sind alle verfügbaren Commands:')
             .addFields(
                 { name: 'Allgemein', value:
+                    '`!info` - Bot info\n' +
+                    '`!ping` - Test bot\n' +
+                    '`!mot` - Get motivated\n' +
+                    '`!gm` - Good morning messages\n' +
+                    '`!gn` - Good night messages\n' +
                     '`!hi` - Say hello\n' +
                     '`!coffee` - Time for coffee!\n' +
-                    '`!meme` - Programming memes\n' +
-                    '`!motivation` - Get motivated\n' +
-                    '`!gn` - Good night messages\n' +
-                    '`!gm` - Good morning messages\n' +
-                    '`!ping` - Test bot\n' +
-                    '`!info` - Bot info', inline: false },
+                    '`!devmeme` - Programming memes', inline: false },
                 { name: 'GitHub', value:
                     '`!github` - Bot owner GitHub and repo\n' +
                     '`!congithubacc` - Connect your GitHub account\n' +
@@ -341,7 +343,8 @@ const commandHandlers = {
                     '`!birthdaychannel` - Set the birthday channel *- only admin*\n' +
                     '`!birthdayset` - Save your birthday', inline: false },
                 { name: 'Twitch', value:
-                    '`!settwitch` - Connect your Twitch account and set clip channel', inline: false },
+                    '`!settwitch` - Link Twitch account and configure clip notifications\n' +
+                    '`!setchannel` - Create a new thread-only channel for clips (use during !settwitch setup)', inline: false },
                 { name: 'Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder *- only admin*\n' +
                     '`!bumpstatus` - Check bump reminder status *- only admin*\n' +
@@ -363,7 +366,7 @@ const commandHandlers = {
             '`!discongithubacc` - Disconnect your GitHub account\n' +
             '`!gitrank` - Show your GitHub commit level\n' +
             '`!gitleader` - Show the top 10 committers\n' +
-            '`!hi`, `!coffee`, `!meme`, `!motivation`, `!gn`, `!gm`, `!ping`, `!info`, `!github`'
+            '`!hi`, `!coffee`, `!devmeme`, `!mot`, `!gn`, `!gm`, `!ping`, `!info`, `!github`'
         );
     },
     '!congithubacc': (message) => {
