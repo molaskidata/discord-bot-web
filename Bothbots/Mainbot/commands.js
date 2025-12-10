@@ -418,11 +418,6 @@ const commandHandlers = {
         }
     },
     '!testingtwitch': async (message) => {
-        if (!message.member.permissions.has('Administrator')) {
-            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
-            return;
-        }
-        
         const guildId = message.guild.id;
         const userId = message.author.id;
         
