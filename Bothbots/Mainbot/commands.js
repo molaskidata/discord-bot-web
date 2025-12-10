@@ -308,13 +308,24 @@ const commandHandlers = {
         message.channel.send(`🔍 Fetching latest clip from Twitch for **${twitchUsername}**...`);
         
         try {
+            if (!process.env.TWITCH_CLIENT_ID || !process.env.TWITCH_CLIENT_SECRET) {
+                message.reply('❌ Twitch API credentials not configured. Please add TWITCH_CLIENT_ID and TWITCH_CLIENT_SECRET to .env file.');
+                return;
+            }
+            
             const tokenResponse = await axios.post('https://id.twitch.tv/oauth2/token', null, {
                 params: {
-                    client_id: process.env.TWITCH_CLIENT_ID || 'your_client_id',
-                    client_secret: process.env.TWITCH_CLIENT_SECRET || 'your_client_secret',
+                    client_id: process.env.TWITCH_CLIENT_ID,
+                    client_secret: process.env.TWITCH_CLIENT_SECRET,
                     grant_type: 'client_credentials'
                 }
             });
+            
+            if (!tokenResponse.data || !tokenResponse.data.access_token) {
+                message.reply('❌ Failed to get Twitch access token. Please verify your Twitch API credentials.');
+                console.error('Twitch token response:', tokenResponse.data);
+                return;
+            }
             
             const accessToken = tokenResponse.data.access_token;
             
