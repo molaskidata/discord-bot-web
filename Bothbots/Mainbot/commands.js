@@ -112,25 +112,22 @@ const commandHandlers = {
             const twitchUsername = m.content.trim();
             await m.delete();
             
-            // Check if username already exists in this server
+            // Check if THIS USER already has a Twitch username saved
             const twitchLinks = loadTwitchLinks();
             if (!twitchLinks[guildId]) twitchLinks[guildId] = {};
             
-            // Find if username already exists
-            const existingUser = Object.entries(twitchLinks[guildId]).find(
-                ([uid, data]) => data.twitchUsername.toLowerCase() === twitchUsername.toLowerCase()
-            );
+            // Check if current user already has a saved configuration
+            const existingData = twitchLinks[guildId][userId];
             
-            if (existingUser) {
-                const [existingUserId, existingData] = existingUser;
+            if (existingData) {
                 const existingChannel = message.guild.channels.cache.get(existingData.clipChannelId);
                 
                 const embed = new EmbedBuilder()
                     .setColor('#9b59b6')
-                    .setTitle('⚠️ Username Already Exists')
-                    .setDescription(`The Twitch username **${twitchUsername}** is already linked in this server.`)
+                    .setTitle('⚠️ You Already Have a Twitch Account Linked')
+                    .setDescription(`You already have a Twitch configuration saved.`)
                     .addFields(
-                        { name: 'Linked User', value: `<@${existingUserId}>`, inline: true },
+                        { name: 'Current Username', value: existingData.twitchUsername, inline: true },
                         { name: 'Clip Channel', value: existingChannel ? `<#${existingData.clipChannelId}>` : 'Channel not found', inline: true }
                     )
                     .setFooter({ text: 'Y = View Stats | N = Cancel | New = Reset & Start Over' });
@@ -153,11 +150,10 @@ const commandHandlers = {
                     if (choice === 'y') {
                         const statsEmbed = new EmbedBuilder()
                             .setColor('#9b59b6')
-                            .setTitle('📊 Twitch Connection Stats')
+                            .setTitle('📊 Your Twitch Connection Stats')
                             .addFields(
                                 { name: 'Twitch Username', value: existingData.twitchUsername, inline: false },
-                                { name: 'Clip Channel', value: existingChannel ? `<#${existingData.clipChannelId}>` : 'Channel deleted', inline: false },
-                                { name: 'Linked User', value: `<@${existingUserId}>`, inline: false }
+                                { name: 'Clip Channel', value: existingChannel ? `<#${existingData.clipChannelId}>` : 'Channel deleted', inline: false }
                             )
                             .setTimestamp();
                         message.channel.send({ embeds: [statsEmbed] });
@@ -165,7 +161,7 @@ const commandHandlers = {
                     }
                     
                     if (choice === 'new') {
-                        delete twitchLinks[guildId][existingUserId];
+                        delete twitchLinks[guildId][userId];
                         saveTwitchLinks(twitchLinks);
                         message.channel.send('Previous configuration deleted. Starting fresh setup...');
                         // Continue with new setup below
