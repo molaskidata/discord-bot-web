@@ -1,5 +1,6 @@
 const fs = require('fs');
 const axios = require('axios');
+const { HfInference } = require('@huggingface/inference');
 
 const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
@@ -511,6 +512,43 @@ const commandHandlers = {
     '!gg': (message) => message.reply("GG WP! 🎉"),
     '!gn': (message) => message.reply(getRandomResponse(goodnightResponses)),
     '!gm': (message) => message.reply(getRandomResponse(goodmorningResponses)),
+    '!flirt': async (message) => {
+        const userMessage = message.content.replace('!flirt', '').trim();
+        
+        if (!userMessage) {
+            message.reply('Gib mir was zum Flirten! Beispiel: `!flirt Hey, wie geht\'s dir? 😊`');
+            return;
+        }
+        
+        if (!process.env.HUGGINGFACE_API_KEY) {
+            message.reply('❌ Hugging Face API Key fehlt in der .env Datei! Füge HUGGINGFACE_API_KEY hinzu.');
+            return;
+        }
+        
+        try {
+            const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+            
+            const prompt = `You are a charming, playful flirt bot. Detect the language of the user's message and respond in the SAME language. Be flirty, witty, and charming. Keep it short (1-2 sentences) and use appropriate emojis. User message: "${userMessage}"`;
+            
+            const response = await hf.textGeneration({
+                model: 'mistralai/Mistral-7B-Instruct-v0.2',
+                inputs: prompt,
+                parameters: {
+                    max_new_tokens: 100,
+                    temperature: 0.8,
+                    top_p: 0.95
+                }
+            });
+            
+            const flirtResponse = response.generated_text.replace(prompt, '').trim();
+            if (flirtResponse) {
+                message.reply(flirtResponse);
+            }
+        } catch (error) {
+            console.error('Hugging Face API error:', error);
+            message.reply('❌ Oops, da ist was schiefgelaufen beim Flirten... Bin wohl zu nervös! 😳');
+        }
+    },
     '!setbumpreminder': (message) => {
         if (!message.member.permissions.has('Administrator')) {
             message.reply('❌ This is an admin-only command and cannot be used by regular users.');
@@ -554,7 +592,8 @@ const commandHandlers = {
                     '`!gn` - Good night messages for you and your mates\n' +
                     '`!hi` - Say hello and get an hello of me\n' +
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
-                    '`!devmeme` - Let me give you a programming meme\n', inline: false },
+                    '`!devmeme` - Let me give you a programming meme\n' +
+                    '`!flirt [text]` - Flirt with AI-generated responses 💘\n', inline: false },
                 { name: '★ GitHub', value:
                     '`!github` - Bot owners GitHub and Repos\n' +
                     '`!congithubacc` - Connect your GitHub account with the bot\n' +
