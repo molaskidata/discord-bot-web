@@ -50,6 +50,15 @@ const goodnightResponses = [
     "Rest well, coding warrior! 🛡️💤"
 ];
 
+const goodmorningResponses = [
+    "Out of bed already? ☀️",
+    "No coffee yet? ☕",
+    "Good morning! Ready to crush some code today? 💻",
+    "Rise and shine, developer! Time to debug the world! 🌍",
+    "Morning! Let's make today bug-free! 🐛",
+    "Good morning! Fresh day, fresh code! ✨"
+];
+
 const BIRTHDAY_FILE = 'birthdays.json';
 function loadBirthdays() {
     if (fs.existsSync(BIRTHDAY_FILE)) {
@@ -72,9 +81,33 @@ function saveTwitchLinks(data) {
     fs.writeFileSync(TWITCH_FILE, JSON.stringify(data, null, 2));
 }
 
+// Bump reminder system
+const DISBOARD_BOT_ID = '302050872383242240';
+let bumpReminders = new Map();
+
+function setBumpReminder(channel, guild) {
+    const channelId = channel.id;
+    
+    if (bumpReminders.has(channelId)) {
+        clearTimeout(bumpReminders.get(channelId));
+    }
+    
+    const reminderTimeout = setTimeout(() => {
+        channel.send('⏰ **Bump Reminder!** ⏰\n\nThe server can be bumped again now! Use `/bump` to bump the server on Disboard! 🚀');
+        bumpReminders.delete(channelId);
+    }, 2 * 60 * 60 * 1000);
+    
+    bumpReminders.set(channelId, reminderTimeout);
+    channel.send('✅ Bump reminder set! I\'ll remind you in 2 hours when the next bump is available.');
+}
+
 const commandHandlers = {
     '!birthdaychannel': async (message) => {
-        await message.delete();
+        // Check if user has Administrator permission
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This command can only be used by administrators!');
+            return;
+        }
         const birthdays = loadBirthdays();
         birthdays.channelId = message.channel.id;
         saveBirthdays(birthdays);
@@ -83,19 +116,14 @@ const commandHandlers = {
         );
     },
     '!birthdayset': async (message) => {
-        await message.delete();
-        message.channel.send({
-            content: 'Write your birthday date in this format (dd/mm/yyyy) and click enter. The bot will save it for you.',
-            ephemeral: true
-        });
+        message.channel.send('Write your birthday date in this format (dd/mm/yyyy) and click enter. The bot will save it for you.');
         const filter = m => m.author.id === message.author.id && /^\d{2}\/\d{2}\/\d{4}$/.test(m.content);
         const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
         collector.on('collect', m => {
             const birthdays = loadBirthdays();
             birthdays.users[m.author.id] = m.content;
             saveBirthdays(birthdays);
-            m.channel.send({ content: 'Your birthday has been saved!', ephemeral: true });
-            m.delete();
+            m.channel.send('Your birthday has been saved!');
         });
     },
     '!settwitch': async (message) => {
@@ -109,7 +137,6 @@ const commandHandlers = {
         
         usernameCollector.on('collect', async (m) => {
             const twitchUsername = m.content.trim();
-            await m.delete();
             
             // Check if THIS USER already has a Twitch username saved
             const twitchLinks = loadTwitchLinks();
@@ -122,7 +149,7 @@ const commandHandlers = {
                 const existingChannel = message.guild.channels.cache.get(existingData.clipChannelId);
                 
                 const embed = new EmbedBuilder()
-                    .setColor('#9b59b6')
+                    .setColor('#7924BF')
                     .setTitle('⚠️ You Already Have a Twitch Account Linked')
                     .setDescription(`You already have a Twitch configuration saved.`)
                     .addFields(
@@ -139,7 +166,6 @@ const commandHandlers = {
                 
                 choiceCollector.on('collect', async (choiceMsg) => {
                     const choice = choiceMsg.content.toLowerCase();
-                    await choiceMsg.delete();
                     
                     if (choice === 'n') {
                         message.channel.send('Setup cancelled. The existing configuration remains unchanged.');
@@ -202,7 +228,6 @@ const commandHandlers = {
             const channelCollector = message.channel.createMessageCollector({ filter: channelFilter, time: 60000, max: 1 });
             
             channelCollector.on('collect', async (channelMsg) => {
-                await channelMsg.delete();
                 let clipChannelId;
                 
                 if (channelMsg.content === '!setchannel') {
@@ -274,10 +299,40 @@ const commandHandlers = {
     '!meme': (message) => message.reply(getRandomResponse(programmingMemes)),
     '!motivation': (message) => message.reply(getRandomResponse(motivationQuotes)),
     '!gg': (message) => message.reply("GG WP! 🎉"),
-    '!goodnight': (message) => message.reply(getRandomResponse(goodnightResponses)),
+    '!gn': (message) => message.reply(getRandomResponse(goodnightResponses)),
+    '!gm': (message) => message.reply(getRandomResponse(goodmorningResponses)),
+    '!setbumpreminder': (message) => {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
+        setBumpReminder(message.channel, message.guild);
+    },
+    '!bumpstatus': (message) => {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
+        if (bumpReminders.has(message.channel.id)) {
+            message.channel.send('⏳ Bump reminder is active for this channel. You\'ll be notified when the next bump is available.');
+        } else {
+            message.channel.send('❌ No active bump reminder for this channel. Use `!setbumpreminder` to set one manually.');
+        }
+    },
+    '!bumphelp': (message) => {
+        message.channel.send(
+            '**🤖 Bump Reminder System Help**\n\n' +
+            '**Automatic Detection:** I automatically detect when you use `/bump` and set a 2-hour reminder!\n\n' +
+            '**Manual Commands:**\n' +
+            '`!setbumpreminder` - Manually set a 2-hour bump reminder *(admin only)*\n' +
+            '`!bumpstatus` - Check if there\'s an active reminder for this channel *(admin only)*\n' +
+            '`!bumphelp` - Show this help message\n\n' +
+            '**How it works:** After a successful bump, I\'ll remind you exactly when the next bump is available (2 hours later)! 🚀'
+        );
+    },
     '!help': (message) => {
         const embed = new EmbedBuilder()
-            .setColor('#168aad')
+            .setColor('#1E1EC7')
             .setTitle('Bot Command Help')
             .setDescription('Hier sind alle verfügbaren Commands:')
             .addFields(
@@ -286,7 +341,8 @@ const commandHandlers = {
                     '`!coffee` - Time for coffee!\n' +
                     '`!meme` - Programming memes\n' +
                     '`!motivation` - Get motivated\n' +
-                    '`!goodnight` - Good night messages\n' +
+                    '`!gn` - Good night messages\n' +
+                    '`!gm` - Good morning messages\n' +
                     '`!ping` - Test bot\n' +
                     '`!info` - Bot info', inline: false },
                 { name: 'GitHub', value:
@@ -296,10 +352,14 @@ const commandHandlers = {
                     '`!gitrank` - Show your GitHub commit level\n' +
                     '`!gitleader` - Show the top 10 committers', inline: false },
                 { name: 'Birthday', value:
-                    '`!birthdaychannel` - Set the birthday channel\n' +
+                    '`!birthdaychannel` - Set the birthday channel *- only admin*\n' +
                     '`!birthdayset` - Save your birthday', inline: false },
                 { name: 'Twitch', value:
-                    '`!settwitch` - Connect your Twitch account and set clip channel', inline: false }
+                    '`!settwitch` - Connect your Twitch account and set clip channel', inline: false },
+                { name: 'Bump Reminders', value:
+                    '`!setbumpreminder` - Set 2-hour bump reminder *- only admin*\n' +
+                    '`!bumpstatus` - Check bump reminder status *- only admin*\n' +
+                    '`!bumphelp` - Show bump system help', inline: false }
             )
             .setFooter({ text: 'Powered by CoderMaster', iconURL: undefined });
         message.reply({ embeds: [embed] });
@@ -317,7 +377,7 @@ const commandHandlers = {
             '`!discongithubacc` - Disconnect your GitHub account\n' +
             '`!gitrank` - Show your GitHub commit level\n' +
             '`!gitleader` - Show the top 10 committers\n' +
-            '`!hi`, `!coffee`, `!meme`, `!motivation`, `!goodnight`, `!ping`, `!info`, `!github`'
+            '`!hi`, `!coffee`, `!meme`, `!motivation`, `!gn`, `!gm`, `!ping`, `!info`, `!github`'
         );
     },
     '!congithubacc': (message) => {
@@ -382,5 +442,6 @@ function handleCommand(message, BOT_INFO) {
 
 module.exports = {
     handleCommand,
-    commandHandlers
+    commandHandlers,
+    setBumpReminder
 };

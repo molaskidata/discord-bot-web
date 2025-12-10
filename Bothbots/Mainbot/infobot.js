@@ -167,6 +167,23 @@ function updateGameStatus() {
 const processedMessages = new Set();
 
 client.on('messageCreate', (message) => {
+    // Check for Disboard bump confirmations (from bot)
+    if (message.author.id === '302050872383242240') {
+        if (message.embeds.length > 0) {
+            const embed = message.embeds[0];
+            if (embed.description && 
+                (embed.description.includes('Bump done') || 
+                 embed.description.includes(':thumbsup:') ||
+                 embed.description.toLowerCase().includes('bumped'))) {
+                
+                console.log(`Bump detected in channel: ${message.channel.name}`);
+                const { setBumpReminder } = require('./commands');
+                setBumpReminder(message.channel, message.guild);
+            }
+        }
+        return;
+    }
+
     if (message.author.bot) return;
 
     const messageId = message.id;
