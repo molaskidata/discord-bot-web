@@ -542,7 +542,7 @@ const commandHandlers = {
     },
     '!help': (message) => {
         const embed = new EmbedBuilder()
-            .setColor('#1E1EC7')
+            .setColor('#11806a')
             .setTitle('★ Bot Command Help')
             .setDescription('Hier sind alle verfügbaren Commands:')
             .addFields(
