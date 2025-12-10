@@ -326,25 +326,26 @@ const commandHandlers = {
             .addFields(
                 { name: 'Allgemein', value:
                     '`!info` - Bot info\n' +
-                    '`!ping` - Test bot\n' +
-                    '`!mot` - Get motivated\n' +
-                    '`!gm` - Good morning messages\n' +
-                    '`!gn` - Good night messages\n' +
-                    '`!hi` - Say hello\n' +
-                    '`!coffee` - Time for coffee!\n' +
-                    '`!devmeme` - Programming memes', inline: false },
+                    '`!ping` - Testing the pingspeed of the bot\n' +
+                    '`!mot` - Get motivated for the day\n' +
+                    '`!gm` - Good morning messages for you and your mates\n' +
+                    '`!gn` - Good night messages for you and your mates\n' +
+                    '`!hi` - Say hello and get an hello of me\n' +
+                    '`!coffee` - Tell your friends it\'s coffee time!\n' +
+                    '`!devmeme` - Let me give you a programming meme\n', inline: false },
                 { name: 'GitHub', value:
-                    '`!github` - Bot owner GitHub and repo\n' +
-                    '`!congithubacc` - Connect your GitHub account\n' +
+                    '`!github` - Bot owners GitHub and Repos\n' +
+                    '`!congithubacc` - Connect your GitHub account with the bot\n' +
                     '`!discongithubacc` - Disconnect your GitHub account\n' +
                     '`!gitrank` - Show your GitHub commit level\n' +
                     '`!gitleader` - Show the top 10 committers', inline: false },
                 { name: 'Birthday', value:
                     '`!birthdaychannel` - Set the birthday channel *- only admin*\n' +
                     '`!birthdayset` - Save your birthday', inline: false },
-                { name: 'Twitch', value:
-                    '`!settwitch` - Link Twitch account and configure clip notifications\n' +
-                    '`!setchannel` - Create a new thread-only channel for clips (use during !settwitch setup)', inline: false },
+                { name: 'Twitch *- only admin*', value:
+                    '`!settwitch` - Link Twitch account and configure clip notifications *- only admin*\n' +
+                    '`!setchannel` - Create a new thread-only channel for clips \n' +
+                    '(use during !settwitch setup) *- only admin*', inline: false },
                 { name: 'Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder *- only admin*\n' +
                     '`!bumpstatus` - Check bump reminder status *- only admin*\n' +
