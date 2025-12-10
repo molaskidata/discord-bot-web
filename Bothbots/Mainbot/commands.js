@@ -280,6 +280,59 @@ const commandHandlers = {
             });
         });
     },
+    '!sendit': async (message) => {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
+        
+        const args = message.content.split(' ');
+        if (args.length !== 4 || args[2].toLowerCase() !== 'to') {
+            message.reply('❌ Invalid format! Use: `!sendit MESSAGE_ID to CHANNEL_ID`');
+            return;
+        }
+        
+        const messageId = args[1];
+        const targetChannelId = args[3].replace(/[<#>]/g, '');
+        
+        try {
+            const originalMessage = await message.channel.messages.fetch(messageId);
+            
+            if (!originalMessage) {
+                message.reply('❌ Message not found in this channel!');
+                return;
+            }
+            
+            const targetChannel = message.guild.channels.cache.get(targetChannelId);
+            if (!targetChannel) {
+                message.reply('❌ Target channel not found!');
+                return;
+            }
+            
+            const content = originalMessage.content || '';
+            const attachments = Array.from(originalMessage.attachments.values());
+            
+            const files = attachments.map(att => ({
+                attachment: att.url,
+                name: att.name
+            }));
+            
+            if (content || files.length > 0) {
+                await targetChannel.send({
+                    content: content,
+                    files: files
+                });
+                
+                message.reply(`✅ Message forwarded to <#${targetChannelId}>`);
+                await message.delete();
+            } else {
+                message.reply('❌ The message has no content or attachments to forward.');
+            }
+        } catch (error) {
+            console.error('Sendit error:', error);
+            message.reply(`❌ Failed to forward message. Error: ${error.message}`);
+        }
+    },
     '!testingtwitch': async (message) => {
         if (!message.member.permissions.has('Administrator')) {
             message.reply('❌ This is an admin-only command and cannot be used by regular users.');
@@ -457,6 +510,8 @@ const commandHandlers = {
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
                     '`(use during !settwitch setup)` *- only admin*\n' +
                     '`!testingtwitch` - Test clip posting by fetching latest clip *- only admin*', inline: false },
+                { name: 'Utilities *- only admin*', value:
+                    '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message anonymously *- only admin*', inline: false },
                 { name: 'Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder *- only admin*\n' +
                     '`!bumpstatus` - Check bump reminder status *- only admin*\n' +
