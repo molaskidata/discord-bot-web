@@ -340,6 +340,30 @@ const commandHandlers = {
             });
         });
     },
+    '!deletetwitch': async (message) => {
+        const guildId = message.guild.id;
+        const userId = message.author.id;
+        
+        const twitchLinks = loadTwitchLinks();
+        
+        if (!twitchLinks[guildId] || !twitchLinks[guildId][userId]) {
+            message.reply('❌ Du hast keinen Twitch-Account verknüpft. Nichts zu löschen!');
+            return;
+        }
+        
+        const userData = twitchLinks[guildId][userId];
+        const username = userData.twitchUsername;
+        
+        delete twitchLinks[guildId][userId];
+        
+        if (Object.keys(twitchLinks[guildId]).length === 0) {
+            delete twitchLinks[guildId];
+        }
+        
+        saveTwitchLinks(twitchLinks);
+        
+        message.channel.send(`✅ Deine Twitch-Daten für **${username}** wurden erfolgreich gelöscht! 🗑️`);
+    },
     '!sendit': async (message) => {
         if (!message.member.permissions.has('Administrator')) {
             message.reply('❌ This is an admin-only command and cannot be used by regular users.');
@@ -540,13 +564,19 @@ const commandHandlers = {
                 }
             });
             
+            console.log('HF Response:', response);
             const flirtResponse = response.generated_text.replace(prompt, '').trim();
+            console.log('Flirt response:', flirtResponse);
+            
             if (flirtResponse) {
                 message.reply(flirtResponse);
+            } else {
+                message.reply('❌ KI hat keine Antwort generiert. Versuch es nochmal! 🤔');
             }
         } catch (error) {
             console.error('Hugging Face API error:', error);
-            message.reply('❌ Oops, da ist was schiefgelaufen beim Flirten... Bin wohl zu nervös! 😳');
+            console.error('Error details:', error.message, error.response?.data);
+            message.reply(`❌ Fehler: ${error.message || 'API Request fehlgeschlagen'}`);
         }
     },
     '!setbumpreminder': (message) => {
@@ -607,7 +637,8 @@ const commandHandlers = {
                     '`!settwitch` - Link Twitch account and configure clip notifications -*only admin*\n' +
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
                     '`(use during !settwitch setup)` -*only admin*\n' +
-                    '`!testingtwitch` - Test clip posting by fetching latest clip -*only admin*', inline: false },
+                    '`!testingtwitch` - Test clip posting by fetching latest clip -*only admin*\n' +
+                    '`!deletetwitch` - Delete your Twitch account data', inline: false },
                 { name: '★ Utilities *- only admin*', value:
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n' +
                     '`anonymously` -*only admin*', inline: false },
