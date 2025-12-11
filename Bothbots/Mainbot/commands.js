@@ -8,7 +8,7 @@ const { loadVoiceConfig, saveVoiceConfig, isPremiumUser, loadVoiceLogs } = requi
 
 // Bot Owner/Admin IDs
 const BOT_OWNERS = [
-    '235295616', // ozzygirl/mungabee - replace with your actual Discord ID
+    '1105877268775051316', // ozzygirl/mungabee
 ];
 
 function isOwnerOrAdmin(member) {

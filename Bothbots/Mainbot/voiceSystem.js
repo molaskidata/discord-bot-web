@@ -7,7 +7,7 @@ const VOICE_LOG_FILE = path.join(__dirname, 'voice_logs.json');
 
 // Premium Users (hardcoded for now)
 const PREMIUM_USERS = [
-    '235295616', // ozzygirl/mungabee - replace with actual Discord ID
+    '1105877268775051316', // ozzygirl/mungabee
     // Add more user IDs here
 ];
 
