@@ -723,6 +723,7 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 
 function handleCommand(message, BOT_INFO) {
+    // Check for exact match first
     const handler = commandHandlers[message.content];
     if (handler) {
         if (message.content === '!info') {
@@ -732,6 +733,19 @@ function handleCommand(message, BOT_INFO) {
         }
         return true;
     }
+    
+    // Check for commands with arguments (like !flirt Hey du)
+    const commandWithArgs = message.content.split(' ')[0].toLowerCase();
+    const argHandler = commandHandlers[commandWithArgs];
+    if (argHandler) {
+        if (commandWithArgs === '!info') {
+            argHandler(message, BOT_INFO);
+        } else {
+            argHandler(message);
+        }
+        return true;
+    }
+    
     return false;
 }
 
