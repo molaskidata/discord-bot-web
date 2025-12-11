@@ -1,0 +1,19 @@
+{
+  "name": "pirate-bot",
+  "version": "1.0.0",
+  "description": "A pirate-themed Discord bot for Sea of Thieves communities",
+  "main": "piratbot.js",
+  "scripts": {
+    "start": "node piratbot.js"
+  },
+  "keywords": ["discord", "bot", "pirate", "sea-of-thieves"],
+  "author": "mungabee/ozzygirl",
+  "license": "ISC",
+  "dependencies": {
+    "discord.js": "^14.14.1",
+    "dotenv": "^16.0.3"
+  },
+  "engines": {
+    "node": "18.x"
+  }
+}

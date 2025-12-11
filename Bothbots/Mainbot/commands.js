@@ -418,6 +418,15 @@ const commandHandlers = {
         }
     },
     '!testingtwitch': async (message) => {
+        const BOT_OWNER_ID = '1105877268775051316';
+        const isAdmin = message.member.permissions.has('Administrator');
+        const isBotOwner = message.author.id === BOT_OWNER_ID;
+        
+        if (!isAdmin && !isBotOwner) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
+        
         const guildId = message.guild.id;
         const userId = message.author.id;
         
