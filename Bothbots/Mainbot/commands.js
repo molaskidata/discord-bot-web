@@ -651,6 +651,7 @@ const commandHandlers = {
                     '`!bumpstatus` - Check bump reminder status -*only admin*\n' +
                     '`!bumphelp` - Show bump system help', inline: false }
             )
+            .setImage('https://images.steamusercontent.com/ugc/12682713710486517274/762B0697319DE5ACD51EF2294AA3376530A773FB/?imw=2048&imh=864&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true')
             .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
         message.reply({ embeds: [embed] });
     },

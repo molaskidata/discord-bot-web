@@ -58,8 +58,7 @@ const commandHandlers = {
             .setFooter({ 
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
-            })
-            .setTimestamp();
+            });
         message.reply({ embeds: [embed] });
     },
     '!crew': (message) => {
@@ -78,7 +77,7 @@ const commandHandlers = {
     '!piratehelp': (message) => {
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder()
-            .setColor('#8B4513')
+            .setColor('#2C1810')
             .setTitle('⚓ Pirate Bot Commands')
             .setDescription('Arrr! Here be the commands ye can use:')
             .addFields(
@@ -100,7 +99,7 @@ const commandHandlers = {
     '!helpme': (message) => {
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder()
-            .setColor('#CD7F32')
+            .setColor('#2C1810')
             .setTitle('⚓ PirateBot - Command Overview')
             .setDescription('**Ahoy, matey!** Welcome aboard the finest pirate bot on the seven seas!\n\nHere be all the commands to help ye navigate:')
             .addFields(
@@ -123,8 +122,7 @@ const commandHandlers = {
             .setFooter({ 
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
-            })
-            .setTimestamp();
+            });
         message.reply({ embeds: [embed] });
     }
 };
