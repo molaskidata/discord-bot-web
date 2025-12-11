@@ -61,7 +61,7 @@ app.get('/github/login', (req, res) => {
         client_id: process.env.GITHUB_CLIENT_ID,
         redirect_uri: 'http://localhost:3000/github/callback',
         scope: 'read:user repo',
-        state: discordId // Use Discord user ID as state
+        state: discordId
     });
     res.redirect(`https://github.com/login/oauth/authorize?${params}`);
 });
