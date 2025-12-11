@@ -592,14 +592,14 @@ const commandHandlers = {
         }
     },
     '!setbumpreminder': (message) => {
-        if (!message.member.permissions.has('Administrator')) {
+        if (!isOwnerOrAdmin(message.member)) {
             message.reply('❌ This is an admin-only command and cannot be used by regular users.');
             return;
         }
         setBumpReminder(message.channel, message.guild);
     },
     '!bumpstatus': (message) => {
-        if (!message.member.permissions.has('Administrator')) {
+        if (!isOwnerOrAdmin(message.member)) {
             message.reply('❌ This is an admin-only command and cannot be used by regular users.');
             return;
         }
@@ -623,7 +623,7 @@ const commandHandlers = {
     
     // ============ VOICE SYSTEM COMMANDS ============
     '!setupvoice': async (message) => {
-        if (!message.member.permissions.has('Administrator')) {
+        if (!isOwnerOrAdmin(message.member)) {
             message.reply('❌ This is an admin-only command.');
             return;
         }
@@ -653,7 +653,7 @@ const commandHandlers = {
     },
     
     '!setupvoicelog': async (message) => {
-        if (!message.member.permissions.has('Administrator')) {
+        if (!isOwnerOrAdmin(message.member)) {
             message.reply('❌ This is an admin-only command.');
             return;
         }
