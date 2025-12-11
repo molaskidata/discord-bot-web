@@ -152,7 +152,7 @@ function updateGameStatus() {
     
     client.user.setPresence({
         activities: [{
-            name: 'Dead by Daylight ☠',
+            name: 'Dead by Daylight 💀',
             type: ActivityType.Playing,
             details: `${gameTimer}h gespielt`,
             state: `Playing Killer for ${gameTimer} hours`,
