@@ -43,7 +43,8 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildMessages,
-        GatewayIntentBits.MessageContent
+        GatewayIntentBits.MessageContent,
+        GatewayIntentBits.GuildVoiceStates
     ]
 });
 
@@ -132,6 +133,7 @@ const server = app.listen(PORT, () => {
 
 
 const { handleCommand, restoreBumpReminders } = require('./commands');
+const { handleVoiceStateUpdate, checkAfkUsers } = require('./voiceHandler');
 
 client.once('ready', () => {
     console.log(`${BOT_INFO.name} v${BOT_INFO.version} is online!`);
@@ -139,6 +141,10 @@ client.once('ready', () => {
     
     restoreBumpReminders(client);
     console.log('✅ Bump reminders restored from file');
+    
+    // Start AFK checker (every minute)
+    setInterval(() => checkAfkUsers(client), 60 * 1000);
+    console.log('✅ Voice AFK checker started');
     
     updateGameStatus();
     setInterval(updateGameStatus, 3600000);
@@ -199,6 +205,10 @@ client.on('messageCreate', (message) => {
     }, 60000);
 
     handleCommand(message, BOT_INFO);
+});
+
+client.on('voiceStateUpdate', (oldState, newState) => {
+    handleVoiceStateUpdate(oldState, newState);
 });
 
 client.login(process.env.DISCORD_TOKEN);

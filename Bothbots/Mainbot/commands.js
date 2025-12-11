@@ -4,6 +4,7 @@ const Groq = require('groq-sdk');
 
 const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
+const { loadVoiceConfig, saveVoiceConfig, isPremiumUser, loadVoiceLogs } = require('./voiceSystem');
 
 const programmingMemes = [
     "It works on my machine! 🤷‍♂️",
@@ -610,6 +611,361 @@ const commandHandlers = {
             '**How it works:** After a successful bump, I\'ll remind you exactly when the next bump is available (2 hours later)! 🚀'
         );
     },
+    
+    // ============ VOICE SYSTEM COMMANDS ============
+    '!setupvoice': async (message) => {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        
+        try {
+            const channel = await message.guild.channels.create({
+                name: '➕ Join to Create',
+                type: 2, // Voice Channel
+                permissionOverwrites: [
+                    {
+                        id: message.guild.id,
+                        allow: ['Connect', 'ViewChannel']
+                    }
+                ]
+            });
+            
+            config.joinToCreateChannel = channel.id;
+            saveVoiceConfig(config);
+            
+            message.reply(`✅ Voice system set up! Users joining **${channel.name}** will get their own channel.`);
+        } catch (error) {
+            console.error('Setup voice error:', error);
+            message.reply('❌ Error setting up voice system.');
+        }
+    },
+    
+    '!setupvoicelog': async (message) => {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        config.voiceLogChannel = message.channel.id;
+        saveVoiceConfig(config);
+        
+        message.reply('✅ This channel will now receive voice activity logs!');
+    },
+    
+    '!voicename': async (message) => {
+        const newName = message.content.replace('!voicename', '').trim();
+        
+        if (!newName) {
+            message.reply('Usage: `!voicename New Channel Name`');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.setName(newName);
+            message.reply(`✅ Channel renamed to **${newName}**`);
+        } catch (error) {
+            message.reply('❌ Error renaming channel.');
+        }
+    },
+    
+    '!voicelimit': async (message) => {
+        const limit = parseInt(message.content.replace('!voicelimit', '').trim());
+        
+        if (isNaN(limit) || limit < 0 || limit > 99) {
+            message.reply('Usage: `!voicelimit [0-99]` (0 = unlimited)');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.setUserLimit(limit);
+            message.reply(`✅ User limit set to **${limit === 0 ? 'Unlimited' : limit}**`);
+        } catch (error) {
+            message.reply('❌ Error setting user limit.');
+        }
+    },
+    
+    '!voicetemplate': async (message) => {
+        const template = message.content.replace('!voicetemplate', '').trim().toLowerCase();
+        
+        if (!message.member.voice.channelId) {
+            message.reply('❌ You must be in a voice channel to use this command.');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        const templates = config.templates;
+        if (!templates[template]) {
+            message.reply(`❌ Invalid template. Available: \`gaming\`, \`study\`, \`chill\``);
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            const templateData = templates[template];
+            
+            await channel.setName(`${templateData.name} - ${message.author.username}`);
+            if (templateData.limit > 0) {
+                await channel.setUserLimit(templateData.limit);
+            }
+            
+            channelInfo.template = template;
+            saveVoiceConfig(config);
+            
+            message.reply(`✅ Applied **${template}** template!`);
+        } catch (error) {
+            message.reply('❌ Error applying template.');
+        }
+    },
+    
+    '!voicelock': async (message) => {
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.permissionOverwrites.edit(message.guild.id, {
+                Connect: false
+            });
+            message.reply('🔒 Channel locked! Only current members can stay.');
+        } catch (error) {
+            message.reply('❌ Error locking channel.');
+        }
+    },
+    
+    '!voiceunlock': async (message) => {
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.permissionOverwrites.edit(message.guild.id, {
+                Connect: true
+            });
+            message.reply('🔓 Channel unlocked!');
+        } catch (error) {
+            message.reply('❌ Error unlocking channel.');
+        }
+    },
+    
+    '!voicekick': async (message) => {
+        const mentionedUser = message.mentions.users.first();
+        
+        if (!mentionedUser) {
+            message.reply('Usage: `!voicekick @user`');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const targetMember = await message.guild.members.fetch(mentionedUser.id);
+            
+            if (targetMember.voice.channelId === message.member.voice.channelId) {
+                await targetMember.voice.disconnect();
+                message.reply(`✅ Kicked **${mentionedUser.username}** from the channel.`);
+            } else {
+                message.reply('❌ That user is not in your voice channel.');
+            }
+        } catch (error) {
+            message.reply('❌ Error kicking user.');
+        }
+    },
+    
+    // ============ PREMIUM VOICE COMMANDS ============
+    '!voicestats': async (message) => {
+        if (!isPremiumUser(message.author.id)) {
+            message.reply('❌ This is a **Premium** feature! Contact the bot owner for premium access.');
+            return;
+        }
+        
+        const logs = loadVoiceLogs();
+        const stats = logs.stats;
+        
+        // Sort by total joins
+        const sortedUsers = Object.entries(stats)
+            .sort(([, a], [, b]) => b.totalJoins - a.totalJoins)
+            .slice(0, 10);
+        
+        if (sortedUsers.length === 0) {
+            message.reply('❌ No voice activity recorded yet.');
+            return;
+        }
+        
+        const { EmbedBuilder } = require('discord.js');
+        const embed = new EmbedBuilder()
+            .setColor('#11806a')
+            .setTitle('🎙️ Voice Activity Stats')
+            .setDescription('Top voice channel users:')
+            .addFields(
+                sortedUsers.map(([userId, data], index) => ({
+                    name: `${index + 1}. ${data.username}`,
+                    value: `Joins: **${data.totalJoins}** | Created: **${data.channelsCreated}**`,
+                    inline: false
+                }))
+            )
+            .setFooter({ text: 'Premium Feature' });
+        
+        message.reply({ embeds: [embed] });
+    },
+    
+    '!voicepermit': async (message) => {
+        if (!isPremiumUser(message.author.id)) {
+            message.reply('❌ This is a **Premium** feature!');
+            return;
+        }
+        
+        const mentionedUser = message.mentions.users.first();
+        
+        if (!mentionedUser) {
+            message.reply('Usage: `!voicepermit @user`');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            const targetMember = await message.guild.members.fetch(mentionedUser.id);
+            
+            await channel.permissionOverwrites.edit(targetMember.id, {
+                Connect: true,
+                Speak: true
+            });
+            
+            message.reply(`✅ **${mentionedUser.username}** can now join your channel.`);
+        } catch (error) {
+            message.reply('❌ Error permitting user.');
+        }
+    },
+    
+    '!voicedeny': async (message) => {
+        if (!isPremiumUser(message.author.id)) {
+            message.reply('❌ This is a **Premium** feature!');
+            return;
+        }
+        
+        const mentionedUser = message.mentions.users.first();
+        
+        if (!mentionedUser) {
+            message.reply('Usage: `!voicedeny @user`');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            const targetMember = await message.guild.members.fetch(mentionedUser.id);
+            
+            await channel.permissionOverwrites.edit(targetMember.id, {
+                Connect: false
+            });
+            
+            if (targetMember.voice.channelId === channel.id) {
+                await targetMember.voice.disconnect();
+            }
+            
+            message.reply(`✅ **${mentionedUser.username}** is now blocked from your channel.`);
+        } catch (error) {
+            message.reply('❌ Error denying user.');
+        }
+    },
+    
+    '!voiceprivate': async (message) => {
+        if (!isPremiumUser(message.author.id)) {
+            message.reply('❌ This is a **Premium** feature!');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            
+            await channel.permissionOverwrites.edit(message.guild.id, {
+                ViewChannel: false,
+                Connect: false
+            });
+            
+            await channel.permissionOverwrites.edit(message.author.id, {
+                ViewChannel: true,
+                Connect: true,
+                ManageChannels: true,
+                MoveMembers: true
+            });
+            
+            channelInfo.isPrivate = true;
+            saveVoiceConfig(config);
+            
+            message.reply('🔒 Channel is now **private**! Use `!voicepermit @user` to allow specific users.');
+        } catch (error) {
+            message.reply('❌ Error making channel private.');
+        }
+    },
+    
     '!help': (message) => {
         const embed = new EmbedBuilder()
             .setColor('#11806a')
@@ -647,7 +1003,20 @@ const commandHandlers = {
                 { name: '★ Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder -*only admin*\n' +
                     '`!bumpstatus` - Check bump reminder status -*only admin*\n' +
-                    '`!bumphelp` - Show bump system help', inline: false }
+                    '`!bumphelp` - Show bump system help', inline: false },
+                { name: '★ Voice Channels', value:
+                    '`!setupvoice` - Create Join-to-Create channel -*only admin*\n' +
+                    '`!setupvoicelog` - Set voice log channel -*only admin*\n' +
+                    '`!voicename [name]` - Rename your voice channel\n' +
+                    '`!voicelimit [0-99]` - Set user limit (0=unlimited)\n' +
+                    '`!voicetemplate [gaming/study/chill]` - Apply template\n' +
+                    '`!voicelock/unlock` - Lock/unlock your channel\n' +
+                    '`!voicekick @user` - Kick user from your channel', inline: false },
+                { name: '★ Voice Premium 💎', value:
+                    '`!voicestats` - View voice activity stats\n' +
+                    '`!voiceprivate` - Make channel private\n' +
+                    '`!voicepermit @user` - Allow user to join\n' +
+                    '`!voicedeny @user` - Block user from joining', inline: false }
             )
             .setImage('https://media.discordapp.net/attachments/1226484495927218239/1448597565275635743/Screenshot_2025-12-11_094708.png?ex=693bd71d&is=693a859d&hm=152773c05569dbf0a2ff10953b93b93762afcce58391c94d358ef789b1e15968&=&format=webp&quality=lossless')
             .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
