@@ -6,6 +6,15 @@ const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
 const { loadVoiceConfig, saveVoiceConfig, isPremiumUser, loadVoiceLogs } = require('./voiceSystem');
 
+// Bot Owner/Admin IDs
+const BOT_OWNERS = [
+    '235295616', // ozzygirl/mungabee - replace with your actual Discord ID
+];
+
+function isOwnerOrAdmin(member) {
+    return BOT_OWNERS.includes(member.user.id) || member.permissions.has('Administrator');
+}
+
 const programmingMemes = [
     "It works on my machine! 🤷‍♂️",
     "Copy from Stack Overflow? It's called research! 📚",
