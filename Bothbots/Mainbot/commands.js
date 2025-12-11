@@ -659,10 +659,43 @@ const commandHandlers = {
         }
         
         const config = loadVoiceConfig();
-        config.voiceLogChannel = message.channel.id;
-        saveVoiceConfig(config);
         
-        message.reply('✅ This channel will now receive voice activity logs!');
+        try {
+            // Create a text channel for voice logs
+            const logChannel = await message.guild.channels.create({
+                name: '📋-voice-logs',
+                type: 0, // Text Channel
+                permissionOverwrites: [
+                    {
+                        id: message.guild.id,
+                        deny: ['ViewChannel']
+                    },
+                    {
+                        id: message.guild.roles.everyone,
+                        deny: ['ViewChannel']
+                    },
+                    // Allow admins to view and send messages
+                    ...message.guild.roles.cache
+                        .filter(role => role.permissions.has('Administrator'))
+                        .map(role => ({
+                            id: role.id,
+                            allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory']
+                        }))
+                ]
+            });
+            
+            config.voiceLogChannel = logChannel.id;
+            saveVoiceConfig(config);
+            
+            message.reply(`✅ Voice log channel created: ${logChannel}! Only admins can see it.`);
+        } catch (error) {
+            console.error('Setup voice log error:', error);
+            if (error.code === 50013 || error.message.includes('Missing Permissions')) {
+                message.reply('❌ **Fehler:** Der Bot hat nicht genug Rechte!\n\n**Lösung:** In den Server-Einstellungen → Rollen → Stelle sicher, dass die **Bot-Rolle ÜBER den Admin-Rollen** steht!');
+            } else {
+                message.reply('❌ Error creating voice log channel.');
+            }
+        }
     },
     
     '!voicename': async (message) => {
