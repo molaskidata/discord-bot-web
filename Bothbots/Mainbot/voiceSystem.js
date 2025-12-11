@@ -1,17 +1,14 @@
 const fs = require('fs');
 const path = require('path');
 
-// Files
 const VOICE_CONFIG_FILE = path.join(__dirname, 'voice_config.json');
 const VOICE_LOG_FILE = path.join(__dirname, 'voice_logs.json');
 
-// Premium Users (hardcoded for now)
 const PREMIUM_USERS = [
-    '1105877268775051316', // ozzygirl/mungabee
-    // Add more user IDs here
+    '1105877268775051316',
 ];
 
-// Load/Save Functions
+ 
 function loadVoiceConfig() {
     if (fs.existsSync(VOICE_CONFIG_FILE)) {
         return JSON.parse(fs.readFileSync(VOICE_CONFIG_FILE));
@@ -44,12 +41,10 @@ function saveVoiceLogs(data) {
     fs.writeFileSync(VOICE_LOG_FILE, JSON.stringify(data, null, 2));
 }
 
-// Check if user has premium
 function isPremiumUser(userId) {
     return PREMIUM_USERS.includes(userId);
 }
 
-// Add voice log entry
 function addVoiceLog(userId, username, action, channelName) {
     const logs = loadVoiceLogs();
     
@@ -61,7 +56,7 @@ function addVoiceLog(userId, username, action, channelName) {
         timestamp: new Date().toISOString()
     });
     
-    // Update stats
+    
     if (!logs.stats[userId]) {
         logs.stats[userId] = {
             username,
@@ -74,7 +69,7 @@ function addVoiceLog(userId, username, action, channelName) {
     if (action === 'joined') logs.stats[userId].totalJoins++;
     if (action === 'created') logs.stats[userId].channelsCreated++;
     
-    // Keep only last 1000 logs
+    
     if (logs.logs.length > 1000) {
         logs.logs = logs.logs.slice(-1000);
     }

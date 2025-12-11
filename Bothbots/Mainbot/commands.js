@@ -6,9 +6,8 @@ const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
 const { loadVoiceConfig, saveVoiceConfig, isPremiumUser, loadVoiceLogs } = require('./voiceSystem');
 
-// Bot Owner/Admin IDs
 const BOT_OWNERS = [
-    '1105877268775051316', // ozzygirl/mungabee
+    '1105877268775051316',
 ];
 
 function isOwnerOrAdmin(member) {
@@ -621,7 +620,7 @@ const commandHandlers = {
         );
     },
     
-    // ============ VOICE SYSTEM COMMANDS ============
+ 
     '!setupvoice': async (message) => {
         if (!isOwnerOrAdmin(message.member)) {
             message.reply('❌ This is an admin-only command.');
@@ -630,7 +629,7 @@ const commandHandlers = {
         
         const config = loadVoiceConfig();
         
-        // Step 1: Ask for Join-to-Create category
+        
         const step1 = await message.reply(
             '**Voice System Setup - Step 1/2** 🎙️\n\n' +
             'In which **Category** should the `➕ Join to Create` channel be created?\n\n' +
@@ -649,14 +648,14 @@ const commandHandlers = {
             
             const joinCategory = m.content.trim();
             
-            // Verify category exists
+            
             const category1 = await message.guild.channels.fetch(joinCategory).catch(() => null);
             if (!category1 || category1.type !== 4) {
                 message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
                 return;
             }
             
-            // Step 2: Ask for created channels category
+            
             const step2 = await message.reply(
                 '**Voice System Setup - Step 2/2** 🎙️\n\n' +
                 'In which **Category** should the **created Voice Channels** be placed?\n\n' +
@@ -674,18 +673,18 @@ const commandHandlers = {
                 
                 const voiceCategory = m2.content.trim();
                 
-                // Verify category exists
+                
                 const category2 = await message.guild.channels.fetch(voiceCategory).catch(() => null);
                 if (!category2 || category2.type !== 4) {
                     message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
                     return;
                 }
                 
-                // Create Join-to-Create channel
+                
                 try {
                     const joinChannel = await message.guild.channels.create({
                         name: '➕ Join to Create',
-                        type: 2, // Voice Channel
+                        type: 2,
                         parent: joinCategory,
                         permissionOverwrites: [
                             {
@@ -737,10 +736,10 @@ const commandHandlers = {
         const config = loadVoiceConfig();
         
         try {
-            // Create a text channel for voice logs
+            
             const logChannel = await message.guild.channels.create({
                 name: '📋-voice-logs',
-                type: 0, // Text Channel
+                type: 0,
                 permissionOverwrites: [
                     {
                         id: message.guild.id,
@@ -750,7 +749,7 @@ const commandHandlers = {
                         id: message.guild.roles.everyone,
                         deny: ['ViewChannel']
                     },
-                    // Allow admins to view and send messages
+                    
                     ...message.guild.roles.cache
                         .filter(role => role.permissions.has('Administrator'))
                         .map(role => ({
@@ -934,7 +933,7 @@ const commandHandlers = {
         }
     },
     
-    // ============ PREMIUM VOICE COMMANDS ============
+    
     '!voicestats': async (message) => {
         if (!isPremiumUser(message.author.id)) {
             message.reply('❌ This is a **Premium** feature! Contact the bot owner for premium access.');
@@ -944,7 +943,7 @@ const commandHandlers = {
         const logs = loadVoiceLogs();
         const stats = logs.stats;
         
-        // Sort by total joins
+        
         const sortedUsers = Object.entries(stats)
             .sort(([, a], [, b]) => b.totalJoins - a.totalJoins)
             .slice(0, 10);
@@ -1105,7 +1104,7 @@ const commandHandlers = {
                 return;
             }
             
-            // Delete all messages in the channel
+            
             let deleted = 0;
             let lastId;
             
@@ -1146,7 +1145,7 @@ const commandHandlers = {
         
         const config = loadVoiceConfig();
         
-        // Confirm deletion
+        
         const confirmMsg = await message.reply(
             '⚠️ **WARNING: Voice System Deletion**\n\n' +
             'This will **permanently delete**:\n' +
@@ -1171,12 +1170,12 @@ const commandHandlers = {
                 return;
             }
             
-            // Start deletion process
+            
             let deletedCount = 0;
             const errors = [];
             
             try {
-                // Delete Join-to-Create channel
+                
                 if (config.joinToCreateChannel) {
                     try {
                         const joinChannel = await message.guild.channels.fetch(config.joinToCreateChannel);
@@ -1189,7 +1188,7 @@ const commandHandlers = {
                     }
                 }
                 
-                // Delete Voice Log channel
+                
                 if (config.voiceLogChannel) {
                     try {
                         const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
@@ -1202,7 +1201,7 @@ const commandHandlers = {
                     }
                 }
                 
-                // Delete all active voice channels
+                
                 if (config.activeChannels) {
                     for (const channelId of Object.keys(config.activeChannels)) {
                         try {
@@ -1217,7 +1216,7 @@ const commandHandlers = {
                     }
                 }
                 
-                // Clear all config data
+                
                 config.joinToCreateChannel = null;
                 config.joinToCreateCategory = null;
                 config.voiceChannelCategory = null;
@@ -1225,7 +1224,7 @@ const commandHandlers = {
                 config.activeChannels = {};
                 saveVoiceConfig(config);
                 
-                // Send success message
+                
                 let resultMsg = `✅ **Voice System Deleted!**\n\n` +
                                 `🗑️ Deleted **${deletedCount}** channels\n` +
                                 `🔄 Reset all voice settings`;
@@ -1371,7 +1370,7 @@ setInterval(() => {
 }, 60 * 60 * 1000);
 
 function handleCommand(message, BOT_INFO) {
-    // Check for exact match first
+            
     const handler = commandHandlers[message.content];
     if (handler) {
         if (message.content === '!info') {
@@ -1382,7 +1381,7 @@ function handleCommand(message, BOT_INFO) {
         return true;
     }
     
-    // Check for commands with arguments (like !flirt Hey du)
+    
     const commandWithArgs = message.content.split(' ')[0].toLowerCase();
     const argHandler = commandHandlers[commandWithArgs];
     if (argHandler) {

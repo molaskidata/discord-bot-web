@@ -1,30 +1,28 @@
 const { PermissionFlagsBits, ChannelType } = require('discord.js');
 const { loadVoiceConfig, saveVoiceConfig, addVoiceLog, isPremiumUser } = require('./voiceSystem');
 
-// AFK Tracker
-const afkTracker = new Map(); // channelId -> { userId -> lastActivity }
+const afkTracker = new Map();
 
-// Handle voice state updates
 async function handleVoiceStateUpdate(oldState, newState) {
     const config = loadVoiceConfig();
     
-    // User joined a channel
+    
     if (!oldState.channelId && newState.channelId) {
         await handleUserJoined(newState, config);
     }
     
-    // User left a channel
+    
     if (oldState.channelId && !newState.channelId) {
         await handleUserLeft(oldState, config);
     }
     
-    // User switched channels
+    
     if (oldState.channelId && newState.channelId && oldState.channelId !== newState.channelId) {
         await handleUserLeft(oldState, config);
         await handleUserJoined(newState, config);
     }
     
-    // User unmuted/undeafened (activity)
+    
     if (newState.channelId && (oldState.selfMute !== newState.selfMute || oldState.selfDeaf !== newState.selfDeaf)) {
         updateAfkTracker(newState.channelId, newState.id);
     }
@@ -33,32 +31,32 @@ async function handleVoiceStateUpdate(oldState, newState) {
 async function handleUserJoined(state, config) {
     const { channelId, member, guild } = state;
     
-    // Check if user joined the "Join to Create" channel
+    
     if (channelId === config.joinToCreateChannel) {
         await createVoiceChannel(member, guild, config);
         return;
     }
     
-    // Update AFK tracker
+    
     updateAfkTracker(channelId, member.id);
     
-    // Log join
+    
     const channel = await guild.channels.fetch(channelId);
     addVoiceLog(member.id, member.user.username, 'joined', channel.name);
     
-    // Send to log channel
+    
     await sendToLogChannel(guild, config, `✅ **${member.user.username}** joined **${channel.name}**`);
 }
 
 async function handleUserLeft(state, config) {
     const { channelId, member, guild } = state;
     
-    // Check if this was a created channel
+    
     if (config.activeChannels[channelId]) {
         const channel = await guild.channels.fetch(channelId).catch(() => null);
         
         if (channel && channel.members.size === 0) {
-            // Channel is empty, delete it
+            
             await channel.delete('Voice channel empty');
             delete config.activeChannels[channelId];
             saveVoiceConfig(config);
@@ -67,12 +65,12 @@ async function handleUserLeft(state, config) {
         }
     }
     
-    // Remove from AFK tracker
+    
     if (afkTracker.has(channelId)) {
         afkTracker.get(channelId).delete(member.id);
     }
     
-    // Log leave
+    
     const channel = await guild.channels.fetch(channelId).catch(() => null);
     if (channel) {
         addVoiceLog(member.id, member.user.username, 'left', channel.name);
@@ -85,7 +83,7 @@ async function createVoiceChannel(member, guild, config) {
         const template = config.templates.custom;
         let channelName = `${template.name} - ${member.user.username}`;
         
-        // Use configured category or fall back to Join-to-Create category
+        
         const categoryId = config.voiceChannelCategory || config.joinToCreateCategory;
         
         const newChannel = await guild.channels.create({
@@ -101,10 +99,10 @@ async function createVoiceChannel(member, guild, config) {
             ]
         });
         
-        // Move user to new channel
+        
         await member.voice.setChannel(newChannel);
         
-        // Save channel info
+        
         config.activeChannels[newChannel.id] = {
             ownerId: member.id,
             createdAt: Date.now(),
@@ -112,10 +110,10 @@ async function createVoiceChannel(member, guild, config) {
         };
         saveVoiceConfig(config);
         
-        // Initialize AFK tracker for this channel
+        
         updateAfkTracker(newChannel.id, member.id);
         
-        // Log creation
+        
         addVoiceLog(member.id, member.user.username, 'created', newChannel.name);
         await sendToLogChannel(guild, config, `🎤 **${member.user.username}** created **${newChannel.name}**`);
         

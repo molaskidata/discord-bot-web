@@ -11,15 +11,12 @@ const PORT = process.env.GITHUB_OAUTH_PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// Store GitHub-Discord links (in production, use a database)
 const userLinks = new Map();
 
-// GitHub OAuth configuration
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
 const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const CALLBACK_URL = process.env.GITHUB_CALLBACK_URL || 'http://localhost:3000/github/callback';
 
-// Health check
 app.get('/', (req, res) => {
   res.json({
     status: 'GitHub-Discord OAuth Server Online',
@@ -29,7 +26,6 @@ app.get('/', (req, res) => {
   });
 });
 
-// Step 1: Redirect to GitHub OAuth
 app.get('/github/auth', (req, res) => {
   const discordId = req.query.discordId;
   
@@ -46,7 +42,6 @@ app.get('/github/auth', (req, res) => {
   res.redirect(githubAuthUrl);
 });
 
-// Step 2: Handle GitHub OAuth callback
 app.get('/github/callback', async (req, res) => {
   const { code, state: discordId } = req.query;
   
@@ -55,7 +50,6 @@ app.get('/github/callback', async (req, res) => {
   }
   
   try {
-    // Exchange code for access token
     const tokenResponse = await fetch('https://github.com/login/oauth/access_token', {
       method: 'POST',
       headers: {
