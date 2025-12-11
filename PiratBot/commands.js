@@ -103,7 +103,6 @@ const commandHandlers = {
                     '`!helpme` - Show this help menu\n' +
                     '`!piratehelp` - Quick command reference\n', inline: false }
             )
-            .setImage('https://i.imgur.com/OlQtRjz.gif')
             .setFooter({ 
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
