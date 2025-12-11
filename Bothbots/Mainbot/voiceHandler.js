@@ -85,14 +85,13 @@ async function createVoiceChannel(member, guild, config) {
         const template = config.templates.custom;
         let channelName = `${template.name} - ${member.user.username}`;
         
-        // Create the channel in same category
-        const joinToCreateCh = await guild.channels.fetch(config.joinToCreateChannel);
-        const category = joinToCreateCh.parent;
+        // Use configured category or fall back to Join-to-Create category
+        const categoryId = config.voiceChannelCategory || config.joinToCreateCategory;
         
         const newChannel = await guild.channels.create({
             name: channelName,
             type: ChannelType.GuildVoice,
-            parent: category,
+            parent: categoryId,
             userLimit: template.limit,
             permissionOverwrites: [
                 {
@@ -185,7 +184,52 @@ async function checkAfkUsers(client) {
     }
 }
 
+// Auto cleanup voice logs (runs every 5 hours)
+async function autoCleanupVoiceLogs(client) {
+    const config = loadVoiceConfig();
+    
+    if (!config.voiceLogChannel) return;
+    
+    try {
+        const guild = client.guilds.cache.first();
+        const logChannel = await guild.channels.fetch(config.voiceLogChannel).catch(() => null);
+        
+        if (!logChannel) return;
+        
+        // Delete all messages
+        let deleted = 0;
+        let lastId;
+        
+        while (true) {
+            const options = { limit: 100 };
+            if (lastId) {
+                options.before = lastId;
+            }
+            
+            const messages = await logChannel.messages.fetch(options);
+            
+            if (messages.size === 0) break;
+            
+            for (const msg of messages.values()) {
+                await msg.delete();
+                deleted++;
+            }
+            
+            lastId = messages.last().id;
+            
+            if (messages.size < 100) break;
+        }
+        
+        console.log(`🧹 Auto-cleanup: Deleted ${deleted} messages from voice log channel`);
+        await logChannel.send(`🧹 **Auto-Cleanup** - Voice logs cleared (${deleted} messages deleted)`);
+        
+    } catch (error) {
+        console.error('Error in auto cleanup voice logs:', error);
+    }
+}
+
 module.exports = {
     handleVoiceStateUpdate,
-    checkAfkUsers
+    checkAfkUsers,
+    autoCleanupVoiceLogs
 };

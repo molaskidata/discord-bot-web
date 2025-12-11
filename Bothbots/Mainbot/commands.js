@@ -630,26 +630,102 @@ const commandHandlers = {
         
         const config = loadVoiceConfig();
         
-        try {
-            const channel = await message.guild.channels.create({
-                name: '➕ Join to Create',
-                type: 2, // Voice Channel
-                permissionOverwrites: [
-                    {
-                        id: message.guild.id,
-                        allow: ['Connect', 'ViewChannel']
-                    }
-                ]
+        // Step 1: Ask for Join-to-Create category
+        const step1 = await message.reply(
+            '**Voice System Setup - Step 1/2** 🎙️\n\n' +
+            'In which **Category** should the `➕ Join to Create` channel be created?\n\n' +
+            '**Answer:** Send the Category ID (Right-click → Copy ID)\n' +
+            '**Cancel:** Type `cancel`'
+        );
+        
+        const filter1 = (m) => m.author.id === message.author.id;
+        const collector1 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
+        
+        collector1.on('collect', async (m) => {
+            if (m.content.toLowerCase() === 'cancel') {
+                message.reply('❌ Voice System Setup cancelled.');
+                return;
+            }
+            
+            const joinCategory = m.content.trim();
+            
+            // Verify category exists
+            const category1 = await message.guild.channels.fetch(joinCategory).catch(() => null);
+            if (!category1 || category1.type !== 4) {
+                message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
+                return;
+            }
+            
+            // Step 2: Ask for created channels category
+            const step2 = await message.reply(
+                '**Voice System Setup - Step 2/2** 🎙️\n\n' +
+                'In which **Category** should the **created Voice Channels** be placed?\n\n' +
+                '**Answer:** Send the Category ID\n' +
+                '**Tip:** Can be the same or a different category'
+            );
+            
+            const collector2 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
+            
+            collector2.on('collect', async (m2) => {
+                if (m2.content.toLowerCase() === 'cancel') {
+                    message.reply('❌ Voice System Setup cancelled.');
+                    return;
+                }
+                
+                const voiceCategory = m2.content.trim();
+                
+                // Verify category exists
+                const category2 = await message.guild.channels.fetch(voiceCategory).catch(() => null);
+                if (!category2 || category2.type !== 4) {
+                    message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
+                    return;
+                }
+                
+                // Create Join-to-Create channel
+                try {
+                    const joinChannel = await message.guild.channels.create({
+                        name: '➕ Join to Create',
+                        type: 2, // Voice Channel
+                        parent: joinCategory,
+                        permissionOverwrites: [
+                            {
+                                id: message.guild.id,
+                                allow: ['Connect', 'ViewChannel']
+                            }
+                        ]
+                    });
+                    
+                    config.joinToCreateChannel = joinChannel.id;
+                    config.joinToCreateCategory = joinCategory;
+                    config.voiceChannelCategory = voiceCategory;
+                    saveVoiceConfig(config);
+                    
+                    const cat1 = await message.guild.channels.fetch(joinCategory);
+                    const cat2 = await message.guild.channels.fetch(voiceCategory);
+                    
+                    message.reply(
+                        `✅ **Voice System successfully set up!**\n\n` +
+                        `📍 Join-to-Create: ${joinChannel} in **${cat1.name}**\n` +
+                        `📍 New channels will be created in: **${cat2.name}**`
+                    );
+                } catch (error) {
+                    console.error('Setup voice error:', error);
+                    message.reply('❌ Error creating voice system.');
+                }
             });
             
-            config.joinToCreateChannel = channel.id;
-            saveVoiceConfig(config);
-            
-            message.reply(`✅ Voice system set up! Users joining **${channel.name}** will get their own channel.`);
-        } catch (error) {
-            console.error('Setup voice error:', error);
-            message.reply('❌ Error setting up voice system.');
-        }
+            collector2.on('end', (collected) => {
+                if (collected.size === 0) {
+                    message.reply('❌ Timeout. Please restart setup with `!setupvoice`.');
+                }
+            });
+        });
+        
+        collector1.on('end', (collected) => {
+            if (collected.size === 0) {
+                message.reply('❌ Timeout. Please restart setup with `!setupvoice`.');
+            }
+        });
     },
     
     '!setupvoicelog': async (message) => {
@@ -691,7 +767,7 @@ const commandHandlers = {
         } catch (error) {
             console.error('Setup voice log error:', error);
             if (error.code === 50013 || error.message.includes('Missing Permissions')) {
-                message.reply('❌ **Fehler:** Der Bot hat nicht genug Rechte!\n\n**Lösung:** In den Server-Einstellungen → Rollen → Stelle sicher, dass die **Bot-Rolle ÜBER den Admin-Rollen** steht!');
+                message.reply('❌ **Error:** Bot doesn\'t have enough permissions!\n\n**Solution:** In Server Settings → Roles → Make sure the **Bot Role is ABOVE Admin Roles**!');
             } else {
                 message.reply('❌ Error creating voice log channel.');
             }
@@ -1008,6 +1084,60 @@ const commandHandlers = {
         }
     },
     
+    '!cleanupvoice': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        
+        if (!config.voiceLogChannel) {
+            message.reply('❌ No voice log channel configured. Use `!setupvoicelog` first.');
+            return;
+        }
+        
+        try {
+            const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
+            
+            if (!logChannel) {
+                message.reply('❌ Voice log channel not found.');
+                return;
+            }
+            
+            // Delete all messages in the channel
+            let deleted = 0;
+            let lastId;
+            
+            while (true) {
+                const options = { limit: 100 };
+                if (lastId) {
+                    options.before = lastId;
+                }
+                
+                const messages = await logChannel.messages.fetch(options);
+                
+                if (messages.size === 0) break;
+                
+                for (const msg of messages.values()) {
+                    await msg.delete();
+                    deleted++;
+                }
+                
+                lastId = messages.last().id;
+                
+                if (messages.size < 100) break;
+            }
+            
+            message.reply(`✅ Voice log channel cleaned! Deleted **${deleted}** messages.`);
+            await logChannel.send(`🧹 **Log Cleanup** - Channel cleared by ${message.author.username}`);
+            
+        } catch (error) {
+            console.error('Cleanup voice error:', error);
+            message.reply('❌ Error cleaning voice log channel.');
+        }
+    },
+    
     '!help': (message) => {
         const embed = new EmbedBuilder()
             .setColor('#11806a')
@@ -1048,7 +1178,8 @@ const commandHandlers = {
                     '`!bumphelp` - Show bump system help', inline: false },
                 { name: '★ Voice Channels', value:
                     '`!setupvoice` - Create Join-to-Create channel -*only admin*\n' +
-                    '`!setupvoicelog` - Set voice log channel -*only admin*\n' +
+                    '`!setupvoicelog` - Create voice log channel -*only admin*\n' +
+                    '`!cleanupvoice` - Clean voice log channel -*only admin*\n' +
                     '`!voicename [name]` - Rename your voice channel\n' +
                     '`!voicelimit [0-99]` - Set user limit (0=unlimited)\n' +
                     '`!voicetemplate [gaming/study/chill]` - Apply template\n' +

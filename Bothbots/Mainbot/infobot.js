@@ -133,7 +133,7 @@ const server = app.listen(PORT, () => {
 
 
 const { handleCommand, restoreBumpReminders } = require('./commands');
-const { handleVoiceStateUpdate, checkAfkUsers } = require('./voiceHandler');
+const { handleVoiceStateUpdate, checkAfkUsers, autoCleanupVoiceLogs } = require('./voiceHandler');
 
 client.once('ready', () => {
     console.log(`${BOT_INFO.name} v${BOT_INFO.version} is online!`);
@@ -145,6 +145,10 @@ client.once('ready', () => {
     // Start AFK checker (every minute)
     setInterval(() => checkAfkUsers(client), 60 * 1000);
     console.log('✅ Voice AFK checker started');
+    
+    // Start voice log cleanup (every 5 hours)
+    setInterval(() => autoCleanupVoiceLogs(client), 5 * 60 * 60 * 1000);
+    console.log('✅ Voice log auto-cleanup started (every 5 hours)');
     
     updateGameStatus();
     setInterval(updateGameStatus, 3600000);
