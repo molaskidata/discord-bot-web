@@ -36,15 +36,31 @@ const commandHandlers = {
     '!treasure': (message) => message.reply(getRandomResponse(treasureQuotes)),
     '!sea': (message) => message.reply(getRandomResponse(seaQuotes)),
     '!piratecode': (message) => {
-        message.reply(
-            '**† The Pirate Code †**\n\n' +
-            '1. Every pirate has a vote in affairs of moment\n' +
-            '2. Every pirate has equal title to fresh provisions\n' +
-            '3. No striking one another aboard ship\n' +
-            '4. Keep your piece, cutlass, and pistols clean\n' +
-            '5. The captain shall have two shares of a prize\n' +
-            '6. Take what ye can, give nothin\' back!'
-        );
+        const { EmbedBuilder } = require('discord.js');
+        const embed = new EmbedBuilder()
+            .setColor('#2C1810')
+            .setTitle('⚓ The Pirate Code ⚓')
+            .setDescription('**The Code of the Brethren, set down by the pirates Morgan and Bartholomew**\n\n*"The Code is more what you\'d call guidelines than actual rules." - Captain Barbossa*')
+            .addFields(
+                { name: 'Article I', value: 'Every man shall have an equal vote in affairs of moment. He shall have an equal title to the fresh provisions or strong liquors at any time seized, and shall use them at pleasure unless a scarcity may make it necessary for the common good that a retrenchment may be voted.', inline: false },
+                { name: 'Article II', value: 'Every man shall be called fairly in turn by the list on board of prizes, because over and above their proper share, they are allowed a shift of clothes. But if they defraud the company to the value of even one dollar in plate, jewels or money, they shall be marooned.', inline: false },
+                { name: 'Article III', value: 'None shall game for money either with dice or cards.', inline: false },
+                { name: 'Article IV', value: 'The lights and candles should be put out at eight at night, and if any of the crew desire to drink after that hour they shall sit upon the open deck without lights.', inline: false },
+                { name: 'Article V', value: 'Each man shall keep his piece, cutlass and pistols at all times clean and ready for action.', inline: false },
+                { name: 'Article VI', value: 'No boy or woman to be allowed amongst them. If any man shall be found seducing any of the latter sex and carrying her to sea in disguise, he shall suffer death.', inline: false },
+                { name: 'Article VII', value: 'He that shall desert the ship or his quarters in time of battle shall be punished by death or marooning.', inline: false },
+                { name: 'Article VIII', value: 'None shall strike another on board the ship, but every man\'s quarrel shall be ended on shore by sword or pistol in this manner.', inline: false },
+                { name: 'Article IX', value: 'No man shall talk of breaking up their way of living till each has a share of 1,000. Every man who shall become a cripple or lose a limb in the service shall have 800 pieces of eight from the common stock.', inline: false },
+                { name: 'Article X', value: 'The captain and the quartermaster shall each receive two shares of a prize, the master gunner and boatswain, one and one half shares, all other officers one and one quarter, and private gentlemen of fortune one share each.', inline: false },
+                { name: 'Article XI', value: 'The musicians shall have rest on the Sabbath Day only by right. On all other days by favour only.', inline: false }
+            )
+            .setImage('https://images.steamusercontent.com/ugc/18345562890096640134/3633D8BC964A13D4B21DA399A640643AFB7B8B70/?imw=1920&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false')
+            .setFooter({ 
+                text: 'Fair winds and following seas! | Made by mungabee',
+                iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
+            })
+            .setTimestamp();
+        message.reply({ embeds: [embed] });
     },
     '!crew': (message) => {
         const members = message.guild.memberCount;
