@@ -1138,6 +1138,117 @@ const commandHandlers = {
         }
     },
     
+    '!deletevoice': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        
+        const config = loadVoiceConfig();
+        
+        // Confirm deletion
+        const confirmMsg = await message.reply(
+            '⚠️ **WARNING: Voice System Deletion**\n\n' +
+            'This will **permanently delete**:\n' +
+            '• Join-to-Create channel\n' +
+            '• Voice log channel\n' +
+            '• All active voice channels\n' +
+            '• All voice system settings\n\n' +
+            '**Type `CONFIRM` to proceed or `CANCEL` to abort**'
+        );
+        
+        const filter = (m) => m.author.id === message.author.id;
+        const collector = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
+        
+        collector.on('collect', async (m) => {
+            if (m.content.toUpperCase() === 'CANCEL') {
+                message.reply('❌ Voice system deletion cancelled.');
+                return;
+            }
+            
+            if (m.content.toUpperCase() !== 'CONFIRM') {
+                message.reply('❌ Invalid response. Deletion cancelled.');
+                return;
+            }
+            
+            // Start deletion process
+            let deletedCount = 0;
+            const errors = [];
+            
+            try {
+                // Delete Join-to-Create channel
+                if (config.joinToCreateChannel) {
+                    try {
+                        const joinChannel = await message.guild.channels.fetch(config.joinToCreateChannel);
+                        if (joinChannel) {
+                            await joinChannel.delete('Voice system deletion');
+                            deletedCount++;
+                        }
+                    } catch (err) {
+                        errors.push('Join-to-Create channel');
+                    }
+                }
+                
+                // Delete Voice Log channel
+                if (config.voiceLogChannel) {
+                    try {
+                        const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
+                        if (logChannel) {
+                            await logChannel.delete('Voice system deletion');
+                            deletedCount++;
+                        }
+                    } catch (err) {
+                        errors.push('Voice log channel');
+                    }
+                }
+                
+                // Delete all active voice channels
+                if (config.activeChannels) {
+                    for (const channelId of Object.keys(config.activeChannels)) {
+                        try {
+                            const channel = await message.guild.channels.fetch(channelId);
+                            if (channel) {
+                                await channel.delete('Voice system deletion');
+                                deletedCount++;
+                            }
+                        } catch (err) {
+                            errors.push(`Voice channel ${channelId}`);
+                        }
+                    }
+                }
+                
+                // Clear all config data
+                config.joinToCreateChannel = null;
+                config.joinToCreateCategory = null;
+                config.voiceChannelCategory = null;
+                config.voiceLogChannel = null;
+                config.activeChannels = {};
+                saveVoiceConfig(config);
+                
+                // Send success message
+                let resultMsg = `✅ **Voice System Deleted!**\n\n` +
+                                `🗑️ Deleted **${deletedCount}** channels\n` +
+                                `🔄 Reset all voice settings`;
+                
+                if (errors.length > 0) {
+                    resultMsg += `\n\n⚠️ **Errors:** Could not delete: ${errors.join(', ')}`;
+                }
+                
+                message.reply(resultMsg);
+                
+            } catch (error) {
+                console.error('Delete voice system error:', error);
+                message.reply('❌ Error deleting voice system. Some components may remain.');
+            }
+        });
+        
+        collector.on('end', (collected) => {
+            if (collected.size === 0) {
+                message.reply('❌ Timeout. Voice system deletion cancelled.');
+            }
+        });
+    },
+    
     '!help': (message) => {
         const embed = new EmbedBuilder()
             .setColor('#11806a')
@@ -1180,6 +1291,7 @@ const commandHandlers = {
                     '`!setupvoice` - Create Join-to-Create channel -*only admin*\n' +
                     '`!setupvoicelog` - Create voice log channel -*only admin*\n' +
                     '`!cleanupvoice` - Clean voice log channel -*only admin*\n' +
+                    '`!deletevoice` - Delete entire voice system -*only admin*\n' +
                     '`!voicename [name]` - Rename your voice channel\n' +
                     '`!voicelimit [0-99]` - Set user limit (0=unlimited)\n' +
                     '`!voicetemplate [gaming/study/chill]` - Apply template\n' +
