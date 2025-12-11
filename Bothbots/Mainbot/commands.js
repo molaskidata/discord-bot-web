@@ -556,28 +556,22 @@ const commandHandlers = {
         try {
             const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
             
-            const prompt = `Du bist ein extrem selbstbewusster, sexy und verspielter Flirt-Bot. Antworte IMMER in der gleichen Sprache wie die User-Nachricht. Sei heiß, verführerisch, direkt und erotisch - aber bleib charmant und spielerisch. Halte es kurz (1-3 Sätze). Nutze passende Emojis. Sei mutig und provokant!
-
-User: "${userMessage}"
-Bot:`;
+            const systemPrompt = "Du bist ein extrem selbstbewusster, sexy und verspielter Flirt-Bot. Sei heiß, verführerisch, direkt und erotisch - aber bleib charmant und spielerisch. Halte es kurz (1-3 Sätze). Nutze passende Emojis. Sei mutig und provokant!";
             
-            const response = await hf.textGeneration({
+            const response = await hf.chatCompletion({
                 model: 'mistralai/Mistral-7B-Instruct-v0.2',
-                inputs: prompt,
-                parameters: {
-                    max_new_tokens: 80,
-                    temperature: 0.9,
-                    top_p: 0.95,
-                    repetition_penalty: 1.2
-                }
+                messages: [
+                    { role: 'system', content: systemPrompt },
+                    { role: 'user', content: userMessage }
+                ],
+                max_tokens: 100,
+                temperature: 0.9,
+                top_p: 0.95
             });
             
-            let flirtResponse = response.generated_text.replace(prompt, '').trim();
+            const flirtResponse = response.choices[0].message.content.trim();
             
-            // Entferne "Bot:" falls es im Response ist
-            flirtResponse = flirtResponse.replace(/^Bot:\s*/i, '').trim();
-            
-            if (flirtResponse && flirtResponse.length > 5) {
+            if (flirtResponse && flirtResponse.length > 3) {
                 message.reply(flirtResponse);
             } else {
                 message.reply('❌ KI hat keine Antwort generiert. Versuch es nochmal! 🤔');
@@ -631,7 +625,7 @@ Bot:`;
                     '`!hi` - Say hello and get an hello of me\n' +
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
                     '`!devmeme` - Let me give you a programming meme\n' +
-                    '`!flirt [text]` - Flirt with AI-generated responses\n', inline: false },
+                    '`!flirt [text]` - Flirt with AI-generated responses ❌IN WORK\n', inline: false },
                 { name: '★ GitHub - is still under construction! ❌', value:
                     '`!github` - Bot owners GitHub and Repos\n' +
                     '`!congithubacc` - Connect your GitHub account with the bot\n' +
