@@ -627,7 +627,7 @@ const commandHandlers = {
                     '`!hi` - Say hello and get an hello of me\n' +
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
                     '`!devmeme` - Let me give you a programming meme\n' +
-                    '`!flirt [text]` - Flirt with AI-generated responses 💘\n', inline: false },
+                    '`!flirt [text]` - Flirt with AI-generated responses\n', inline: false },
                 { name: '★ GitHub', value:
                     '`!github` - Bot owners GitHub and Repos\n' +
                     '`!congithubacc` - Connect your GitHub account with the bot\n' +
@@ -651,7 +651,7 @@ const commandHandlers = {
                     '`!bumpstatus` - Check bump reminder status -*only admin*\n' +
                     '`!bumphelp` - Show bump system help', inline: false }
             )
-            .setImage('https://images.steamusercontent.com/ugc/12682713710486517274/762B0697319DE5ACD51EF2294AA3376530A773FB/?imw=2048&imh=864&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=true')
+            .setImage('https://media.discordapp.net/attachments/1226484495927218239/1448597565275635743/Screenshot_2025-12-11_094708.png?ex=693bd71d&is=693a859d&hm=152773c05569dbf0a2ff10953b93b93762afcce58391c94d358ef789b1e15968&=&format=webp&quality=lossless')
             .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
         message.reply({ embeds: [embed] });
     },
