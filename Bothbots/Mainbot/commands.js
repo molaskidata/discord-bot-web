@@ -1,6 +1,6 @@
 const fs = require('fs');
 const axios = require('axios');
-const { HfInference } = require('@huggingface/inference');
+const Groq = require('groq-sdk');
 
 const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
@@ -548,23 +548,23 @@ const commandHandlers = {
             return;
         }
         
-        if (!process.env.HUGGINGFACE_API_KEY) {
-            message.reply('❌ Hugging Face API Key fehlt in der .env Datei! Füge HUGGINGFACE_API_KEY hinzu.');
+        if (!process.env.GROQ_API_KEY) {
+            message.reply('❌ Groq API Key fehlt in der .env Datei! Füge GROQ_API_KEY hinzu.');
             return;
         }
         
         try {
-            const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
+            const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
             
             const systemPrompt = "Du bist ein extrem selbstbewusster, sexy und verspielter Flirt-Bot. Sei heiß, verführerisch, direkt und erotisch - aber bleib charmant und spielerisch. Halte es kurz (1-3 Sätze). Nutze passende Emojis. Sei mutig und provokant!";
             
-            const response = await hf.chatCompletion({
-                model: 'mistralai/Mistral-7B-Instruct-v0.2',
+            const response = await groq.chat.completions.create({
+                model: 'llama-3.3-70b-versatile',
                 messages: [
                     { role: 'system', content: systemPrompt },
                     { role: 'user', content: userMessage }
                 ],
-                max_tokens: 100,
+                max_tokens: 150,
                 temperature: 0.9,
                 top_p: 0.95
             });
@@ -577,7 +577,7 @@ const commandHandlers = {
                 message.reply('❌ KI hat keine Antwort generiert. Versuch es nochmal! 🤔');
             }
         } catch (error) {
-            console.error('Hugging Face API error:', error);
+            console.error('Groq API error:', error);
             message.reply(`❌ Fehler: ${error.message || 'API Request fehlgeschlagen'}`);
         }
     },
