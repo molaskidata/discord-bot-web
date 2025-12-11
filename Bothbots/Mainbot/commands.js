@@ -556,30 +556,34 @@ const commandHandlers = {
         try {
             const hf = new HfInference(process.env.HUGGINGFACE_API_KEY);
             
-            const prompt = `You are a charming, playful flirt bot. Detect the language of the user's message and respond in the SAME language. Be flirty, witty, and charming. Keep it short (1-2 sentences) and use appropriate emojis. User message: "${userMessage}"`;
+            const prompt = `Du bist ein extrem selbstbewusster, sexy und verspielter Flirt-Bot. Antworte IMMER in der gleichen Sprache wie die User-Nachricht. Sei heiß, verführerisch, direkt und erotisch - aber bleib charmant und spielerisch. Halte es kurz (1-3 Sätze). Nutze passende Emojis. Sei mutig und provokant!
+
+User: "${userMessage}"
+Bot:`;
             
             const response = await hf.textGeneration({
                 model: 'mistralai/Mistral-7B-Instruct-v0.2',
                 inputs: prompt,
                 parameters: {
-                    max_new_tokens: 100,
-                    temperature: 0.8,
-                    top_p: 0.95
+                    max_new_tokens: 80,
+                    temperature: 0.9,
+                    top_p: 0.95,
+                    repetition_penalty: 1.2
                 }
             });
             
-            console.log('HF Response:', response);
-            const flirtResponse = response.generated_text.replace(prompt, '').trim();
-            console.log('Flirt response:', flirtResponse);
+            let flirtResponse = response.generated_text.replace(prompt, '').trim();
             
-            if (flirtResponse) {
+            // Entferne "Bot:" falls es im Response ist
+            flirtResponse = flirtResponse.replace(/^Bot:\s*/i, '').trim();
+            
+            if (flirtResponse && flirtResponse.length > 5) {
                 message.reply(flirtResponse);
             } else {
                 message.reply('❌ KI hat keine Antwort generiert. Versuch es nochmal! 🤔');
             }
         } catch (error) {
             console.error('Hugging Face API error:', error);
-            console.error('Error details:', error.message, error.response?.data);
             message.reply(`❌ Fehler: ${error.message || 'API Request fehlgeschlagen'}`);
         }
     },
@@ -628,7 +632,7 @@ const commandHandlers = {
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
                     '`!devmeme` - Let me give you a programming meme\n' +
                     '`!flirt [text]` - Flirt with AI-generated responses\n', inline: false },
-                { name: '★ GitHub', value:
+                { name: '★ GitHub - is still under construction! ❌', value:
                     '`!github` - Bot owners GitHub and Repos\n' +
                     '`!congithubacc` - Connect your GitHub account with the bot\n' +
                     '`!discongithubacc` - Disconnect your GitHub account\n' +
