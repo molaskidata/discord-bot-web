@@ -1,6 +1,4 @@
 // Attach security moderation handler
-const { handleSecurityModeration } = require('./commands');
-client.on('messageCreate', handleSecurityModeration);
 const PING_GUILD_ID = '1415044198792691858';
 const PING_CHANNEL_ID = '1448640396359106672';
 function sendPingToPingBot() {
@@ -52,6 +50,9 @@ const client = new Client({
 });
 
 global.client = client;
+
+// Attach security moderation handler after client is initialized
+client.on('messageCreate', handleSecurityModeration);
 
 let gameTimer = 0;
 const MAX_HOURS = 20;
