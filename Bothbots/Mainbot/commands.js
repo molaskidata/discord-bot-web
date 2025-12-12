@@ -247,6 +247,78 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+                '!sban': async (message) => {
+                    if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
+                        message.reply('❌ This is an admin-only and premium command.');
+                        return;
+                    }
+                    const user = message.mentions.users.first();
+                    if (!user) {
+                        message.reply('Usage: !sban @user');
+                        return;
+                    }
+                    try {
+                        await message.guild.members.ban(user.id, { reason: 'Manual security ban' });
+                        message.reply(`🔨 Banned ${user.tag}`);
+                    } catch (err) {
+                        message.reply('❌ Failed to ban user.');
+                    }
+                },
+                '!skick': async (message) => {
+                    if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
+                        message.reply('❌ This is an admin-only and premium command.');
+                        return;
+                    }
+                    const user = message.mentions.users.first();
+                    if (!user) {
+                        message.reply('Usage: !skick @user');
+                        return;
+                    }
+                    try {
+                        await message.guild.members.kick(user.id, 'Manual security kick');
+                        message.reply(`👢 Kicked ${user.tag}`);
+                    } catch (err) {
+                        message.reply('❌ Failed to kick user.');
+                    }
+                },
+                '!stimeout': async (message) => {
+                    if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
+                        message.reply('❌ This is an admin-only and premium command.');
+                        return;
+                    }
+                    const user = message.mentions.users.first();
+                    const args = message.content.split(' ');
+                    const duration = parseInt(args[2]) || 120; // default 120 min
+                    if (!user) {
+                        message.reply('Usage: !stimeout @user [minutes]');
+                        return;
+                    }
+                    try {
+                        const member = await message.guild.members.fetch(user.id);
+                        await member.timeout(duration * 60 * 1000, 'Manual security timeout');
+                        message.reply(`⏳ Timed out ${user.tag} for ${duration} minutes.`);
+                    } catch (err) {
+                        message.reply('❌ Failed to timeout user.');
+                    }
+                },
+                '!stimeoutdel': async (message) => {
+                    if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
+                        message.reply('❌ This is an admin-only and premium command.');
+                        return;
+                    }
+                    const user = message.mentions.users.first();
+                    if (!user) {
+                        message.reply('Usage: !stimeoutdel @user');
+                        return;
+                    }
+                    try {
+                        const member = await message.guild.members.fetch(user.id);
+                        await member.timeout(null, 'Manual security timeout removed');
+                        message.reply(`✅ Timeout removed for ${user.tag}`);
+                    } catch (err) {
+                        message.reply('❌ Failed to remove timeout.');
+                    }
+                },
             '!setsecuritymod': async (message) => {
                 if (!isOwnerOrAdmin(message.member)) {
                     message.reply('❌ This is an admin-only command.');
