@@ -1,3 +1,68 @@
+// --- Security System Word Lists (multi-language, extend as needed) ---
+const securityWordLists = [
+    // German (provided)
+    'anal','anus','arsch','boobs','cl1t','clit','dick','dickpic','fick','ficki','ficks','fuck','fucking','hure','huren','hurens','kitzler','milf','nackt','nacktbilder','nippel','nud3','nude','nudes','nutt','p0rn','p0rno','p3nis','penis','porn','porno','puss','pussy','s3x','scheide','schlampe','sex','sexual','slut','slutti','t1tt','titt','titten','vag1na','vagina',
+    'arschloch','asozial','bastard','behindert','depp','dödel','dumm','dummi','hund','hundesohn','idiot','lappen','lappi','opfa','opfer','sohnedings','sohnemann','sohns','spast','spasti','wichser','wix','wixx','wixxer',
+    'geh sterben','gehsterben','go die','ich bring dich um','ich töte dich','kill yourself','killyourself','kys','self harm','selfharm','sterb','suizid','töd dich','töt dich','verreck','verreckt','cl1ck','click here','discordgift','free nitro','freenitro','gift you nitro','steamgift','abschlacht','abschlachten','abst3chen','abstechen','abstich','angreifen','att4ck','attack','attackieren','aufhaengen','aufhängen','ausloeschen','auslöschen','ausradieren','bedroh','bedrohe','bedrohen','blut','brechdirdieknochen','bring dich um','bringdichum','bringmichum','erdrücken','erdruecken','erhaengen','erhängen','ermorden','erschies','erschießen','erstech','erstechen','erwuergen','erwürg','erwürgen','gefährd','gefährlich','k1ll','kill','kille','killer','knochenbrechen','m0rd','m4ssaker','massaker','mord','morden','pruegeln','prügeln','schiess','schieß','schlagdich','schlagmich','shoot','stech','stich','toeten','töten','umbr1ng','umbracht','umbringen',
+    // English (partial, extend as needed)
+    'anal','anus','ass','boobs','clit','dick','dickpic','fuck','fucking','whore','milf','nude','nudes','nipple','porn','porno','pussy','sex','slut','tits','vagina','bastard','idiot','dumb','stupid','retard','spastic','wanker','go die','kill yourself','kys','suicide','self harm','selfharm','die','murder','kill','attack','blood','shoot','stab','hang','dangerous','massacre','threat','gift nitro','free nitro','discordgift','click here','steamgift',
+    // Add more: Danish, Serbisch, Kroatisch, Russisch, Finnisch, Italienisch, Spanisch
+];
+
+// --- Security Moderation Handler ---
+async function handleSecurityModeration(message) {
+    if (!message.guild) return;
+    const guildId = message.guild.id;
+    if (!securitySystemEnabled[guildId]) return;
+    if (!isPremiumUser(message.author.id)) return;
+    if (isOwnerOrAdmin(message.member)) return; // Don't moderate admins/owners
+
+    const content = message.content.toLowerCase();
+    // Check for invite links
+    const inviteRegex = /(discord\.gg\/|discordapp\.com\/invite\/|discord\.com\/invite\/)/i;
+    if (inviteRegex.test(content)) {
+        await timeoutAndWarn(message, 'Invite links are not allowed!');
+        return;
+    }
+    // Check for spam (simple: repeated characters/words, can be improved)
+    if (/([a-zA-Z0-9])\1{6,}/.test(content) || /(.)\s*\1{6,}/.test(content)) {
+        await timeoutAndWarn(message, 'Spam detected!');
+        return;
+    }
+    // Check for blacklisted words
+    for (const word of securityWordLists) {
+        if (content.includes(word)) {
+            await timeoutAndWarn(message, `Inappropriate language detected: "${word}"`);
+            return;
+        }
+    }
+    // Check for NSFW images (basic: attachment filename, can be improved with AI)
+    if (message.attachments && message.attachments.size > 0) {
+        for (const [, attachment] of message.attachments) {
+            const name = attachment.name.toLowerCase();
+            if (name.match(/(nude|nudes|porn|dick|boobs|sex|fuck|pussy|tits|vagina|penis|clit|anal|ass|nsfw|xxx|18\+|dickpic|dickpic|nacktbilder|nackt|milf|slut|cum|cumshot|hure|huren|arsch|fick|ficki|ficks|titten|titt|t1tt|nud3|nud3s|p0rn|p0rno|p3nis|kitzler|scheide|schlampe|nutt|nippel|nacktbilder|nackt|nude|nudes|nutt|p0rn|p0rno|p3nis|penis|porn|porno|puss|pussy|s3x|scheide|schlampe|sex|sexual|slut|slutti|t1tt|titt|titten|vag1na|vagina)/)) {
+                await timeoutAndWarn(message, 'NSFW/explicit image detected!');
+                return;
+            }
+        }
+    }
+}
+
+// --- Timeout and Warn Helper ---
+async function timeoutAndWarn(message, reason) {
+    try {
+        await message.delete();
+        await message.member.timeout(2 * 60 * 60 * 1000, reason); // 2h timeout
+        await message.author.send(`You have been timed out for 2 hours for: ${reason}`);
+    } catch (err) {
+        // Ignore errors (e.g. cannot DM user)
+    }
+}
+// --- Security Moderation Listener ---
+// Attach to your message event handler in your bot's main file:
+// client.on('messageCreate', handleSecurityModeration);
+// Security system state per guild
+const securitySystemEnabled = {};
 // Store cleanup intervals per channel
 const cleanupIntervals = {};
 const SERVER_LANG_FILE = 'server_languages.json';
@@ -182,9 +247,30 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+            '!setsecuritymod': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) {
+                    message.reply('❌ This is an admin-only command.');
+                    return;
+                }
+                if (!isPremiumUser(message.author.id)) {
+                    message.reply('❌ This is a **Premium** feature!');
+                    return;
+                }
+                const guildId = message.guild.id;
+                if (securitySystemEnabled[guildId]) {
+                    message.reply('⚠️ Security system is already enabled for this server.');
+                    return;
+                }
+                securitySystemEnabled[guildId] = true;
+                message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages. You can customize the word list and settings soon.');
+            },
         '!cleanup': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {
                 message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            if (!isPremiumUser(message.author.id)) {
+                message.reply('❌ This is a **Premium** feature!');
                 return;
             }
             const channel = message.channel;
@@ -220,6 +306,10 @@ const commandHandlers = {
         '!cleanupdel': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {
                 message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            if (!isPremiumUser(message.author.id)) {
+                message.reply('❌ This is a **Premium** feature!');
                 return;
             }
             const channel = message.channel;
@@ -1214,49 +1304,39 @@ const commandHandlers = {
             message.reply('❌ This is an admin-only command.');
             return;
         }
-        
+        if (!isPremiumUser(message.author.id)) {
+            message.reply('❌ This is a **Premium** feature!');
+            return;
+        }
         const config = loadVoiceConfig();
-        
         if (!config.voiceLogChannel) {
             message.reply('❌ No voice log channel configured. Use `!setupvoicelog` first.');
             return;
         }
-        
         try {
             const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
-            
             if (!logChannel) {
                 message.reply('❌ Voice log channel not found.');
                 return;
             }
-            
-            
             let deleted = 0;
             let lastId;
-            
             while (true) {
                 const options = { limit: 100 };
                 if (lastId) {
                     options.before = lastId;
                 }
-                
                 const messages = await logChannel.messages.fetch(options);
-                
                 if (messages.size === 0) break;
-                
                 for (const msg of messages.values()) {
                     await msg.delete();
                     deleted++;
                 }
-                
                 lastId = messages.last().id;
-                
                 if (messages.size < 100) break;
             }
-            
             message.reply(`✅ Voice log channel cleaned! Deleted **${deleted}** messages.`);
             await logChannel.send(`🧹 **Log Cleanup** - Channel cleared by ${message.author.username}`);
-            
         } catch (error) {
             console.error('Cleanup voice error:', error);
             message.reply('❌ Error cleaning voice log channel.');
@@ -1268,10 +1348,11 @@ const commandHandlers = {
             message.reply('❌ This is an admin-only command.');
             return;
         }
-        
+        if (!isPremiumUser(message.author.id)) {
+            message.reply('❌ This is a **Premium** feature!');
+            return;
+        }
         const config = loadVoiceConfig();
-        
-        
         const confirmMsg = await message.reply(
             '⚠️ **WARNING: Voice System Deletion**\n\n' +
             'This will **permanently delete**:\n' +
@@ -1281,27 +1362,20 @@ const commandHandlers = {
             '• All voice system settings\n\n' +
             '**Type `CONFIRM` to proceed or `CANCEL` to abort**'
         );
-        
         const filter = (m) => m.author.id === message.author.id;
         const collector = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
-        
         collector.on('collect', async (m) => {
             if (m.content.toUpperCase() === 'CANCEL') {
                 message.reply('❌ Voice system deletion cancelled.');
                 return;
             }
-            
             if (m.content.toUpperCase() !== 'CONFIRM') {
                 message.reply('❌ Invalid response. Deletion cancelled.');
                 return;
             }
-            
-            
             let deletedCount = 0;
             const errors = [];
-            
             try {
-                
                 if (config.joinToCreateChannel) {
                     try {
                         const joinChannel = await message.guild.channels.fetch(config.joinToCreateChannel);
@@ -1313,8 +1387,6 @@ const commandHandlers = {
                         errors.push('Join-to-Create channel');
                     }
                 }
-                
-                
                 if (config.voiceLogChannel) {
                     try {
                         const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
@@ -1326,8 +1398,6 @@ const commandHandlers = {
                         errors.push('Voice log channel');
                     }
                 }
-                
-                
                 if (config.activeChannels) {
                     for (const channelId of Object.keys(config.activeChannels)) {
                         try {
@@ -1341,32 +1411,24 @@ const commandHandlers = {
                         }
                     }
                 }
-                
-                
                 config.joinToCreateChannel = null;
                 config.joinToCreateCategory = null;
                 config.voiceChannelCategory = null;
                 config.voiceLogChannel = null;
                 config.activeChannels = {};
                 saveVoiceConfig(config);
-                
-                
                 let resultMsg = `✅ **Voice System Deleted!**\n\n` +
                                 `🗑️ Deleted **${deletedCount}** channels\n` +
                                 `🔄 Reset all voice settings`;
-                
                 if (errors.length > 0) {
                     resultMsg += `\n\n⚠️ **Errors:** Could not delete: ${errors.join(', ')}`;
                 }
-                
                 message.reply(resultMsg);
-                
             } catch (error) {
                 console.error('Delete voice system error:', error);
                 message.reply('❌ Error deleting voice system. Some components may remain.');
             }
         });
-        
         collector.on('end', (collected) => {
             if (collected.size === 0) {
                 message.reply('❌ Timeout. Voice system deletion cancelled.');
