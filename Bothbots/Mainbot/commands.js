@@ -180,6 +180,35 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+        '!cleanup': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            const channel = message.channel;
+            message.reply('🧹 Cleanup aktiviert! Alle Nachrichten in diesem Channel werden in 1 Stunde automatisch gelöscht.');
+            setTimeout(async () => {
+                let deleted = 0;
+                let lastId;
+                try {
+                    while (true) {
+                        const options = { limit: 100 };
+                        if (lastId) options.before = lastId;
+                        const messages = await channel.messages.fetch(options);
+                        if (messages.size === 0) break;
+                        for (const msg of messages.values()) {
+                            await msg.delete();
+                            deleted++;
+                        }
+                        lastId = messages.last().id;
+                        if (messages.size < 100) break;
+                    }
+                    channel.send(`🧹 Cleanup abgeschlossen! Es wurden **${deleted}** Nachrichten gelöscht.`);
+                } catch (err) {
+                    channel.send('❌ Fehler beim Löschen der Nachrichten.');
+                }
+            }, 60 * 60 * 1000);
+        },
     '!birthdaychannel': async (message) => {
         if (!message.member.permissions.has('Administrator')) {
             message.reply('❌ This command can only be used by administrators!');
@@ -1356,6 +1385,7 @@ const commandHandlers = {
                     '`!deletetwitch` - Delete your Twitch account data', inline: false },
                 { name: '★ Utilities *- only admin*', value:
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n' +
+                    '`!cleanup` - Aktiviert 1h Auto-Cleanup: löscht alle Nachrichten im Channel nach 1 Stunde -*only admin*\n' +
                     '`anonymously` -*only admin*', inline: false },
                 { name: '★ Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder -*only admin*\n' +
