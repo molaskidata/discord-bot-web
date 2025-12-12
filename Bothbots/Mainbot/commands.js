@@ -1,3 +1,5 @@
+// Store cleanup intervals per channel
+const cleanupIntervals = {};
 const SERVER_LANG_FILE = 'server_languages.json';
 function loadServerLanguages() {
     if (fs.existsSync(SERVER_LANG_FILE)) {
@@ -186,8 +188,12 @@ const commandHandlers = {
                 return;
             }
             const channel = message.channel;
-            message.reply('🧹 Cleanup aktiviert! Alle Nachrichten in diesem Channel werden in 1 Stunde automatisch gelöscht.');
-            setTimeout(async () => {
+            if (cleanupIntervals[channel.id]) {
+                message.reply('⚠️ There is already a cleanup interval running in this channel. Use !cleanupdel to stop it first.');
+                return;
+            }
+            message.reply('🧹 Cleanup enabled! All messages in this channel will be deleted automatically every hour.\n\n**Note:** You must run this command in the channel you want to clean up.');
+            const interval = setInterval(async () => {
                 let deleted = 0;
                 let lastId;
                 try {
@@ -203,11 +209,27 @@ const commandHandlers = {
                         lastId = messages.last().id;
                         if (messages.size < 100) break;
                     }
-                    channel.send(`🧹 Cleanup abgeschlossen! Es wurden **${deleted}** Nachrichten gelöscht.`);
+                    channel.send(`🧹 Cleanup complete! **${deleted}** messages deleted.`);
                 } catch (err) {
-                    channel.send('❌ Fehler beim Löschen der Nachrichten.');
+                    channel.send('❌ Error while deleting messages.');
                 }
             }, 60 * 60 * 1000);
+            cleanupIntervals[channel.id] = interval;
+        },
+
+        '!cleanupdel': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            const channel = message.channel;
+            if (!cleanupIntervals[channel.id]) {
+                message.reply('❌ There is no cleanup interval running in this channel. Make sure you are in the correct channel or it was already stopped.');
+                return;
+            }
+            clearInterval(cleanupIntervals[channel.id]);
+            delete cleanupIntervals[channel.id];
+            message.reply('🛑 Cleanup interval stopped for this channel.');
         },
     '!birthdaychannel': async (message) => {
         if (!message.member.permissions.has('Administrator')) {
@@ -1385,7 +1407,8 @@ const commandHandlers = {
                     '`!deletetwitch` - Delete your Twitch account data', inline: false },
                 { name: '★ Utilities *- only admin*', value:
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n' +
-                    '`!cleanup` - Aktiviert 1h Auto-Cleanup: löscht alle Nachrichten im Channel nach 1 Stunde -*only admin*\n' +
+                    '`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour. **You must run this command in the channel you want to clean up.** -*only admin*\n' +
+                    '`!cleanupdel` - Stop the hourly auto-cleanup for this channel. **You must run this command in the channel where cleanup is active.** -*only admin*\n' +
                     '`anonymously` -*only admin*', inline: false },
                 { name: '★ Bump Reminders', value:
                     '`!setbumpreminder` - Set 2-hour bump reminder -*only admin*\n' +
