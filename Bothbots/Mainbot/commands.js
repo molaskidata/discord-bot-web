@@ -1,3 +1,13 @@
+const SERVER_LANG_FILE = 'server_languages.json';
+function loadServerLanguages() {
+    if (fs.existsSync(SERVER_LANG_FILE)) {
+        return JSON.parse(fs.readFileSync(SERVER_LANG_FILE));
+    }
+    return {};
+}
+function saveServerLanguages(data) {
+    fs.writeFileSync(SERVER_LANG_FILE, JSON.stringify(data, null, 2));
+}
 const fs = require('fs');
 const axios = require('axios');
 const Groq = require('groq-sdk');
@@ -549,24 +559,91 @@ const commandHandlers = {
     '!gg': (message) => message.reply("GG WP! 🎉"),
     '!gn': (message) => message.reply(getRandomResponse(goodnightResponses)),
     '!gm': (message) => message.reply(getRandomResponse(goodmorningResponses)),
-    '!flirt': async (message) => {
-        const userMessage = message.content.replace('!flirt', '').trim();
-        
-        if (!userMessage) {
-            message.reply('Gib mir was zum Flirten! Beispiel: `!flirt Hey, wie geht\'s dir? 😊`');
+    '!setlanguage': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ Nur Admins oder Bot-Owner dürfen die Sprache setzen.');
             return;
         }
-        
+        const args = message.content.split(' ');
+        if (args.length < 2) {
+            message.reply('❌ Bitte gib eine Sprache an, z.B. `!setlanguage arabic` oder `!setlanguage english`.');
+            return;
+        }
+        const lang = args[1].toLowerCase();
+        const serverId = message.guild.id;
+        const langs = loadServerLanguages();
+        langs[serverId] = lang;
+        saveServerLanguages(langs);
+        message.reply(`✅ Serversprache wurde auf **${lang}** gesetzt. KI wird ab jetzt diese Sprache für Übersetzungen und Flirts nutzen.`);
+    },
+    '!translate': async (message) => {
         if (!process.env.GROQ_API_KEY) {
             message.reply('❌ Groq API Key fehlt in der .env Datei! Füge GROQ_API_KEY hinzu.');
             return;
         }
-        
+        if (!message.reference || !message.reference.messageId) {
+            message.reply('❌ Bitte benutze !translate als Antwort auf eine Nachricht, die du übersetzen willst.');
+            return;
+        }
         try {
+            const refMsg = await message.channel.messages.fetch(message.reference.messageId);
+            const originalText = refMsg.content;
+            if (!originalText || originalText.length < 2) {
+                message.reply('❌ Die referenzierte Nachricht enthält keinen übersetzbaren Text.');
+                return;
+            }
+            const serverId = message.guild.id;
+            const langs = loadServerLanguages();
+            const targetLang = langs[serverId];
             const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
-            
-            const systemPrompt = "You are an extremely confident, sexy, and playful flirt bot. Be hot, seductive, direct and erotic - but stay charming and playful. Keep it short (1-3 sentences). Use maximum 1-2 emojis per message - no more! Be bold and provocative! CRITICAL: Detect the user's language and respond in THE EXACT SAME LANGUAGE. If they write in German, respond in German. If they write in English, respond in English. ALWAYS use gender-neutral terms like 'Süße/r', 'Hübsche/r', 'Schöne/r' in German or 'sweetie', 'beautiful' in English.";
-            
+            let prompt;
+            if (targetLang) {
+                prompt = `Du bist ein Übersetzer. Erkenne die Sprache des folgenden Textes und übersetze ihn:\n1. Ins Englische (falls Original nicht Englisch)\n2. Ins Deutsche (falls Original nicht Deutsch)\n3. In die Serversprache (${targetLang}) (falls Original nicht ${targetLang})\nAntworte im Format:\nTranslation (ENGL): ...\nTranslation (DEU): ...\nTranslation (${targetLang.toUpperCase()}): ...\n\nText: ${originalText}`;
+            } else {
+                prompt = `Du bist ein Übersetzer. Erkenne die Sprache des folgenden Textes und übersetze ihn:\n1. Ins Englische (falls Original nicht Englisch)\n2. Ins Deutsche (falls Original nicht Deutsch)\nAntworte im Format:\nTranslation (ENGL): ...\nTranslation (DEU): ...\n\nText: ${originalText}`;
+            }
+            const response = await groq.chat.completions.create({
+                model: 'llama-3.3-70b-versatile',
+                messages: [
+                    { role: 'system', content: 'Du bist ein hilfreicher Übersetzer für Discord. Antworte immer im gewünschten Format.' },
+                    { role: 'user', content: prompt }
+                ],
+                max_tokens: 400,
+                temperature: 0.2,
+                top_p: 0.95
+            });
+            const translation = response.choices[0].message.content.trim();
+            if (translation && translation.length > 3) {
+                message.reply(translation);
+            } else {
+                message.reply('❌ KI hat keine Übersetzung generiert. Versuch es nochmal!');
+            }
+        } catch (error) {
+            console.error('Groq API error:', error);
+            message.reply(`❌ Fehler: ${error.message || 'API Request fehlgeschlagen'}`);
+        }
+    },
+    '!flirt': async (message) => {
+        const userMessage = message.content.replace('!flirt', '').trim();
+        if (!userMessage) {
+            message.reply('Gib mir was zum Flirten! Beispiel: `!flirt Hey, wie geht\'s dir? 😊`');
+            return;
+        }
+        if (!process.env.GROQ_API_KEY) {
+            message.reply('❌ Groq API Key fehlt in der .env Datei! Füge GROQ_API_KEY hinzu.');
+            return;
+        }
+        try {
+            const serverId = message.guild.id;
+            const langs = loadServerLanguages();
+            const flirtLang = langs[serverId];
+            const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
+            let systemPrompt;
+            if (flirtLang) {
+                systemPrompt = `You are an extremely confident, sexy, and playful flirt bot. Be hot, seductive, direct and erotic - but stay charming and playful. Keep it short (1-3 sentences). Use maximum 1-2 emojis per message - no more! Be bold and provocative! CRITICAL: Antworte IMMER in ${flirtLang}. Verwende genderneutrale Begriffe falls möglich.`;
+            } else {
+                systemPrompt = "You are an extremely confident, sexy, and playful flirt bot. Be hot, seductive, direct and erotic - but stay charming and playful. Keep it short (1-3 sentences). Use maximum 1-2 emojis per message - no more! Be bold and provocative! CRITICAL: Detect the user's language and respond in THE EXACT SAME LANGUAGE. ALWAYS use gender-neutral terms like 'Süße/r', 'Hübsche/r', 'Schöne/r' in German or 'sweetie', 'beautiful' in English.";
+            }
             const response = await groq.chat.completions.create({
                 model: 'llama-3.3-70b-versatile',
                 messages: [
@@ -577,9 +654,7 @@ const commandHandlers = {
                 temperature: 0.9,
                 top_p: 0.95
             });
-            
             const flirtResponse = response.choices[0].message.content.trim();
-            
             if (flirtResponse && flirtResponse.length > 3) {
                 message.reply(flirtResponse);
             } else {
