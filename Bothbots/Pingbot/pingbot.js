@@ -6,7 +6,7 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
 
 const PING_GUILD_ID = '1415044198792691858';
-const PING_CHANNEL_ID = '1440998057016557619';
+const PING_CHANNEL_ID = '1448640396359106672';
 
 const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();

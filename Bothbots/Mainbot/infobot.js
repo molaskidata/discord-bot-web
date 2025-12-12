@@ -1,5 +1,5 @@
 const PING_GUILD_ID = '1415044198792691858';
-const PING_CHANNEL_ID = '1440998057016557619';
+const PING_CHANNEL_ID = '1448640396359106672';
 function sendPingToPingBot() {
     const guild = client.guilds.cache.get(PING_GUILD_ID);
     if (guild) {
@@ -185,14 +185,30 @@ client.on('messageCreate', (message) => {
     if (message.author.id === '302050872383242240') {
         if (message.embeds.length > 0) {
             const embed = message.embeds[0];
-            if (embed.description && 
-                (embed.description.includes('Bump done') || 
-                 embed.description.includes(':thumbsup:') ||
-                 embed.description.toLowerCase().includes('bumped'))) {
-                
-                console.log(`Bump detected in channel: ${message.channel.name}`);
-                const { setBumpReminder } = require('./commands');
-                setBumpReminder(message.channel, message.guild);
+            if (embed.description) {
+                const desc = embed.description.toLowerCase();
+                // Englische, deutsche und weitere Varianten
+                const bumpKeywords = [
+                    'bump done',
+                    ':thumbsup:',
+                    'bumped',
+                    'bump erfolgreich',
+                    'erfolgreich gebumpt',
+                    'server wurde gebumpt',
+                    'du kannst den server in 2 stunden wieder bumpen',
+                    'bump ist durch',
+                    'bump abgeschlossen',
+                    'bump wurde durchgeführt',
+                    'bump effectué', // Französisch
+                    'bump completado', // Spanisch
+                    'bump effettuato', // Italienisch
+                    'bump realizado', // Portugiesisch
+                ];
+                if (bumpKeywords.some(k => desc.includes(k))) {
+                    console.log(`Bump detected in channel: ${message.channel.name}`);
+                    const { setBumpReminder } = require('./commands');
+                    setBumpReminder(message.channel, message.guild);
+                }
             }
         }
         return;
