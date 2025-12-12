@@ -1670,5 +1670,6 @@ module.exports = {
     handleCommand,
     commandHandlers,
     setBumpReminder,
-    restoreBumpReminders
+    restoreBumpReminders,
+    handleSecurityModeration
 };
