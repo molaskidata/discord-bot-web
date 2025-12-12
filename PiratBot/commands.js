@@ -1,3 +1,155 @@
+// --- Security System Word Lists (multi-language, extend as needed) ---
+const securityWordLists = [
+    // German (provided)
+    'anal','anus','arsch','boobs','cl1t','clit','dick','dickpic','fick','ficki','ficks','fuck','fucking','hure','huren','hurens','kitzler','milf','nackt','nacktbilder','nippel','nud3','nude','nudes','nutt','p0rn','p0rno','p3nis','penis','porn','porno','puss','pussy','s3x','scheide','schlampe','sex','sexual','slut','slutti','t1tt','titt','titten','vag1na','vagina',
+    'arschloch','asozial','bastard','behindert','depp','dödel','dumm','dummi','hund','hundesohn','idiot','lappen','lappi','opfa','opfer','sohnedings','sohnemann','sohns','spast','spasti','wichser','wix','wixx','wixxer',
+    'geh sterben','gehsterben','go die','ich bring dich um','ich töte dich','kill yourself','killyourself','kys','self harm','selfharm','sterb','suizid','töd dich','töt dich','verreck','verreckt','cl1ck','click here','discordgift','free nitro','freenitro','gift you nitro','steamgift','abschlacht','abschlachten','abst3chen','abstechen','abstich','angreifen','att4ck','attack','attackieren','aufhaengen','aufhängen','ausloeschen','auslöschen','ausradieren','bedroh','bedrohe','bedrohen','blut','brechdirdieknochen','bring dich um','bringdichum','bringmichum','erdrücken','erdruecken','erhaengen','erhängen','ermorden','erschies','erschießen','erstech','erstechen','erwuergen','erwürg','erwürgen','gefährd','gefährlich','k1ll','kill','kille','killer','knochenbrechen','m0rd','m4ssaker','massaker','mord','morden','pruegeln','prügeln','schiess','schieß','schlagdich','schlagmich','shoot','stech','stich','toeten','töten','umbr1ng','umbracht','umbringen',
+    // English (partial, extend as needed)
+    'anal','anus','ass','boobs','clit','dick','dickpic','fuck','fucking','whore','milf','nude','nudes','nipple','porn','porno','pussy','sex','slut','tits','vagina','bastard','idiot','dumb','stupid','retard','spastic','wanker','go die','kill yourself','kys','suicide','self harm','selfharm','die','murder','kill','attack','blood','shoot','stab','hang','dangerous','massacre','threat','gift nitro','free nitro','discordgift','click here','steamgift',
+    // Add more: Danish, Serbisch, Kroatisch, Russisch, Finnisch, Italienisch, Spanisch
+];
+
+// Security system state per guild
+const securitySystemEnabled = {};
+
+// --- Security Moderation Handler ---
+async function handleSecurityModeration(message) {
+    if (!message.guild) return;
+    const guildId = message.guild.id;
+    if (!securitySystemEnabled[guildId]) return;
+    if (!isOwnerOrAdmin(message.member)) return; // Don't moderate admins/owners
+
+    const content = message.content.toLowerCase();
+    // Check for invite links
+    const inviteRegex = /(discord\.gg\/|discordapp\.com\/invite\/|discord\.com\/invite\/)/i;
+    if (inviteRegex.test(content)) {
+        await timeoutAndWarn(message, 'Invite links are not allowed!');
+        return;
+    }
+    // Check for spam (simple: repeated characters/words, can be improved)
+    if (/([a-zA-Z0-9])\1{6,}/.test(content) || /(.)\s*\1{6,}/.test(content)) {
+        await timeoutAndWarn(message, 'Spam detected!');
+        return;
+    }
+    // Check for blacklisted words
+    for (const word of securityWordLists) {
+        if (content.includes(word)) {
+            await timeoutAndWarn(message, `Inappropriate language detected: "${word}"`);
+            return;
+        }
+    }
+    // Check for NSFW images (basic: attachment filename, can be improved with AI)
+    if (message.attachments && message.attachments.size > 0) {
+        for (const [, attachment] of message.attachments) {
+            const name = attachment.name.toLowerCase();
+            if (name.match(/(nude|nudes|porn|dick|boobs|sex|fuck|pussy|tits|vagina|penis|clit|anal|ass|nsfw|xxx|18\+|dickpic|dickpic|nacktbilder|nackt|milf|slut|cum|cumshot|hure|huren|arsch|fick|ficki|ficks|titten|titt|t1tt|nud3|nud3s|p0rn|p0rno|p3nis|kitzler|scheide|schlampe|nutt|nippel|nacktbilder|nackt|nude|nudes|nutt|p0rn|p0rno|p3nis|penis|porn|porno|puss|pussy|s3x|scheide|schlampe|sex|sexual|slut|slutti|t1tt|titt|titten|vag1na|vagina)/)) {
+                await timeoutAndWarn(message, 'NSFW/explicit image detected!');
+                return;
+            }
+        }
+    }
+}
+
+// --- Timeout and Warn Helper ---
+async function timeoutAndWarn(message, reason) {
+    try {
+        await message.delete();
+        await message.member.timeout(2 * 60 * 60 * 1000, reason); // 2h timeout
+        await message.author.send(`You have been timed out for 2 hours for: ${reason}`);
+    } catch (err) {
+        // Ignore errors (e.g. cannot DM user)
+    }
+}
+
+function isOwnerOrAdmin(member) {
+    return member.permissions.has('Administrator');
+}
+    '!setsecuritymod': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const guildId = message.guild.id;
+        if (securitySystemEnabled[guildId]) {
+            message.reply('⚠️ Security system is already enabled for this server.');
+            return;
+        }
+        securitySystemEnabled[guildId] = true;
+        message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.');
+    },
+    '!sban': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        if (!user) {
+            message.reply('Usage: !sban @user');
+            return;
+        }
+        try {
+            await message.guild.members.ban(user.id, { reason: 'Manual security ban' });
+            message.reply(`🔨 Banned ${user.tag}`);
+        } catch (err) {
+            message.reply('❌ Failed to ban user.');
+        }
+    },
+    '!skick': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        if (!user) {
+            message.reply('Usage: !skick @user');
+            return;
+        }
+        try {
+            await message.guild.members.kick(user.id, 'Manual security kick');
+            message.reply(`👢 Kicked ${user.tag}`);
+        } catch (err) {
+            message.reply('❌ Failed to kick user.');
+        }
+    },
+    '!stimeout': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        const args = message.content.split(' ');
+        const duration = parseInt(args[2]) || 120; // default 120 min
+        if (!user) {
+            message.reply('Usage: !stimeout @user [minutes]');
+            return;
+        }
+        try {
+            const member = await message.guild.members.fetch(user.id);
+            await member.timeout(duration * 60 * 1000, 'Manual security timeout');
+            message.reply(`⏳ Timed out ${user.tag} for ${duration} minutes.`);
+        } catch (err) {
+            message.reply('❌ Failed to timeout user.');
+        }
+    },
+    '!stimeoutdel': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        if (!user) {
+            message.reply('Usage: !stimeoutdel @user');
+            return;
+        }
+        try {
+            const member = await message.guild.members.fetch(user.id);
+            await member.timeout(null, 'Manual security timeout removed');
+            message.reply(`✅ Timeout removed for ${user.tag}`);
+        } catch (err) {
+            message.reply('❌ Failed to remove timeout.');
+        }
+    },
+module.exports.handleSecurityModeration = handleSecurityModeration;
 const pirateGreetings = [
     "Ahoy, Matey! ⚓",
     "Arrr, what be ye needin'?",

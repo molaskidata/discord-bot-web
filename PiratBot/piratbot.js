@@ -1,3 +1,4 @@
+const { handleSecurityModeration } = require('./commands');
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
@@ -36,6 +37,7 @@ client.once('ready', () => {
 });
 
 client.on('messageCreate', (message) => {
+        handleSecurityModeration(message);
     if (message.author.bot) return;
     
     if (message.content.startsWith('!')) {
