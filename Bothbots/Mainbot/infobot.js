@@ -141,15 +141,19 @@ client.once('ready', () => {
     
     restoreBumpReminders(client);
     console.log('✅ Bump reminders restored from file');
-    
+
+    // Ping Pingbot direkt beim Start
+    sendPingToPingBot();
+    console.log('✅ Ping an Pingbot beim Start gesendet');
+
     // Start AFK checker (every minute)
     setInterval(() => checkAfkUsers(client), 60 * 1000);
     console.log('✅ Voice AFK checker started');
-    
+
     // Start voice log cleanup (every 5 hours)
     setInterval(() => autoCleanupVoiceLogs(client), 5 * 60 * 60 * 1000);
     console.log('✅ Voice log auto-cleanup started (every 5 hours)');
-    
+
     updateGameStatus();
     setInterval(updateGameStatus, 3600000);
 });
