@@ -1,4 +1,5 @@
 // Attach security moderation handler
+const { handleSecurityModeration } = require('./commands');
 const PING_GUILD_ID = '1415044198792691858';
 const PING_CHANNEL_ID = '1448640396359106672';
 function sendPingToPingBot() {
