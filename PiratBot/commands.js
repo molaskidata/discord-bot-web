@@ -254,7 +254,7 @@ const commandHandlers = {
                     '`!helpme` - Show this help menu\n' +
                     '`!piratehelp` - Quick command reference\n', inline: false }
             )
-            .setImage('https://images.steamusercontent.com/ugc/56962680127490223/8405C14A667B05E602D82BB7E566BFC22AD075D3/?imw=1920&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false')
+            .setImage('https://imgur.com/RHZtWpV.jpng')
             .setFooter({ 
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
