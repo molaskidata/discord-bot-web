@@ -1523,7 +1523,7 @@ const commandHandlers = {
                     '`!hi` - Say hello and get a hello from me\n' +
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
                     '`!devmeme` - Get a programming meme\n' +
-                    '`!flirt [text]` - Flirt with AI-generated responses ❌IN WORK\n', inline: false },
+                    '`!flirt [text]` - Flirt with AI-generated responses\n', inline: false },
                 { name: '★ Security Features (Premium)', value:
                     '`!setsecuritymod` - Enable the AI Security System for this server. **You must be an admin and have premium.**\n' +
                     '  → The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n' +
@@ -1558,7 +1558,7 @@ const commandHandlers = {
                     '`(use during !settwitch setup)` -*only admin*\n' +
                     '`!testingtwitch` - Test clip posting by fetching latest clip -*only admin*\n' +
                     '`!deletetwitch` - Delete your Twitch account data', inline: false },
-                { name: '★ GitHub', value:
+                { name: '★ GitHub ❌ out of order right now!', value:
                     '`!github` - Bot owner\'s GitHub and Repos\n' +
                     '`!congithubacc` - Connect your GitHub account with the bot\n' +
                     '`!discongithubacc` - Disconnect your GitHub account\n' +
