@@ -29,7 +29,7 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 const path = require('path');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-const { Client, GatewayIntentBits, ActivityType } = require('discord.js');
+const { Client, GatewayIntentBits, ActivityType, PermissionsBitField } = require('discord.js');
 const express = require('express');
 const querystring = require('querystring');
 const fs = require('fs');
@@ -137,7 +137,7 @@ const server = app.listen(PORT, () => {
 });
 
 
-const { handleCommand, restoreBumpReminders } = require('./commands');
+const { handleCommand, restoreBumpReminders, helpdeskOrigins } = require('./commands');
 const { handleVoiceStateUpdate, checkAfkUsers, autoCleanupVoiceLogs } = require('./voiceHandler');
 
 client.once('ready', () => {
@@ -238,6 +238,56 @@ client.on('messageCreate', (message) => {
 
 client.on('voiceStateUpdate', (oldState, newState) => {
     handleVoiceStateUpdate(oldState, newState);
+});
+
+// Handle helpdesk select menu interactions
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isStringSelectMenu()) return;
+    if (interaction.customId !== 'helpdesk_select') return;
+
+    const choice = interaction.values[0];
+    // Basic replies for each category — adjust text as needed
+    let replyText = '';
+    switch (choice) {
+        case 'help_all': replyText = 'Full command list: run `!help` in your server channel to see all commands.'; break;
+        case 'help_voice': replyText = 'Voice help: run `!helpyvoice` in your server channel for voice commands.'; break;
+        case 'help_secure': replyText = 'Security help: run `!helpysecure` to see moderation commands.'; break;
+        case 'help_twitch': replyText = 'Twitch help: run `!helpytwitch` for Twitch integration commands.'; break;
+        case 'help_github': replyText = 'GitHub help: run `!helpygithub` to manage GitHub linking.'; break;
+        case 'help_bump': replyText = 'Bump help: run `!helpybump` for bump/reminder commands.'; break;
+        case 'help_birth': replyText = 'Birthday help: run `!helpybirth` to configure birthdays.'; break;
+        default: replyText = 'No information available for this selection.';
+    }
+
+    // Ephemeral reply so only the user sees it
+    try {
+        await interaction.reply({ content: replyText, ephemeral: true });
+    } catch (err) {
+        // fallback: try to DM the user
+        try { await interaction.user.send(replyText); } catch (e) { /* ignore */ }
+    }
+
+    // Optionally, send a DM with the same info (users sometimes prefer DMs)
+    try {
+        await interaction.user.send(`You requested help for: ${choice}\n\n${replyText}`);
+    } catch (e) {
+        // can't DM user — ignore
+    }
+
+    // Note: Discord does not allow sending ephemeral replies to a different channel than the interaction.
+    // We stored the origin channel when the helpdesk was created; if you want a public follow-up in the
+    // origin channel, you can uncomment the block below (will be visible to everyone in that channel).
+    /*
+    try {
+        const originChannelId = helpdeskOrigins.get(interaction.message.id);
+        if (originChannelId) {
+            const originChannel = client.channels.cache.get(originChannelId);
+            if (originChannel && originChannel.permissionsFor(client.user).has(PermissionsBitField.Flags.SendMessages)) {
+                originChannel.send(`<@${interaction.user.id}> selected a help category: **${choice}**`);
+            }
+        }
+    } catch (e) { }
+    */
 });
 
 client.login(process.env.DISCORD_TOKEN);
