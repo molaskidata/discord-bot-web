@@ -1769,22 +1769,21 @@ const commandHandlers = {
                     '`!gn` - Good night messages for you and your mates\n' +
                     '`!hi` - Say hello and get a hello from me\n' +
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
-                    '`!devmeme` - Get a programming meme\n' +
-                    '`!flirt [text]` - Flirt with AI-generated responses\n', inline: false },
-                { name: '★ Security Features (Premium)', value:
-                    '`!setsecuritymod` - Enable the AI Security System for this server. **You must be an admin and have premium.**\n' +
+                    '`!devmeme` - Get a programming meme\n', inline: false },
+                { name: '★ Security Features *Admin only, Premium*', value:
+                    '`!setsecuritymod` - Enable the AI Security System for this server.\n' +
                     '  → The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n' +
                     '  → If a violation is detected, the user will be timed out for 2 hours and warned via DM.\n' +
                     '  → You can customize the word list and settings soon.\n' +
-                    '`!sban @user` - Manually ban a user (admin, premium)\n' +
-                    '`!skick @user` - Manually kick a user (admin, premium)\n' +
-                    '`!stimeout @user [minutes]` - Manually timeout a user (admin, premium)\n' +
-                    '`!stimeoutdel @user` - Remove timeout from a user (admin, premium)', inline: false },
-                { name: '★ Voice Features (incl. Premium)', value:
-                    '`!setupvoice` - Create Join-to-Create channel -*only admin*\n' +
-                    '`!setupvoicelog` - Create voice log channel -*only admin*\n' +
-                    '`!cleanupvoice` - Clean voice log channel -*only admin, premium*\n' +
-                    '`!deletevoice` - Delete entire voice system -*only admin, premium*\n' +
+                    '`!sban @user` - Manually ban a user\n' +
+                    '`!skick @user` - Manually kick a user\n' +
+                    '`!stimeout @user [minutes]` - Manually timeout a user\n' +
+                    '`!stimeoutdel @user` - Remove timeout from a user', inline: false },
+                { name: '★ Voice Features *Admin only, Premium*', value:
+                    '`!setupvoice` - Create Join-to-Create channel *(three channels free!)*\n' +
+                    '`!setupvoicelog` - Create voice log channel *(free)*\n' +
+                    '`!cleanupvoice` - Clean voice log channel\n' +
+                    '`!deletevoice` - Delete entire voice system *(free)*\n' +
                     '`!voicename [name]` - Rename your voice channel\n' +
                     '`!voicelimit [0-99]` - Set user limit (0=unlimited)\n' +
                     '`!voicetemplate [gaming/study/chill]` - Apply template\n' +
@@ -1794,18 +1793,18 @@ const commandHandlers = {
                     '`!voiceprivate` - Make channel private\n' +
                     '`!voicepermit @user` - Allow user to join\n' +
                     '`!voicedeny @user` - Block user from joining', inline: false },
-                { name: '★ Utilities (Admin only, Premium)', value:
+                { name: '★ Utilities *Admin only, Premium*', value:
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n' +
                     '`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour. Run this command in the channel you want to clean up.\n' +
                     '`!cleanupdel` - Stop the hourly auto-cleanup for this channel. Run this command in the channel where cleanup is active.\n' +
                     '`!setupflirtlang [language]` - Set AI flirt language for this server\n' +
                     '`!removeflirtlang` - Remove AI flirt language setting for this server\n' +
                     '`!flirt [text]` - Flirt with AI-generated responses', inline: false },
-                { name: '★ Twitch *-only admin*', value:
-                    '`!settwitch` - Link Twitch account and configure clip notifications -*only admin*\n' +
+                { name: '★ Twitch *Admin only*', value:
+                    '`!settwitch` - Link Twitch account and configure clip notifications\n' +
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
-                    '`(use during !settwitch setup)` -*only admin*\n' +
-                    '`!testingtwitch` - Test clip posting by fetching latest clip -*only admin*\n' +
+                    '`(use during !settwitch setup)`\n' +
+                    '`!testingtwitch` - Test clip posting by fetching latest clip\n' +
                     '`!deletetwitch` - Delete your Twitch account data', inline: false },
                 { name: '★ GitHub ❌ out of order right now!', value:
                     '`!github` - Bot owner\'s GitHub and Repos\n' +
@@ -1813,12 +1812,12 @@ const commandHandlers = {
                     '`!discongithubacc` - Disconnect your GitHub account\n' +
                     '`!gitrank` - Show your GitHub commit level\n' +
                     '`!gitleader` - Show the top 10 committers', inline: false },
-                { name: '★ Bump Reminders', value:
-                    '`!setbumpreminder` - Set 2-hour bump reminder -*only admin*\n' +
-                    '`!bumpstatus` - Check bump reminder status -*only admin*\n' +
+                { name: '★ Bump Reminders *Admin only*', value:
+                    '`!setbumpreminder` - Set 2-hour bump reminder\n' +
+                    '`!bumpstatus` - Check bump reminder status\n' +
                     '`!bumphelp` - Show bump system help', inline: false },
                 { name: '★ Birthday', value:
-                    '`!birthdaychannel` - Set the birthday channel -*only admin*\n' +
+                    '`!birthdaychannel` - Set the birthday channel *Admin only*\n' +
                     '`!birthdayset` - Save your birthday', inline: false }
             )
             .setImage('https://media.discordapp.net/attachments/1226484495927218239/1448597565275635743/Screenshot_2025-12-11_094708.png?ex=693bd71d&is=693a859d&hm=152773c05569dbf0a2ff10953b93b93762afcce58391c94d358ef789b1e15968&=&format=webp&quality=lossless')
