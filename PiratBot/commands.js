@@ -17,7 +17,7 @@ async function handleSecurityModeration(message) {
     if (!message.guild) return;
     const guildId = message.guild.id;
     if (!securitySystemEnabled[guildId]) return;
-    if (!isOwnerOrAdmin(message.member)) return; // Don't moderate admins/owners
+    if (isOwnerOrAdmin(message.member)) return; // Don't moderate admins/owners
 
     const content = message.content.toLowerCase();
     // Check for invite links
@@ -629,7 +629,10 @@ const commandHandlers = {
                 { name: '» Fun Commands', value:
                     '`!crew` - Show crew count\n' +
                     '`!dice` - Roll the dice\n' +
-                    '`!compass` - Check direction\n', inline: false }
+                    '`!compass` - Check direction\n' +
+                    '`!games` - Show games embed (Battleship & Mine/Raid)\n' +
+                    '`!bs start @user` / `!bs attack A1` - Battleship PvP\n' +
+                    '`!mine` / `!gold` / `!raid @user` - Mine gold and raid other ships\n', inline: false },
             )
             .setImage('https://i.imgur.com/p95YIAZ.png')
             .setFooter({ text: 'Yo ho ho!' });
@@ -652,7 +655,10 @@ const commandHandlers = {
                 { name: '» Fun & Games', value:
                     '`!dice` - Roll yer lucky dice\n' +
                     '`!compass` - Check the wind direction\n' +
-                    '`!crew` - See how many mates be aboard\n', inline: false },
+                    '`!crew` - See how many mates be aboard\n' +
+                    '`!games` - Show games embed (Battleship & Mine/Raid)\n' +
+                    '`!bs start @user` / `!bs attack A1` - Battleship PvP\n' +
+                    '`!mine` / `!gold` / `!raid @user` - Mine gold and raid other ships\n', inline: false },
                 { name: '» Information', value:
                     '`!helpme` - Show this help menu\n' +
                     '`!piratehelp` - Quick command reference\n', inline: false }
@@ -664,6 +670,287 @@ const commandHandlers = {
             });
         message.reply({ embeds: [embed] });
     }
+};
+
+// --- Simple Games & Persistence ---
+const GAMES_FILE = 'pirate_games.json';
+function loadGameData() {
+    const fs = require('fs');
+    if (fs.existsSync(GAMES_FILE)) return JSON.parse(fs.readFileSync(GAMES_FILE));
+    return { players: {}, battles: {} };
+}
+function saveGameData(data) {
+    const fs = require('fs');
+    fs.writeFileSync(GAMES_FILE, JSON.stringify(data, null, 2));
+}
+
+function coordToIndex(coord) {
+    // expect A1..E5
+    const m = /^([A-Ea-e])(\d)$/.exec(coord.trim());
+    if (!m) return null;
+    const row = m[1].toUpperCase().charCodeAt(0) - 65;
+    const col = parseInt(m[2], 10) - 1;
+    if (row < 0 || row > 4 || col < 0 || col > 4) return null;
+    return { r: row, c: col };
+}
+
+function makeEmptyBoard() {
+    return Array.from({ length: 5 }, () => Array(5).fill(0));
+}
+
+function placeRandomShips(board, sizes = [2,2,2]) {
+    // place ships value 1 on board, naive random placement
+    for (const size of sizes) {
+        let placed = false;
+        for (let attempt=0; attempt<200 && !placed; attempt++) {
+            const horiz = Math.random() < 0.5;
+            const r = Math.floor(Math.random()*5);
+            const c = Math.floor(Math.random()*5);
+            const cells = [];
+            for (let i=0;i<size;i++) {
+                const rr = r + (horiz?0:i);
+                const cc = c + (horiz?i:0);
+                if (rr>4||cc>4) { cells.length=0; break; }
+                cells.push([rr,cc]);
+            }
+            if (cells.length===0) continue;
+            // check overlap
+            if (cells.some(([rr,cc])=>board[rr][cc]===1)) continue;
+            cells.forEach(([rr,cc])=> board[rr][cc]=1);
+            placed = true;
+        }
+    }
+}
+
+function boardToDisplay(board, reveal=false) {
+    // 0 empty, 1 ship, 2 miss, 3 hit
+    const rows = ['A','B','C','D','E'];
+    let out = '  1 2 3 4 5\n';
+    for (let r=0;r<5;r++){
+        out += rows[r] + ' ';
+        for (let c=0;c<5;c++){
+            const v = board[r][c];
+            let ch = '·';
+            if (v===2) ch = 'o';
+            if (v===3) ch = 'X';
+            if (reveal && v===1) ch = 'S';
+            out += ch + ' ';
+        }
+        out += '\n';
+    }
+    return "```\n" + out + "```";
+}
+
+// Gaming embed command
+commandHandlers['!games'] = (message) => {
+    const { EmbedBuilder } = require('discord.js');
+    const embed = new EmbedBuilder()
+        .setTitle('Pirate Games')
+        .setDescription('Play interactive pirate games: Battleship and Gold Raid. Use the commands below to play!')
+        .setImage('https://i.imgur.com/o8M34zS.png')
+        .addFields(
+            { name: 'Battleship (PvP)', value: '!bs start @user - Start a battleship game. Then use !bs attack A1 to shoot. (5x5 grid, 3 ships)' },
+            { name: 'Mine & Raid', value: '!mine - Mine gold for your ship. !gold - Show your gold. !raid @user - Attempt to steal gold from another player (cooldown).' }
+        )
+        .setFooter({ text: 'Have fun sailing the seas!' });
+    message.reply({ embeds: [embed] });
+};
+
+// Battleship: start and attack
+commandHandlers['!bs'] = async (message) => {
+    const parts = message.content.split(' ').filter(Boolean);
+    const sub = parts[1] ? parts[1].toLowerCase() : null;
+    const data = loadGameData();
+    if (sub === 'start') {
+        const target = message.mentions.users.first();
+        if (!target) { message.reply('Usage: !bs start @user'); return; }
+        if (target.id === message.author.id) { message.reply('Cannot play against yourself.'); return; }
+        const gid = `${message.guild.id}_${message.channel.id}_${Date.now()%10000}`;
+        const boardA = makeEmptyBoard();
+        const boardB = makeEmptyBoard();
+        placeRandomShips(boardA); placeRandomShips(boardB);
+        data.battles[gid] = { playerA: message.author.id, playerB: target.id, boardA, boardB, turn: message.author.id, finished: false };
+        saveGameData(data);
+        message.channel.send('⚓ Battleship started between <@' + message.author.id + '> and <@' + target.id + '>! Game ID: `' + gid + '`. <@' + message.author.id + '> starts. Use `!bs attack A1` to fire.');
+        return;
+    }
+    if (sub === 'attack') {
+        const coord = parts[2];
+        if (!coord) { message.reply('Usage: !bs attack A1'); return; }
+        // find active game where author is player and not finished
+        const gid = Object.keys(data.battles).find(k => {
+            const g = data.battles[k];
+            return !g.finished && (g.playerA===message.author.id || g.playerB===message.author.id);
+        });
+        if (!gid) { message.reply('No active battles found for you. Start one with `!bs start @user`.'); return; }
+        const game = data.battles[gid];
+        if (game.turn !== message.author.id) { message.reply('Not your turn.'); return; }
+        const idx = coordToIndex(coord);
+        if (!idx) { message.reply('Invalid coordinate. Use A1..E5.'); return; }
+        const opponentBoard = (game.playerA===message.author.id) ? game.boardB : game.boardA;
+        const cell = opponentBoard[idx.r][idx.c];
+        if (cell === 2 || cell === 3) { message.reply('Already attacked that coordinate.'); return; }
+        let reply = '';
+        if (cell === 1) {
+            opponentBoard[idx.r][idx.c] = 3; // hit
+            reply = `💥 Hit at ${coord}!`;
+        } else {
+            opponentBoard[idx.r][idx.c] = 2; // miss
+            reply = `🌊 Miss at ${coord}.`;
+        }
+        // check win
+        const opponentHasShips = opponentBoard.some(row => row.some(v => v===1));
+        if (!opponentHasShips) {
+            game.finished = true;
+            reply += `\n🏴‍☠️ <@${message.author.id}> sank all ships and won!`;
+            // award gold
+            const pdata = data.players[message.author.id] || { gold: 0, lastMine: 0 };
+            pdata.gold = (pdata.gold || 0) + 50;
+            data.players[message.author.id] = pdata;
+            reply += ' You received 50 gold.';
+        } else {
+            // switch turn
+            game.turn = (game.playerA === message.author.id) ? game.playerB : game.playerA;
+            reply += `\nNext: <@${game.turn}>`;
+        }
+        data.battles[gid] = game;
+        saveGameData(data);
+        // show small board of opponent (no reveal)
+        message.channel.send(reply);
+        return;
+    }
+    message.reply('Battleship commands: `!bs start @user` or `!bs attack A1`.');
+};
+
+// Mining and raid mini-game
+commandHandlers['!mine'] = (message) => {
+    const data = loadGameData();
+    const pid = message.author.id;
+    const now = Date.now();
+    const p = data.players[pid] || { gold: 0, lastMine: 0 };
+    if (now - (p.lastMine || 0) < 60*1000) { message.reply('You must wait 60s between mines.'); return; }
+    const found = Math.floor(Math.random()*20) + 5; // 5-24 gold
+    p.gold = (p.gold||0) + found;
+    p.lastMine = now;
+    data.players[pid] = p;
+    saveGameData(data);
+    message.reply(`⛏️ You mined ${found} gold! Current gold: ${p.gold}`);
+};
+
+commandHandlers['!gold'] = (message) => {
+    const data = loadGameData();
+    const p = data.players[message.author.id] || { gold: 0 };
+    message.reply(`🏴‍☠️ You have **${p.gold||0}** gold stored on your ship.`);
+};
+
+commandHandlers['!raid'] = (message) => {
+    const target = message.mentions.users.first();
+    if (!target) { message.reply('Usage: !raid @user'); return; }
+    if (target.id === message.author.id) { message.reply('You cannot raid yourself.'); return; }
+    const data = loadGameData();
+    const attacker = data.players[message.author.id] || { gold: 0, lastRaid: 0 };
+    const defender = data.players[target.id] || { gold: 0 };
+    const now = Date.now();
+    if (now - (attacker.lastRaid || 0) < 2*60*1000) { message.reply('Raid cooldown: 2 minutes.'); return; }
+    if (!defender.gold || defender.gold <= 0) { message.reply('Target has no gold to steal.'); return; }
+    // chance-based steal
+    const success = Math.random() < 0.5; // 50%
+    let stolen = 0;
+    if (success) {
+        stolen = Math.max(1, Math.floor(defender.gold * (Math.random()*0.15 + 0.05))); // steal 5-20%
+        defender.gold = Math.max(0, defender.gold - stolen);
+        attacker.gold = (attacker.gold||0) + stolen;
+        attacker.lastRaid = now;
+        data.players[message.author.id] = attacker;
+        data.players[target.id] = defender;
+        saveGameData(data);
+        message.reply(`🏴‍☠️ Raid successful! You stole **${stolen}** gold from <@${target.id}>.`);
+    } else {
+        attacker.lastRaid = now;
+        data.players[message.author.id] = attacker;
+        saveGameData(data);
+        message.reply(`💥 Raid failed! <@${target.id}> defended their ship.`);
+    }
+};
+
+// Support origins map and tickets config for PiratBot
+const supportOrigins = new Map();
+const TICKETS_CONFIG_FILE = 'pirate_tickets_config.json';
+function loadTicketsConfig() {
+    const fs = require('fs');
+    if (fs.existsSync(TICKETS_CONFIG_FILE)) return JSON.parse(fs.readFileSync(TICKETS_CONFIG_FILE));
+    return {};
+}
+function saveTicketsConfig(data) {
+    const fs = require('fs');
+    fs.writeFileSync(TICKETS_CONFIG_FILE, JSON.stringify(data, null, 2));
+}
+
+// add support ticket posting command (image different)
+commandHandlers['!munga-supportticket'] = async (message) => {
+    message.reply('Please send the target Channel ID where the support ticket embed should be posted. (60 seconds)');
+    const filter = m => m.author.id === message.author.id && /^\d{17,20}$/.test(m.content.trim());
+    const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+    collector.on('collect', async (msg) => {
+        const channelId = msg.content.trim();
+        const targetChannel = message.guild.channels.cache.get(channelId);
+        if (!targetChannel) { message.reply('❌ Channel not found.'); return; }
+        const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
+        const supportEmbed = new EmbedBuilder()
+            .setColor('#2f3136')
+            .setAuthor({ name: 'Support Ticket', iconURL: 'https://i.imgur.com/f29ONGJ.png' })
+            .setTitle('Create a Support Ticket')
+            .setDescription('Need help? Choose the appropriate option from the menu below to create a support ticket. Provide as much detail as possible when prompted.\n\nExamples of what to report:\n• Technical issues (bot errors, command failures, crashes)\n• Server abuse or harassment (spam, targeted threats, moderation requests)\n• Scam or phishing attempts (suspicious links, impersonation)\n• Advertising / recruitment (unsolicited promotions or bot invites)\n• Bug reports & feature requests (steps to reproduce, expected behavior)\n• Other (billing, access, or custom requests)')
+            .setImage('https://i.imgur.com/f29ONGJ.png')
+            .setFooter({ text: 'Select a category to start a ticket — a staff member will respond.' });
+        const selectMenu = new StringSelectMenuBuilder()
+            .setCustomId('support_select')
+            .setPlaceholder('Choose a support category')
+            .addOptions([
+                { label: 'Technical Issue', description: 'Bot or server technical problem', value: 'support_technical', emoji: '🛠️' },
+                { label: 'Spam / Scam', description: 'Report spam, phishing or scams', value: 'support_spam', emoji: '⚠️' },
+                { label: 'Abuse / Harassment', description: 'Report abuse or threatening behavior', value: 'support_abuse', emoji: '🚨' },
+                { label: 'Advertising / Recruitment', description: 'Unwanted promotions or invites', value: 'support_ad', emoji: '📣' },
+                { label: 'Bug / Feature', description: 'Report a bug or request a feature', value: 'support_bug', emoji: '🐛' },
+                { label: 'Other', description: 'Other support inquiries', value: 'support_other', emoji: '❓' }
+            ]);
+        const row = new ActionRowBuilder().addComponents(selectMenu);
+        const sent = await targetChannel.send({ embeds: [supportEmbed], components: [row] });
+        supportOrigins.set(sent.id, message.channel.id);
+        message.reply('✅ Support ticket embed posted in the requested channel!');
+    });
+    collector.on('end', (collected) => { if (collected.size === 0) message.reply('❌ Time expired.'); });
+};
+
+// admin command to configure ticket log channel
+commandHandlers['!munga-ticketsystem'] = async (message) => {
+    if (!message.member.permissions.has('Administrator')) { message.reply('❌ Admin only command.'); return; }
+    message.reply('Send the Log Channel ID where ticket transcripts should be posted, or type **!create** to let the bot create one. (60s)');
+    const filter = m => m.author.id === message.author.id;
+    const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+    collector.on('collect', async (m) => {
+        const val = m.content.trim();
+        let logChannelId = null;
+        if (val.toLowerCase() === '!create') {
+            try {
+                const created = await message.guild.channels.create({ name: 'tickets-log', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] });
+                message.guild.roles.cache.filter(r => r.permissions.has('Administrator')).forEach(role => { created.permissionOverwrites.create(role, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => {}); });
+                created.permissionOverwrites.create(message.client.user.id, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => {});
+                logChannelId = created.id;
+            } catch (err) { message.reply('❌ Failed to create log channel.'); return; }
+        } else {
+            const match = val.match(/<#?(\d+)>?/);
+            if (!match) { message.reply('❌ Invalid channel ID.'); return; }
+            const chan = message.guild.channels.cache.get(match[1]);
+            if (!chan) { message.reply('❌ Channel not found.'); return; }
+            logChannelId = match[1];
+        }
+        const cfg = loadTicketsConfig();
+        cfg[message.guild.id] = { logChannelId };
+        saveTicketsConfig(cfg);
+        message.reply(`✅ Ticket system configured. Log channel: <#${logChannelId}>`);
+    });
+    collector.on('end', (collected) => { if (collected.size === 0) message.reply('❌ Time expired.'); });
 };
 
 function handleCommand(message) {
@@ -680,3 +967,6 @@ module.exports = {
     commandHandlers,
     handleSecurityModeration
 };
+module.exports.supportOrigins = supportOrigins;
+module.exports.loadTicketsConfig = loadTicketsConfig;
+module.exports.saveTicketsConfig = saveTicketsConfig;

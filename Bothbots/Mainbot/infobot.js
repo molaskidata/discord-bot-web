@@ -265,7 +265,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 // Handle helpdesk select menu interactions
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isStringSelectMenu()) return;
-    if (interaction.customId !== 'helpdesk_select') return;
+    const customId = interaction.customId;
+    if (!['helpdesk_select','support_select'].includes(customId)) return;
 
     const choice = interaction.values[0];
     // Basic replies for each category — adjust text as needed
@@ -296,6 +297,65 @@ client.on('interactionCreate', async (interaction) => {
         // can't DM user — ignore
     }
 
+    // If support_select, create a private ticket channel
+    if (customId === 'support_select') {
+        try {
+            const { loadTicketsConfig } = require('./commands');
+            const cfg = loadTicketsConfig();
+            const guild = interaction.guild;
+            const user = interaction.user;
+            const selectionMap = {
+                support_technical: 'Technical Issue',
+                support_spam: 'Spam / Scam',
+                support_abuse: 'Abuse / Harassment',
+                support_ad: 'Advertising / Recruitment',
+                support_bug: 'Bug / Feature Request',
+                support_other: 'Other'
+            };
+            const selectionLabel = selectionMap[choice] || choice;
+
+            const chanName = `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g,'')}-${Date.now()%10000}`;
+            const overwrites = [];
+            // deny everyone
+            overwrites.push({ id: guild.id, deny: ['ViewChannel'] });
+            // allow user
+            overwrites.push({ id: user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] });
+            // allow admins
+            guild.roles.cache.filter(r => r.permissions.has(PermissionsBitField.Flags.Administrator)).forEach(role => {
+                overwrites.push({ id: role.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] });
+            });
+            // allow bot
+            overwrites.push({ id: client.user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory', 'ManageChannels'] });
+
+            const ticketChannel = await guild.channels.create({ name: chanName, type: 0, permissionOverwrites: overwrites });
+
+            // send initial embed + buttons
+            const { EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+            const embed = new EmbedBuilder()
+                .setColor('#2f3136')
+                .setTitle(`Ticket: ${selectionLabel}`)
+                .setDescription(`Opened by <@${user.id}> (${user.id})\n\nPls continue and write your issue. We will be here for you as quick as we can!`)
+                .setFooter({ text: `Category: ${selectionLabel}` });
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder().setCustomId('ticket_close').setLabel('Close Ticket').setStyle(ButtonStyle.Danger),
+                new ButtonBuilder().setCustomId('ticket_log').setLabel('Log Ticket').setStyle(ButtonStyle.Secondary),
+                new ButtonBuilder().setCustomId('ticket_save').setLabel('Save Transcript').setStyle(ButtonStyle.Primary)
+            );
+
+            await ticketChannel.send({ content: `<@${user.id}>`, embeds: [embed], components: [row] });
+            await interaction.reply({ content: `✅ Ticket created: ${ticketChannel}`, ephemeral: true });
+
+            // store ticket meta in memory for button handlers
+            if (!global.ticketMeta) global.ticketMeta = new Map();
+            global.ticketMeta.set(ticketChannel.id, { userId: user.id, category: selectionLabel, originMessageId: interaction.message.id, guildId: guild.id });
+
+        } catch (err) {
+            console.error('Support select handler error:', err);
+            try { await interaction.reply({ content: '❌ Failed to create ticket channel.', ephemeral: true }); } catch (e) { }
+        }
+    }
+
     // Note: Discord does not allow sending ephemeral replies to a different channel than the interaction.
     // We stored the origin channel when the helpdesk was created; if you want a public follow-up in the
     // origin channel, you can uncomment the block below (will be visible to everyone in that channel).
@@ -310,6 +370,70 @@ client.on('interactionCreate', async (interaction) => {
         }
     } catch (e) { }
     */
+});
+
+// Handle ticket buttons (close / log / save)
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isButton()) return;
+    const id = interaction.customId;
+    const channel = interaction.channel;
+    const guild = interaction.guild;
+    try {
+        // ensure this is a ticket channel
+        const meta = global.ticketMeta ? global.ticketMeta.get(channel.id) : null;
+        if (!meta) {
+            await interaction.reply({ content: 'This button is only available inside a ticket channel.', ephemeral: true });
+            return;
+        }
+
+        const { loadTicketsConfig } = require('./commands');
+        const cfg = loadTicketsConfig();
+        const logChannelId = cfg[guild.id]?.logChannelId;
+
+        if (id === 'ticket_close') {
+            await interaction.reply({ content: 'Closing ticket...', ephemeral: true });
+            // delete channel after short delay to allow reply
+            setTimeout(() => { channel.delete().catch(() => {}); if (global.ticketMeta) global.ticketMeta.delete(channel.id); }, 1000);
+            return;
+        }
+
+        // fetch messages and build transcript
+        let messages = [];
+        let lastId;
+        while (true) {
+            const options = { limit: 100 };
+            if (lastId) options.before = lastId;
+            const batch = await channel.messages.fetch(options);
+            if (!batch) break;
+            messages = messages.concat(Array.from(batch.values()).map(m => ({ author: m.author.tag, id: m.author.id, content: m.content, time: m.createdAt.toISOString() })));
+            if (batch.size < 100) break;
+            lastId = batch.last().id;
+        }
+        // reverse to chronological
+        messages = messages.reverse();
+        const transcript = messages.map(m => `[${m.time}] ${m.author} (${m.id}): ${m.content}`).join('\n');
+
+        if (id === 'ticket_save' || id === 'ticket_log') {
+            if (!logChannelId) {
+                await interaction.reply({ content: 'No log channel configured for this server. Ask an admin to run !munga-ticketsystem.', ephemeral: true });
+                return;
+            }
+            const filename = `ticket_${guild.id}_${channel.id}_${Date.now()}.txt`;
+            const fs = require('fs');
+            fs.writeFileSync(filename, transcript);
+            const logChan = guild.channels.cache.get(logChannelId);
+            if (logChan) {
+                await logChan.send({ content: `Ticket transcript from ${channel.name} (created by <@${meta.userId}>):`, files: [filename] });
+            }
+            // tidy up local file
+            try { fs.unlinkSync(filename); } catch (e) { }
+            await interaction.reply({ content: '✅ Ticket transcript saved to log channel.', ephemeral: true });
+            return;
+        }
+    } catch (err) {
+        console.error('Ticket button handler error:', err);
+        try { await interaction.reply({ content: 'An error occurred while handling the ticket action.', ephemeral: true }); } catch (e) { }
+    }
 });
 
 // Map slash (chat input) commands to existing prefix handlers where possible

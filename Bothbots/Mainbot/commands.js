@@ -202,6 +202,16 @@ let bumpReminders = new Map();
 const helpdeskOrigins = new Map();
 // Maps support ticket message ID -> origin channel ID (where !munga-supportticket was executed)
 const supportOrigins = new Map();
+const TICKETS_CONFIG_FILE = 'tickets_config.json';
+function loadTicketsConfig() {
+    if (fs.existsSync(TICKETS_CONFIG_FILE)) {
+        return JSON.parse(fs.readFileSync(TICKETS_CONFIG_FILE));
+    }
+    return {};
+}
+function saveTicketsConfig(data) {
+    fs.writeFileSync(TICKETS_CONFIG_FILE, JSON.stringify(data, null, 2));
+}
 
 function setBumpReminder(channel, guild) {
     const channelId = channel.id;
@@ -487,6 +497,52 @@ const commandHandlers = {
                                         message.reply('❌ Time expired. Please run the command again.');
                                     }
                                 });
+                            },
+                            '!munga-ticketsystem': async (message) => {
+                                if (!isOwnerOrAdmin(message.member)) {
+                                    message.reply('❌ Admin only command.');
+                                    return;
+                                }
+                                message.reply('Send the Log Channel ID where ticket transcripts should be posted, or type **!create** to let the bot create a new log channel for admins. (60s)');
+                                const filter = m => m.author.id === message.author.id;
+                                const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                                collector.on('collect', async (m) => {
+                                    const val = m.content.trim();
+                                    let logChannelId = null;
+                                    if (val.toLowerCase() === '!create') {
+                                        try {
+                                            const created = await message.guild.channels.create({
+                                                name: 'tickets-log',
+                                                type: 0,
+                                                permissionOverwrites: [
+                                                    { id: message.guild.id, deny: ['ViewChannel'] }
+                                                ]
+                                            });
+                                            // allow admins to view
+                                            message.guild.roles.cache.filter(r => r.permissions.has('Administrator')).forEach(role => {
+                                                created.permissionOverwrites.create(role, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => {});
+                                            });
+                                            // allow bot
+                                            created.permissionOverwrites.create(message.client.user.id, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => {});
+                                            logChannelId = created.id;
+                                        } catch (err) {
+                                            message.reply('❌ Failed to create log channel. Provide an existing channel ID instead.');
+                                            return;
+                                        }
+                                    } else {
+                                        const match = val.match(/<#?(\d+)>?/);
+                                        if (!match) { message.reply('❌ Invalid channel ID.'); return; }
+                                        const chan = message.guild.channels.cache.get(match[1]);
+                                        if (!chan) { message.reply('❌ Channel not found in this server.'); return; }
+                                        logChannelId = match[1];
+                                    }
+
+                                    const cfg = loadTicketsConfig();
+                                    cfg[message.guild.id] = { logChannelId };
+                                    saveTicketsConfig(cfg);
+                                    message.reply(`✅ Ticket system configured. Log channel: <#${logChannelId}>`);
+                                });
+                                collector.on('end', (collected) => { if (collected.size === 0) message.reply('❌ Time expired. Please run the command again.'); });
                             },
                         // (removed) duplicate helpdesk — use !mungahelpdesk
 
@@ -2062,5 +2118,7 @@ module.exports = {
     restoreBumpReminders,
     handleSecurityModeration,
     helpdeskOrigins,
-    supportOrigins
+    supportOrigins,
+    loadTicketsConfig,
+    saveTicketsConfig
 };
