@@ -250,6 +250,61 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+                            '!mungahelpdesk': async (message) => {
+                                // Nur Admins oder Bot-Owner
+                                if (!message.member.permissions.has('Administrator') && message.author.id !== '1105877268775051316') {
+                                    message.reply('❌ Nur Admins oder Bot-Owner dürfen diesen Command nutzen.');
+                                    return;
+                                }
+                                message.reply('Bitte sende die Channel-ID, in die das Helpdesk gesendet werden soll. (60 Sekunden Zeit)');
+                                const filter = m => m.author.id === message.author.id && /^\d{17,20}$/.test(m.content.trim());
+                                const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                                collector.on('collect', async (msg) => {
+                                    const channelId = msg.content.trim();
+                                    const targetChannel = message.guild.channels.cache.get(channelId);
+                                    if (!targetChannel) {
+                                        message.reply('❌ Channel nicht gefunden. Bitte prüfe die ID.');
+                                        return;
+                                    }
+                                    const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
+                                    const helpEmbed = new EmbedBuilder()
+                                        .setColor('#008080') // dunkles türkis
+                                        .setTitle('Self Support / Bot Help')
+                                        .setDescription('Wähle einen Bereich aus, um Hilfe zu erhalten:')
+                                        .addFields(
+                                            { name: 'Allgemeine Hilfe', value: '• **!help** – Zeigt alle Commands' },
+                                            { name: 'Voice Commands', value: '• **!helpyvoice** – Voice-spezifische Hilfe' },
+                                            { name: 'Security Commands', value: '• **!helpysecure** – Moderation/Security Hilfe' },
+                                            { name: 'Twitch Commands', value: '• **!helpytwitch** – Twitch-Integration Hilfe' },
+                                            { name: 'GitHub Commands', value: '• **!helpygithub** – GitHub-Integration Hilfe' },
+                                            { name: 'Bump Commands', value: '• **!helpybump** – Bump/Disboard Hilfe' },
+                                            { name: 'Birthday Commands', value: '• **!helpybirth** – Geburtstags-System Hilfe' }
+                                        )
+                                        .setImage('https://share.creavite.co/693fba2507e523c90b19fc32.gif')
+                                        .setFooter({ text: 'Wähle unten einen Bereich aus!' });
+
+                                    const selectMenu = new StringSelectMenuBuilder()
+                                        .setCustomId('helpdesk_select')
+                                        .setPlaceholder('Wähle einen Help-Bereich')
+                                        .addOptions([
+                                            { label: 'Alle Commands', description: 'Komplette Übersicht (!help)', value: 'help_all', emoji: '📖' },
+                                            { label: 'Voice Commands', description: 'Voice-System Hilfe', value: 'help_voice', emoji: '🎤' },
+                                            { label: 'Security Commands', description: 'Moderation/Security Hilfe', value: 'help_secure', emoji: '🛡️' },
+                                            { label: 'Twitch Commands', description: 'Twitch-Integration Hilfe', value: 'help_twitch', emoji: '📺' },
+                                            { label: 'GitHub Commands', description: 'GitHub-Integration Hilfe', value: 'help_github', emoji: '🐙' },
+                                            { label: 'Bump Commands', description: 'Bump/Disboard Hilfe', value: 'help_bump', emoji: '🔔' },
+                                            { label: 'Birthday Commands', description: 'Geburtstags-System Hilfe', value: 'help_birth', emoji: '🎂' }
+                                        ]);
+                                    const row = new ActionRowBuilder().addComponents(selectMenu);
+                                    await targetChannel.send({ embeds: [helpEmbed], components: [row] });
+                                    message.reply('✅ Helpdesk wurde im gewünschten Channel gepostet!');
+                                });
+                                collector.on('end', (collected) => {
+                                    if (collected.size === 0) {
+                                        message.reply('❌ Zeit abgelaufen. Bitte Command erneut ausführen.');
+                                    }
+                                });
+                            },
                         '!helpdesk': async (message) => {
                             const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
                             const helpEmbed = new EmbedBuilder()
@@ -257,27 +312,27 @@ const commandHandlers = {
                                 .setTitle('Self Support / Bot Help')
                                 .setDescription('Choose an option in which you need help:')
                                 .addFields(
-                                    { name: 'Allgemeine Hilfe', value: '• **!help** – Zeigt alle Commands' },
-                                    { name: 'Voice Commands', value: '• **!helpyvoice** – Voice-spezifische Hilfe' },
-                                    { name: 'Security Commands', value: '• **!helpysecure** – Moderation/Security Hilfe' },
-                                    { name: 'Twitch Commands', value: '• **!helpytwitch** – Twitch-Integration Hilfe' },
-                                    { name: 'GitHub Commands', value: '• **!helpygithub** – GitHub-Integration Hilfe' },
-                                    { name: 'Bump Commands', value: '• **!helpybump** – Bump/Disboard Hilfe' },
+                                    { name: 'General Help', value: '• **!help** – Shows all commands' },
+                                    { name: 'Voice Commands', value: '• **!helpyvoice** – Voice-specific help' },
+                                    { name: 'Security Commands', value: '• **!helpysecure** – Moderation/Security help' },
+                                    { name: 'Twitch Commands', value: '• **!helpytwitch** – Twitch integration help' },
+                                    { name: 'GitHub Commands', value: '• **!helpygithub** – GitHub integration help' },
+                                    { name: 'Bump Commands', value: '• **!helpybump** – Bump/Disboard help' },
                                     { name: 'Birthday Commands', value: '• **!helpybirth** – Geburtstags-System Hilfe' }
                                 )
                                 .setFooter({ text: 'Wähle unten einen Bereich aus!' });
 
                             const selectMenu = new StringSelectMenuBuilder()
                                 .setCustomId('helpdesk_select')
-                                .setPlaceholder('Wähle einen Help-Bereich')
+                                .setPlaceholder('Choose a help category')
                                 .addOptions([
-                                    { label: 'Alle Commands', description: 'Komplette Übersicht (!help)', value: 'help_all', emoji: '📖' },
-                                    { label: 'Voice Commands', description: 'Voice-System Hilfe', value: 'help_voice', emoji: '🎤' },
-                                    { label: 'Security Commands', description: 'Moderation/Security Hilfe', value: 'help_secure', emoji: '🛡️' },
-                                    { label: 'Twitch Commands', description: 'Twitch-Integration Hilfe', value: 'help_twitch', emoji: '📺' },
-                                    { label: 'GitHub Commands', description: 'GitHub-Integration Hilfe', value: 'help_github', emoji: '🐙' },
-                                    { label: 'Bump Commands', description: 'Bump/Disboard Hilfe', value: 'help_bump', emoji: '🔔' },
-                                    { label: 'Birthday Commands', description: 'Geburtstags-System Hilfe', value: 'help_birth', emoji: '🎂' }
+                                    { label: 'All Commands', description: 'All commands', value: 'help_all', emoji: '📖' },
+                                    { label: 'Voice Commands', description: 'Voice-System help', value: 'help_voice', emoji: '🎤' },
+                                    { label: 'Security Commands', description: 'Moderation/Security help', value: 'help_secure', emoji: '🛡️' },
+                                    { label: 'Twitch Commands', description: 'Twitch integration help', value: 'help_twitch', emoji: '📺' },
+                                    { label: 'GitHub Commands', description: 'GitHub integration help', value: 'help_github', emoji: '🐙' },
+                                    { label: 'Bump Commands', description: 'Bump/Disboard help', value: 'help_bump', emoji: '🔔' },
+                                    { label: 'Birthday Commands', description: 'Birthday system help', value: 'help_birth', emoji: '🎂' }
                                 ]);
 
                             const row = new ActionRowBuilder().addComponents(selectMenu);
