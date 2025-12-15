@@ -189,7 +189,7 @@ const commandHandlers = {
                 { name: 'Article X', value: 'The captain and the quartermaster shall each receive two shares of a prize, the master gunner and boatswain, one and one half shares, all other officers one and one quarter, and private gentlemen of fortune one share each.', inline: false },
                 { name: 'Article XI', value: 'The musicians shall have rest on the Sabbath Day only by right. On all other days by favour only.', inline: false }
             )
-            .setImage('https://images.steamusercontent.com/ugc/18345562890096640134/3633D8BC964A13D4B21DA399A640643AFB7B8B70/?imw=1920&&ima=fit&impolicy=Letterbox&imcolor=%23000000&letterbox=false')
+            .setImage('https://i.imgur.com/lqJBNWW.png')
             .setFooter({ 
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
@@ -228,7 +228,7 @@ const commandHandlers = {
                     '`!dice` - Roll the dice\n' +
                     '`!compass` - Check direction\n', inline: false }
             )
-            .setImage('https://imgur.com/p95YIAZ.png')
+            .setImage('https://i.imgur.com/p95YIAZ.png')
             .setFooter({ text: 'Yo ho ho!' });
         message.reply({ embeds: [embed] });
     },
@@ -254,7 +254,7 @@ const commandHandlers = {
                     '`!helpme` - Show this help menu\n' +
                     '`!piratehelp` - Quick command reference\n', inline: false }
             )
-            .setImage('https://imgur.com/RHZtWpV.jpng')
+            .setImage('https://i.imgur.com/RHZtWpV.png')
             .setFooter({ 
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'

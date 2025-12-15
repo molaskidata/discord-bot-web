@@ -1850,7 +1850,7 @@ const commandHandlers = {
         const embed = new EmbedBuilder()
             .setColor('#11806a')
             .setTitle('★ Bot Command Help')
-            .setAuthor({ name: '!Code.Mater()', iconURL: 'https://imgur.com/8dF1kMw'})
+            .setAuthor({ name: '!Code.Mater()', iconURL: 'https://i.imgur.com/8dF1kMw.jpeg'})
             .setDescription('Here are all available commands:')
             .addFields(
                 { name: '★ General', value:
@@ -1923,7 +1923,7 @@ const commandHandlers = {
                     '`!helpybump` - Bump/Disboard help\n' +
                     '`!helpybirth` - Birthday help', inline: false }
             )
-            .setImage('https://imgur.com/yEnlJxN.png')
+            .setImage('https://i.imgur.com/8dF1kMw.jpeg')
             .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
         message.reply({ embeds: [embed] });
     },
