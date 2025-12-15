@@ -90,7 +90,7 @@ client.on('messageCreate', (message) => {
         return;
     }
 
-    if (message.content === '!setbumpreminder') {
+    if (message.content === '!setbumpreminder2') {
         if (!message.member.permissions.has('Administrator')) {
             message.reply('❌ This is an admin-only command and cannot be used by regular users.');
             return;
