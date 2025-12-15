@@ -659,6 +659,12 @@ const commandHandlers = {
                     '`!games` - Show games embed (Battleship & Mine/Raid)\n' +
                     '`!bs start @user` / `!bs attack A1` - Battleship PvP\n' +
                     '`!mine` / `!gold` / `!raid @user` - Mine gold and raid other ships\n', inline: false },
+                { name: '» Security & Moderation', value:
+                    '`!setsecuritymod` - Enable automatic security moderation for this server (admin only)\n' +
+                    '`!sban @user` - Security ban a user (admin only)\n' +
+                    '`!skick @user` - Security kick a user (admin only)\n' +
+                    '`!stimeout @user [minutes]` - Timeout a user for given minutes (admin only)\n' +
+                    '`!stimeoutdel @user` - Remove timeout from a user (admin only)\n', inline: false },
                 { name: '» Information', value:
                     '`!helpme` - Show this help menu\n' +
                     '`!piratehelp` - Quick command reference\n', inline: false }
