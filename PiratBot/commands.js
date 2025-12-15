@@ -273,5 +273,6 @@ function handleCommand(message) {
 
 module.exports = {
     handleCommand,
-    commandHandlers
+    commandHandlers,
+    handleSecurityModeration
 };
