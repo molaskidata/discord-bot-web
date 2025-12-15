@@ -144,6 +144,23 @@ client.on('messageCreate', (message) => {
         return;
     }
 
+    // General PingBot help (avoid conflict with Mainbot !help)
+    if (message.content === '!phelp') {
+        const { EmbedBuilder } = require('discord.js');
+        const embed = new EmbedBuilder()
+            .setColor('#5865F2')
+            .setTitle('PingBot — Help')
+            .setDescription('Self-contained help for PingBot (ping & bump reminders).')
+            .addFields(
+                { name: 'Ping', value: '`!pingme` - Basic ping/pong check', inline: false },
+                { name: 'Bump Reminder Commands', value: '`!setbumpreminder2` - Set a 2-hour bump reminder (admin only)\n`!delbumpreminder2` - Delete the active bump reminder (admin only)\n`!bumpstatus` - Show status of bump reminder (admin only)\n`!bumphelp` - Show detailed bump help', inline: false }
+            )
+            .setFooter({ text: 'PingBot — bump helper' });
+
+        message.channel.send({ embeds: [embed] });
+        return;
+    }
+
     if (message.author.id === DISBOARD_BOT_ID) {
         if (message.embeds.length > 0) {
             const embed = message.embeds[0];
