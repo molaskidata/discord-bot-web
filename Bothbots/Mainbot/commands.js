@@ -1766,7 +1766,7 @@ const commandHandlers = {
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n' +
                     '`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour. **You must run this command in the channel you want to clean up.** -*only admin, premium*\n' +
                     '`!cleanupdel` - Stop the hourly auto-cleanup for this channel. **You must run this command in the channel where cleanup is active.** -*only admin, premium*\n' +
-                    '`anonymously` -*only admin*', inline: false },
+                    // ...existing code...
                 { name: '★ Twitch *-only admin*', value:
                     '`!settwitch` - Link Twitch account and configure clip notifications -*only admin*\n' +
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
