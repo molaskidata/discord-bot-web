@@ -250,6 +250,23 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+                                        '!helpy-commands': (message) => {
+                                            const embed = new EmbedBuilder()
+                                                .setColor('#7289da')
+                                                .setTitle('★ Help Categories Overview')
+                                                .setDescription('Here are all available help categories for the bot commands:')
+                                                .addFields(
+                                                    { name: 'General Help', value: '`!help` – Shows all commands', inline: false },
+                                                    { name: 'Voice Help', value: '`!helpyvoice` – Voice-specific help', inline: false },
+                                                    { name: 'Security Help', value: '`!helpysecure` – Moderation/Security help', inline: false },
+                                                    { name: 'Twitch Help', value: '`!helpytwitch` – Twitch integration help', inline: false },
+                                                    { name: 'GitHub Help', value: '`!helpygithub` – GitHub integration help', inline: false },
+                                                    { name: 'Bump Help', value: '`!helpybump` – Bump/Disboard help', inline: false },
+                                                    { name: 'Birthday Help', value: '`!helpybirth` – Birthday system help', inline: false }
+                                                )
+                                                .setFooter({ text: 'Tip: Use the respective !helpy... category for details!' });
+                                            message.reply({ embeds: [embed] });
+                                        },
                                     '!setupflirtlang': (message) => {
                                         if (!isOwnerOrAdmin(message.member)) {
                                             message.reply('❌ This is an admin-only command and cannot be used by regular users.');
@@ -470,12 +487,16 @@ const commandHandlers = {
                     '!helpybump': (message) => {
                         const embed = new EmbedBuilder()
                             .setColor('#f1c40f')
-                            .setTitle('★ Bump Commands')
-                            .setDescription('Alle Bump/Disboard Befehle:')
+                            .setTitle('★ Bump/Disboard Befehle')
+                            .setDescription('Alle verfügbaren Bump/Disboard Commands:')
                             .addFields(
-                                { name: 'Bump', value:
-                                    '`!bumpreminder` - Bump Reminder aktivieren\n' +
-                                    '`!bumpreminderdel` - Bump Reminder deaktivieren', inline: false }
+                                { name: 'Bump Reminder', value:
+                                    '`!setbumpreminder` - Setze einen 2-Stunden Bump-Reminder\n' +
+                                    '`!delbumpreminder` - Lösche den aktiven Bump-Reminder\n' +
+                                    '`!bumpreminder` - Aktiviere den Bump-Reminder (Alias)\n' +
+                                    '`!bumpreminderdel` - Deaktiviere den Bump-Reminder (Alias)\n' +
+                                    '`!bumpstatus` - Zeigt den Status des Bump-Reminders\n' +
+                                    '`!bumphelp` - Zeigt Hilfe zum Bump-System', inline: false }
                             )
                             .setFooter({ text: 'Nur Bump Features' });
                         message.reply({ embeds: [embed] });
@@ -1780,7 +1801,7 @@ const commandHandlers = {
                     '`!stimeout @user [minutes]` - Manually timeout a user\n' +
                     '`!stimeoutdel @user` - Remove timeout from a user', inline: false },
                 { name: '★ Voice Features *Admin only, Premium*', value:
-                    '`!setupvoice` - Create Join-to-Create channel *(three channels free!)*\n' +
+                    '`!setupvoice` - Create Join-to-Create channel *(3 channels free!)*\n' +
                     '`!setupvoicelog` - Create voice log channel *(free)*\n' +
                     '`!cleanupvoice` - Clean voice log channel\n' +
                     '`!deletevoice` - Delete entire voice system *(free)*\n' +
@@ -1812,13 +1833,25 @@ const commandHandlers = {
                     '`!discongithubacc` - Disconnect your GitHub account\n' +
                     '`!gitrank` - Show your GitHub commit level\n' +
                     '`!gitleader` - Show the top 10 committers', inline: false },
-                { name: '★ Bump Reminders *Admin only*', value:
-                    '`!setbumpreminder` - Set 2-hour bump reminder\n' +
-                    '`!bumpstatus` - Check bump reminder status\n' +
-                    '`!bumphelp` - Show bump system help', inline: false },
+                    { name: '★ Bump Reminders *Admin only*', value:
+                     '`!setbumpreminder` - Setze einen 2-Stunden Bump-Reminder\n' +
+                    '`!delbumpreminder` - Lösche den aktiven Bump-Reminder\n' +
+                     '`!bumpreminder` - Aktiviere den Bump-Reminder (Alias)\n' +
+                     '`!bumpreminderdel` - Deaktiviere den Bump-Reminder (Alias)\n' +
+                      '`!bumpstatus` - Zeigt den Status des Bump-Reminders\n' +
+                      '`!bumphelp` - Zeigt Hilfe zum Bump-System\n' +
+                      '`!helpybump` - Zeigt alle Bump/Disboard Befehle', inline: false },
                 { name: '★ Birthday', value:
                     '`!birthdaychannel` - Set the birthday channel *Admin only*\n' +
-                    '`!birthdayset` - Save your birthday', inline: false }
+                    '`!birthdayset` - Save your birthday', inline: false },
+                { name: '★ Help Categories', value:
+                    '`!mungahelpdesk` - Shows all big help categories\n' +
+                    '`!helpyvoice` - Voice help\n' +
+                    '`!helpysecure` - Security help\n' +
+                    '`!helpytwitch` - Twitch help\n' +
+                    '`!helpygithub` - GitHub help\n' +
+                    '`!helpybump` - Bump/Disboard help\n' +
+                    '`!helpybirth` - Birthday help', inline: false }
             )
             .setImage('https://media.discordapp.net/attachments/1226484495927218239/1448597565275635743/Screenshot_2025-12-11_094708.png?ex=693bd71d&is=693a859d&hm=152773c05569dbf0a2ff10953b93b93762afcce58391c94d358ef789b1e15968&=&format=webp&quality=lossless')
             .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
