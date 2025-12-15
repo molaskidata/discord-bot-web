@@ -64,69 +64,103 @@ async function timeoutAndWarn(message, reason) {
 function isOwnerOrAdmin(member) {
     return member.permissions.has('Administrator');
 }
-    '!setsecuritymod': async (message) => {
-        if (!isOwnerOrAdmin(message.member)) {
-            message.reply('❌ This is an admin-only command.');
-            return;
-        }
-        const guildId = message.guild.id;
-        if (securitySystemEnabled[guildId]) {
-            message.reply('⚠️ Security system is already enabled for this server.');
-            return;
-        }
-        securitySystemEnabled[guildId] = true;
-        message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.');
-    },
-    '!sban': async (message) => {
-        if (!isOwnerOrAdmin(message.member)) {
-            message.reply('❌ This is an admin-only command.');
-            return;
-        }
-        const user = message.mentions.users.first();
-        if (!user) {
-            message.reply('Usage: !sban @user');
-            return;
-        }
-        try {
-            await message.guild.members.ban(user.id, { reason: 'Manual security ban' });
-            message.reply(`🔨 Banned ${user.tag}`);
-        } catch (err) {
-            message.reply('❌ Failed to ban user.');
-        }
-    },
-    '!skick': async (message) => {
-        if (!isOwnerOrAdmin(message.member)) {
-            message.reply('❌ This is an admin-only command.');
-            return;
-        }
-        const user = message.mentions.users.first();
-        if (!user) {
-            message.reply('Usage: !skick @user');
-            return;
-        }
-        try {
-            await message.guild.members.kick(user.id, 'Manual security kick');
-            message.reply(`👢 Kicked ${user.tag}`);
-        } catch (err) {
-            message.reply('❌ Failed to kick user.');
-        }
-    },
-    '!stimeout': async (message) => {
-        if (!isOwnerOrAdmin(message.member)) {
-            message.reply('❌ This is an admin-only command.');
-            return;
-        }
-        const user = message.mentions.users.first();
-        const args = message.content.split(' ');
-        const duration = parseInt(args[2]) || 120; // default 120 min
-        if (!user) {
-            message.reply('Usage: !stimeout @user [minutes]');
-            return;
-        }
-        try {
-            const member = await message.guild.members.fetch(user.id);
-            await member.timeout(duration * 60 * 1000, 'Manual security timeout');
-            message.reply(`⏳ Timed out ${user.tag} for ${duration} minutes.`);
+module.exports.handleSecurityModeration = handleSecurityModeration;
+const pirateGreetings = [
+    "Ahoy, Matey! ⚓",
+    "Arrr, what be ye needin'?",
+    "Shiver me timbers! Ahoy there!",
+    "Yo ho ho! What brings ye to these waters?"
+];
+
+const pirateFarewell = [
+    "Fair winds and following seas, matey! ⚓",
+    const commandHandlers = {
+        '!setsecuritymod': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            const guildId = message.guild.id;
+            if (securitySystemEnabled[guildId]) {
+                message.reply('⚠️ Security system is already enabled for this server.');
+                return;
+            }
+            securitySystemEnabled[guildId] = true;
+            message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.');
+        },
+        '!sban': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            const user = message.mentions.users.first();
+            if (!user) {
+                message.reply('Usage: !sban @user');
+                return;
+            }
+            try {
+                await message.guild.members.ban(user.id, { reason: 'Manual security ban' });
+                message.reply(`🔨 Banned ${user.tag}`);
+            } catch (err) {
+                message.reply('❌ Failed to ban user.');
+            }
+        },
+        '!skick': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            const user = message.mentions.users.first();
+            if (!user) {
+                message.reply('Usage: !skick @user');
+                return;
+            }
+            try {
+                await message.guild.members.kick(user.id, 'Manual security kick');
+                message.reply(`👢 Kicked ${user.tag}`);
+            } catch (err) {
+                message.reply('❌ Failed to kick user.');
+            }
+        },
+        '!stimeout': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            const user = message.mentions.users.first();
+            const args = message.content.split(' ');
+            const duration = parseInt(args[2]) || 120; // default 120 min
+            if (!user) {
+                message.reply('Usage: !stimeout @user [minutes]');
+                return;
+            }
+            try {
+                const member = await message.guild.members.fetch(user.id);
+                await member.timeout(duration * 60 * 1000, 'Manual security timeout');
+                message.reply(`⏳ Timed out ${user.tag} for ${duration} minutes.`);
+            } catch (err) {
+                message.reply('❌ Failed to timeout user.');
+            }
+        },
+        '!stimeoutdel': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+            const user = message.mentions.users.first();
+            if (!user) {
+                message.reply('Usage: !stimeoutdel @user');
+                return;
+            }
+            try {
+                const member = await message.guild.members.fetch(user.id);
+                await member.timeout(null, 'Manual security timeout removed');
+                message.reply(`✅ Timeout removed for ${user.tag}`);
+            } catch (err) {
+                message.reply('❌ Failed to remove timeout.');
+            }
+        },
+        // ...bestehende Commands folgen...
         } catch (err) {
             message.reply('❌ Failed to timeout user.');
         }
@@ -149,40 +183,6 @@ function isOwnerOrAdmin(member) {
             message.reply('❌ Failed to remove timeout.');
         }
     },
-module.exports.handleSecurityModeration = handleSecurityModeration;
-const pirateGreetings = [
-    "Ahoy, Matey! ⚓",
-    "Arrr, what be ye needin'?",
-    "Shiver me timbers! Ahoy there!",
-    "Yo ho ho! What brings ye to these waters?"
-];
-
-const pirateFarewell = [
-    "Fair winds and following seas, matey! ⚓",
-    "May yer compass always point true!",
-    "Safe travels, ye scallywag!",
-    "Until we meet again on the high seas!"
-];
-
-const treasureQuotes = [
-    "X marks the spot!",
-    "Treasure be waitin' for the brave!",
-    "Gold doubloons for all!",
-    "The greatest treasure be the crew ye sail with!"
-];
-
-const seaQuotes = [
-    "The sea be callin', matey!",
-    "A pirate's life for me! ⚓",
-    "Dead men tell no tales!",
-    "Hoist the colors!"
-];
-
-function getRandomResponse(array) {
-    return array[Math.floor(Math.random() * array.length)];
-}
-
-const commandHandlers = {
     '!ahoy': (message) => message.reply(getRandomResponse(pirateGreetings)),
     '!farewell': (message) => message.reply(getRandomResponse(pirateFarewell)),
     '!treasure': (message) => message.reply(getRandomResponse(treasureQuotes)),
