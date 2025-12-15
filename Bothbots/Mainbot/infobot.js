@@ -161,6 +161,28 @@ client.once('ready', () => {
 
     updateGameStatus();
     setInterval(updateGameStatus, 3600000);
+    try {
+        // restore previously scheduled cleanup intervals so they survive restarts
+        restoreCleanupIntervals(client);
+    } catch (e) { }
+
+    // periodic backup of common JSON state files to ensure persistence
+    const knownFiles = [
+        'cleanup_intervals.json',
+        'birthdays.json',
+        'github_links.json',
+        'bump_reminders.json',
+        'bump_reminders_ping.json',
+        'voice_settings.json',
+        'twitch_settings.json'
+    ];
+    persistence.schedulePeriodicBackup(knownFiles, 5 * 60 * 1000);
+
+    // also flush on exit signals
+    const flush = () => { try { persistence.backupFiles(knownFiles); } catch (e) { } };
+    process.on('exit', flush);
+    process.on('SIGINT', () => { flush(); process.exit(); });
+    process.on('SIGTERM', () => { flush(); process.exit(); });
 });
 
 function updateGameStatus() {

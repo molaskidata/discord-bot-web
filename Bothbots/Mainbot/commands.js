@@ -68,6 +68,18 @@ async function timeoutAndWarn(message, reason) {
 const securitySystemEnabled = {};
 // Store cleanup intervals per channel
 const cleanupIntervals = {};
+const CLEANUP_FILE = 'cleanup_intervals.json';
+
+function loadCleanupIntervals() {
+    if (fs.existsSync(CLEANUP_FILE)) {
+        return JSON.parse(fs.readFileSync(CLEANUP_FILE));
+    }
+    return {};
+}
+
+function saveCleanupIntervals(data) {
+    fs.writeFileSync(CLEANUP_FILE, JSON.stringify(data, null, 2));
+}
 const SERVER_LANG_FILE = 'server_languages.json';
 function loadServerLanguages() {
     if (fs.existsSync(SERVER_LANG_FILE)) {
@@ -248,6 +260,78 @@ function restoreBumpReminders(client) {
         }, timeLeft);
         
         bumpReminders.set(channelId, reminderTimeout);
+    });
+}
+
+// Restore cleanup intervals from disk and reschedule them
+function restoreCleanupIntervals(client) {
+    const stored = loadCleanupIntervals();
+    const now = Date.now();
+    Object.entries(stored).forEach(([channelId, data]) => {
+        const timeLeft = (data.nextRun || now) - now;
+        const chan = client.channels.cache.get(channelId);
+        if (!chan) {
+            // channel not available, remove stored entry
+            delete stored[channelId];
+            saveCleanupIntervals(stored);
+            return;
+        }
+
+        // schedule first run after timeLeft (or immediate if negative)
+        const firstDelay = Math.max(0, timeLeft);
+        setTimeout(async () => {
+            // perform cleanup then set interval
+            try {
+                // reuse doFullCleanup from above by requiring the module's scope
+                // but doFullCleanup is defined inside !cleanup scope; recreate minimal cleanup logic here
+                let deleted = 0;
+                let lastId = null;
+                while (true) {
+                    const options = { limit: 100 };
+                    if (lastId) options.before = lastId;
+                    const messages = await chan.messages.fetch(options);
+                    if (messages.size === 0) break;
+                    for (const msg of messages.values()) {
+                        try { await msg.delete(); deleted++; } catch (e) { }
+                    }
+                    lastId = messages.last().id;
+                    if (messages.size < 100) break;
+                }
+                try { await chan.send(`🧹 Cleanup complete! **${deleted}** messages deleted.`); } catch (e) { }
+            } catch (e) { try { await chan.send('❌ Error while deleting messages.'); } catch (e) { } }
+
+            // schedule hourly interval
+            const interval = setInterval(async () => {
+                let deleted = 0;
+                let lastId = null;
+                try {
+                    while (true) {
+                        const options = { limit: 100 };
+                        if (lastId) options.before = lastId;
+                        const messages = await chan.messages.fetch(options);
+                        if (messages.size === 0) break;
+                        for (const msg of messages.values()) {
+                            try { await msg.delete(); deleted++; } catch (e) { }
+                        }
+                        lastId = messages.last().id;
+                        if (messages.size < 100) break;
+                    }
+                    try { await chan.send(`🧹 Cleanup complete! **${deleted}** messages deleted.`); } catch (e) { }
+                } catch (err) { try { await chan.send('❌ Error while deleting messages.'); } catch (e) { } }
+                try {
+                    const s = loadCleanupIntervals();
+                    s[channelId] = { nextRun: Date.now() + 60 * 60 * 1000 };
+                    saveCleanupIntervals(s);
+                } catch (e) { }
+            }, 60 * 60 * 1000);
+            cleanupIntervals[channelId] = interval;
+            // persist nextRun
+            try {
+                const s = loadCleanupIntervals();
+                s[channelId] = { nextRun: Date.now() + 60 * 60 * 1000 };
+                saveCleanupIntervals(s);
+            } catch (e) { }
+        }, firstDelay);
     });
 }
 
@@ -600,10 +684,24 @@ const commandHandlers = {
             };
 
             // run immediate cleanup
-            doFullCleanup(channel);
+            doFullCleanup(channel).then(() => {
+                // after immediate run, persist nextRun
+                try {
+                    const stored = loadCleanupIntervals();
+                    stored[channel.id] = { nextRun: Date.now() + 60 * 60 * 1000 };
+                    saveCleanupIntervals(stored);
+                } catch (e) { }
+            });
 
             // schedule hourly cleanup
-            const interval = setInterval(() => doFullCleanup(channel), 60 * 60 * 1000);
+            const interval = setInterval(async () => {
+                await doFullCleanup(channel);
+                try {
+                    const stored = loadCleanupIntervals();
+                    stored[channel.id] = { nextRun: Date.now() + 60 * 60 * 1000 };
+                    saveCleanupIntervals(stored);
+                } catch (e) { }
+            }, 60 * 60 * 1000);
             cleanupIntervals[channel.id] = interval;
         },
 
@@ -623,6 +721,13 @@ const commandHandlers = {
             }
             clearInterval(cleanupIntervals[channel.id]);
             delete cleanupIntervals[channel.id];
+            try {
+                const stored = loadCleanupIntervals();
+                if (stored[channel.id]) {
+                    delete stored[channel.id];
+                    saveCleanupIntervals(stored);
+                }
+            } catch (e) { }
             message.reply('🛑 Cleanup interval stopped for this channel.');
         },
     '!birthdaychannel': async (message) => {
