@@ -137,7 +137,7 @@ const server = app.listen(PORT, () => {
 });
 
 
-const { handleCommand, restoreBumpReminders, helpdeskOrigins } = require('./commands');
+const { handleCommand, restoreBumpReminders, helpdeskOrigins, commandHandlers } = require('./commands');
 const { handleVoiceStateUpdate, checkAfkUsers, autoCleanupVoiceLogs } = require('./voiceHandler');
 
 client.once('ready', () => {
@@ -288,6 +288,46 @@ client.on('interactionCreate', async (interaction) => {
         }
     } catch (e) { }
     */
+});
+
+// Map slash (chat input) commands to existing prefix handlers where possible
+client.on('interactionCreate', async (interaction) => {
+    if (!interaction.isChatInputCommand()) return;
+
+    const name = interaction.commandName; // e.g. 'help' -> maps to '!help'
+    const handler = commandHandlers['!' + name];
+    if (!handler) {
+        await interaction.reply({ content: 'This slash command has no mapped prefix handler.', ephemeral: true });
+        return;
+    }
+
+    let replied = false;
+    const doReply = async (payload) => {
+        const p = (typeof payload === 'string') ? { content: payload } : payload || {};
+        if (!replied) {
+            replied = true;
+            return interaction.reply(Object.assign({}, p, { ephemeral: true }));
+        }
+        return interaction.followUp(Object.assign({}, p, { ephemeral: true }));
+    };
+
+    const fakeMessage = {
+        content: '!' + name,
+        author: interaction.user,
+        member: interaction.member,
+        guild: interaction.guild,
+        channel: {
+            send: (p) => doReply(p)
+        },
+        reply: (p) => doReply(p)
+    };
+
+    try {
+        await handler(fakeMessage);
+    } catch (err) {
+        console.error('Slash->prefix handler error:', err);
+        try { await interaction.reply({ content: 'Command failed (see logs).', ephemeral: true }); } catch (e) { /* ignore */ }
+    }
 });
 
 client.login(process.env.DISCORD_TOKEN);
