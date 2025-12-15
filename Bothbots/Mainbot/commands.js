@@ -1,3 +1,6 @@
+    // ...existing code...
+// Füge die Help-Handler INSIDE des commandHandlers-Objekts ein:
+// (Suche nach const commandHandlers = { ... und füge sie dort ein)
 // --- Security System Word Lists (multi-language, extend as needed) ---
 const securityWordLists = [
     // German (provided)
@@ -247,6 +250,146 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+                        '!helpdesk': async (message) => {
+                            const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
+                            const helpEmbed = new EmbedBuilder()
+                                .setColor('#3498db')
+                                .setTitle('Self Support / Bot Help')
+                                .setDescription('Choose an option in which you need help:')
+                                .addFields(
+                                    { name: 'Allgemeine Hilfe', value: '• **!help** – Zeigt alle Commands' },
+                                    { name: 'Voice Commands', value: '• **!helpyvoice** – Voice-spezifische Hilfe' },
+                                    { name: 'Security Commands', value: '• **!helpysecure** – Moderation/Security Hilfe' },
+                                    { name: 'Twitch Commands', value: '• **!helpytwitch** – Twitch-Integration Hilfe' },
+                                    { name: 'GitHub Commands', value: '• **!helpygithub** – GitHub-Integration Hilfe' },
+                                    { name: 'Bump Commands', value: '• **!helpybump** – Bump/Disboard Hilfe' },
+                                    { name: 'Birthday Commands', value: '• **!helpybirth** – Geburtstags-System Hilfe' }
+                                )
+                                .setFooter({ text: 'Wähle unten einen Bereich aus!' });
+
+                            const selectMenu = new StringSelectMenuBuilder()
+                                .setCustomId('helpdesk_select')
+                                .setPlaceholder('Wähle einen Help-Bereich')
+                                .addOptions([
+                                    { label: 'Alle Commands', description: 'Komplette Übersicht (!help)', value: 'help_all', emoji: '📖' },
+                                    { label: 'Voice Commands', description: 'Voice-System Hilfe', value: 'help_voice', emoji: '🎤' },
+                                    { label: 'Security Commands', description: 'Moderation/Security Hilfe', value: 'help_secure', emoji: '🛡️' },
+                                    { label: 'Twitch Commands', description: 'Twitch-Integration Hilfe', value: 'help_twitch', emoji: '📺' },
+                                    { label: 'GitHub Commands', description: 'GitHub-Integration Hilfe', value: 'help_github', emoji: '🐙' },
+                                    { label: 'Bump Commands', description: 'Bump/Disboard Hilfe', value: 'help_bump', emoji: '🔔' },
+                                    { label: 'Birthday Commands', description: 'Geburtstags-System Hilfe', value: 'help_birth', emoji: '🎂' }
+                                ]);
+
+                            const row = new ActionRowBuilder().addComponents(selectMenu);
+                            await message.channel.send({ embeds: [helpEmbed], components: [row] });
+                        },
+
+                    // Interaktion-Handler für das SelectMenu (in infobot.js oder mainbot.js einbauen!):
+                    // client.on('interactionCreate', async interaction => {
+                    //   if (!interaction.isStringSelectMenu()) return;
+                    //   if (interaction.customId !== 'helpdesk_select') return;
+                    //   let reply;
+                    //   switch (interaction.values[0]) {
+                    //     case 'help_all': reply = '...!help Embed oder Text...'; break;
+                    //     case 'help_voice': reply = '...!helpyvoice Embed oder Text...'; break;
+                    //     ...
+                    //   }
+                    //   await interaction.reply({ content: reply, ephemeral: true });
+                    // });
+                    '!helpyvoice': (message) => {
+                        const embed = new EmbedBuilder()
+                            .setColor('#11806a')
+                            .setTitle('★ Voice Commands')
+                            .setDescription('Alle Voice-spezifischen Befehle:')
+                            .addFields(
+                                { name: 'Voice', value:
+                                    '`!setupvoice` - Join-to-Create Channel erstellen\n' +
+                                    '`!setupvoicelog` - Voice Log Channel erstellen\n' +
+                                    '`!cleanupvoice` - Voice Log Channel säubern\n' +
+                                    '`!deletevoice` - Voice System löschen\n' +
+                                    '`!voicename [name]` - Voice Channel umbenennen\n' +
+                                    '`!voicelimit [0-99]` - Userlimit setzen\n' +
+                                    '`!voicetemplate [gaming/study/chill]` - Template anwenden\n' +
+                                    '`!voicelock/unlock` - Channel sperren/entsperren\n' +
+                                    '`!voicekick @user` - User aus Channel kicken\n' +
+                                    '`!voicestats` - Voice Aktivitätsstatistik\n' +
+                                    '`!voiceprivate` - Channel privat machen\n' +
+                                    '`!voicepermit @user` - User erlauben\n' +
+                                    '`!voicedeny @user` - User blockieren', inline: false }
+                            )
+                            .setFooter({ text: 'Nur Voice Features' });
+                        message.reply({ embeds: [embed] });
+                    },
+                    '!helpysecure': (message) => {
+                        const embed = new EmbedBuilder()
+                            .setColor('#e74c3c')
+                            .setTitle('★ Security Commands')
+                            .setDescription('Alle Security/Moderation Befehle:')
+                            .addFields(
+                                { name: 'Security', value:
+                                    '`!setsecuritymod` - Security System aktivieren\n' +
+                                    '`!sban @user` - User bannen\n' +
+                                    '`!skick @user` - User kicken\n' +
+                                    '`!stimeout @user [min]` - User Timeout\n' +
+                                    '`!stimeoutdel @user` - Timeout entfernen', inline: false }
+                            )
+                            .setFooter({ text: 'Nur Security Features' });
+                        message.reply({ embeds: [embed] });
+                    },
+                    '!helpytwitch': (message) => {
+                        const embed = new EmbedBuilder()
+                            .setColor('#9147ff')
+                            .setTitle('★ Twitch Commands')
+                            .setDescription('Alle Twitch-spezifischen Befehle:')
+                            .addFields(
+                                { name: 'Twitch', value:
+                                    '`!settwitch` - Twitch Account verknüpfen\n' +
+                                    '`!setchannel` - Clip Channel erstellen\n' +
+                                    '`!testingtwitch` - Clip-Post Test\n' +
+                                    '`!deletetwitch` - Twitch Account entfernen', inline: false }
+                            )
+                            .setFooter({ text: 'Nur Twitch Features' });
+                        message.reply({ embeds: [embed] });
+                    },
+                    '!helpygithub': (message) => {
+                        const embed = new EmbedBuilder()
+                            .setColor('#24292e')
+                            .setTitle('★ GitHub Commands')
+                            .setDescription('Alle GitHub-spezifischen Befehle:')
+                            .addFields(
+                                { name: 'GitHub', value:
+                                    '`!congithubacc` - GitHub Account verbinden\n' +
+                                    '`!discongithubacc` - GitHub Account trennen', inline: false }
+                            )
+                            .setFooter({ text: 'Nur GitHub Features' });
+                        message.reply({ embeds: [embed] });
+                    },
+                    '!helpybump': (message) => {
+                        const embed = new EmbedBuilder()
+                            .setColor('#f1c40f')
+                            .setTitle('★ Bump Commands')
+                            .setDescription('Alle Bump/Disboard Befehle:')
+                            .addFields(
+                                { name: 'Bump', value:
+                                    '`!bumpreminder` - Bump Reminder aktivieren\n' +
+                                    '`!bumpreminderdel` - Bump Reminder deaktivieren', inline: false }
+                            )
+                            .setFooter({ text: 'Nur Bump Features' });
+                        message.reply({ embeds: [embed] });
+                    },
+                    '!helpybirth': (message) => {
+                        const embed = new EmbedBuilder()
+                            .setColor('#ffb347')
+                            .setTitle('★ Birthday Commands')
+                            .setDescription('Alle Geburtstags-Befehle:')
+                            .addFields(
+                                { name: 'Birthday', value:
+                                    '`!birthdaychannel` - Channel für Geburtstage setzen\n' +
+                                    '`!birthdayset` - Geburtstag eintragen', inline: false }
+                            )
+                            .setFooter({ text: 'Nur Birthday Features' });
+                        message.reply({ embeds: [embed] });
+                    },
                 '!sban': async (message) => {
                     if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
                         message.reply('❌ This is an admin-only and premium command.');
