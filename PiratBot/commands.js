@@ -65,6 +65,8 @@ function isOwnerOrAdmin(member) {
     return member.permissions.has('Administrator');
 }
 module.exports.handleSecurityModeration = handleSecurityModeration;
+const { getRandomResponse } = require('../Bothbots/Mainbot/utils');
+const { loadVoiceConfig, saveVoiceConfig, isPremiumUser, loadVoiceLogs } = require('../Bothbots/Mainbot/voiceSystem');
 const pirateGreetings = [
     "Ahoy, Matey! ⚓",
     "Arrr, what be ye needin'?",
@@ -163,6 +165,407 @@ const commandHandlers = {
                 message.reply(`✅ Timeout removed for ${user.tag}`);
             } catch (err) {
                 message.reply('❌ Failed to remove timeout.');
+            }
+        },
+        '!setupvoice': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+
+            const config = loadVoiceConfig();
+
+            const step1 = await message.reply(
+                '**Voice System Setup - Step 1/2** 🎙️\n\n' +
+                'In which **Category** should the `➕ Join to Create` channel be created?\n\n' +
+                '**Answer:** Send the Category ID (Right-click → Copy ID)\n' +
+                '**Cancel:** Type `cancel`'
+            );
+
+            const filter1 = (m) => m.author.id === message.author.id;
+            const collector1 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
+
+            collector1.on('collect', async (m) => {
+                if (m.content.toLowerCase() === 'cancel') {
+                    message.reply('❌ Voice System Setup cancelled.');
+                    return;
+                }
+
+                const joinCategory = m.content.trim();
+                const category1 = await message.guild.channels.fetch(joinCategory).catch(() => null);
+                if (!category1 || category1.type !== 4) {
+                    message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
+                    return;
+                }
+
+                const step2 = await message.reply(
+                    '**Voice System Setup - Step 2/2** 🎙️\n\n' +
+                    'In which **Category** should the **created Voice Channels** be placed?\n\n' +
+                    '**Answer:** Send the Category ID\n' +
+                    '**Tip:** Can be the same or a different category'
+                );
+
+                const collector2 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
+
+                collector2.on('collect', async (m2) => {
+                    if (m2.content.toLowerCase() === 'cancel') {
+                        message.reply('❌ Voice System Setup cancelled.');
+                        return;
+                    }
+
+                    const voiceCategory = m2.content.trim();
+                    const category2 = await message.guild.channels.fetch(voiceCategory).catch(() => null);
+                    if (!category2 || category2.type !== 4) {
+                        message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
+                        return;
+                    }
+
+                    try {
+                        const joinChannel = await message.guild.channels.create({
+                            name: '➕ Join to Create',
+                            type: 2,
+                            parent: joinCategory,
+                            permissionOverwrites: [
+                                {
+                                    id: message.guild.id,
+                                    allow: ['Connect', 'ViewChannel']
+                                }
+                            ]
+                        });
+
+                        config.joinToCreateChannel = joinChannel.id;
+                        config.joinToCreateCategory = joinCategory;
+                        config.voiceChannelCategory = voiceCategory;
+                        saveVoiceConfig(config);
+
+                        const cat1 = await message.guild.channels.fetch(joinCategory);
+                        const cat2 = await message.guild.channels.fetch(voiceCategory);
+
+                        message.reply(
+                            `✅ **Voice System successfully set up!**\n\n` +
+                            `📍 Join-to-Create: ${joinChannel} in **${cat1.name}**\n` +
+                            `📍 New channels will be created in: **${cat2.name}**`
+                        );
+                    } catch (error) {
+                        console.error('Setup voice error (PiratBot):', error);
+                        message.reply('❌ Error creating voice system.');
+                    }
+                });
+
+                collector2.on('end', (collected) => {
+                    if (collected.size === 0) {
+                        message.reply('❌ Timeout. Please restart setup with `!setupvoice`.');
+                    }
+                });
+            });
+
+            collector1.on('end', (collected) => {
+                if (collected.size === 0) {
+                    message.reply('❌ Timeout. Please restart setup with `!setupvoice`.');
+                }
+            });
+        },
+
+        '!setupvoicelog': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) {
+                message.reply('❌ This is an admin-only command.');
+                return;
+            }
+
+            const config = loadVoiceConfig();
+
+            try {
+                const logChannel = await message.guild.channels.create({
+                    name: '📋-voice-logs',
+                    type: 0,
+                    permissionOverwrites: [
+                        {
+                            id: message.guild.id,
+                            deny: ['ViewChannel']
+                        }
+                    ]
+                });
+
+                config.voiceLogChannel = logChannel.id;
+                saveVoiceConfig(config);
+
+                message.reply(`✅ Voice log channel created: ${logChannel}! Only admins can see it.`);
+            } catch (error) {
+                console.error('Setup voice log error (PiratBot):', error);
+                message.reply('❌ Error creating voice log channel.');
+            }
+        },
+
+        '!voicename': async (message) => {
+            const newName = message.content.replace('!voicename', '').trim();
+            if (!newName) {
+                message.reply('Usage: `!voicename New Channel Name`');
+                return;
+            }
+
+            const config = loadVoiceConfig();
+            const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+                message.reply('❌ You must be in your own voice channel to use this command.');
+                return;
+            }
+
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                await channel.setName(newName);
+                message.reply(`✅ Channel renamed to **${newName}**`);
+            } catch (error) {
+                message.reply('❌ Error renaming channel.');
+            }
+        },
+
+        '!voicelimit': async (message) => {
+            const limit = parseInt(message.content.replace('!voicelimit', '').trim());
+            if (isNaN(limit) || limit < 0 || limit > 99) {
+                message.reply('Usage: `!voicelimit [0-99]` (0 = unlimited)');
+                return;
+            }
+
+            const config = loadVoiceConfig();
+            const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+                message.reply('❌ You must be in your own voice channel to use this command.');
+                return;
+            }
+
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                await channel.setUserLimit(limit);
+                message.reply(`✅ User limit set to **${limit === 0 ? 'Unlimited' : limit}**`);
+            } catch (error) {
+                message.reply('❌ Error setting user limit.');
+            }
+        },
+
+        '!voicetemplate': async (message) => {
+            const template = message.content.replace('!voicetemplate', '').trim().toLowerCase();
+            if (!message.member.voice.channelId) {
+                message.reply('❌ You must be in a voice channel to use this command.');
+                return;
+            }
+
+            const config = loadVoiceConfig();
+            const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+                message.reply('❌ You must be in your own voice channel to use this command.');
+                return;
+            }
+
+            const templates = config.templates;
+            if (!templates[template]) {
+                message.reply(`❌ Invalid template. Available: \`gaming\`, \`study\`, \`chill\``);
+                return;
+            }
+
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                const templateData = templates[template];
+                await channel.setName(`${templateData.name} - ${message.author.username}`);
+                if (templateData.limit > 0) await channel.setUserLimit(templateData.limit);
+                channelInfo.template = template;
+                saveVoiceConfig(config);
+                message.reply(`✅ Applied **${template}** template!`);
+            } catch (error) {
+                message.reply('❌ Error applying template.');
+            }
+        },
+
+        '!voicelock': async (message) => {
+            const config = loadVoiceConfig();
+            const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+                message.reply('❌ You must be in your own voice channel to use this command.');
+                return;
+            }
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                await channel.permissionOverwrites.edit(message.guild.id, { Connect: false });
+                message.reply('🔒 Channel locked! Only current members can stay.');
+            } catch (error) {
+                message.reply('❌ Error locking channel.');
+            }
+        },
+
+        '!voiceunlock': async (message) => {
+            const config = loadVoiceConfig();
+            const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+                message.reply('❌ You must be in your own voice channel to use this command.');
+                return;
+            }
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                await channel.permissionOverwrites.edit(message.guild.id, { Connect: true });
+                message.reply('🔓 Channel unlocked!');
+            } catch (error) {
+                message.reply('❌ Error unlocking channel.');
+            }
+        },
+
+        '!voicekick': async (message) => {
+            const mentionedUser = message.mentions.users.first();
+            if (!mentionedUser) { message.reply('Usage: `!voicekick @user`'); return; }
+            const config = loadVoiceConfig();
+            const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+            try {
+                const targetMember = await message.guild.members.fetch(mentionedUser.id);
+                if (targetMember.voice.channelId === message.member.voice.channelId) {
+                    await targetMember.voice.disconnect();
+                    message.reply(`✅ Kicked **${mentionedUser.username}** from the channel.`);
+                } else {
+                    message.reply('❌ That user is not in your voice channel.');
+                }
+            } catch (error) { message.reply('❌ Error kicking user.'); }
+        },
+
+        '!voicestats': async (message) => {
+            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature! Contact the bot owner for premium access.'); return; }
+            const logs = loadVoiceLogs();
+            const stats = logs.stats;
+            const sortedUsers = Object.entries(stats).sort(([, a], [, b]) => b.totalJoins - a.totalJoins).slice(0, 10);
+            if (sortedUsers.length === 0) { message.reply('❌ No voice activity recorded yet.'); return; }
+            const { EmbedBuilder } = require('discord.js');
+            const embed = new EmbedBuilder()
+                .setColor('#11806a')
+                .setTitle('🎙️ Voice Activity Stats')
+                .setDescription('Top voice channel users:')
+                .addFields(sortedUsers.map(([userId, data], index) => ({ name: `${index + 1}. ${data.username}`, value: `Joins: **${data.totalJoins}** | Created: **${data.channelsCreated}**`, inline: false })))
+                .setFooter({ text: 'Premium Feature' });
+            message.reply({ embeds: [embed] });
+        },
+
+        '!voicepermit': async (message) => {
+            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+            const mentionedUser = message.mentions.users.first(); if (!mentionedUser) { message.reply('Usage: `!voicepermit @user`'); return; }
+            const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                const targetMember = await message.guild.members.fetch(mentionedUser.id);
+                await channel.permissionOverwrites.edit(targetMember.id, { Connect: true, Speak: true });
+                message.reply(`✅ **${mentionedUser.username}** can now join your channel.`);
+            } catch (error) { message.reply('❌ Error permitting user.'); }
+        },
+
+        '!voicedeny': async (message) => {
+            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+            const mentionedUser = message.mentions.users.first(); if (!mentionedUser) { message.reply('Usage: `!voicedeny @user`'); return; }
+            const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                const targetMember = await message.guild.members.fetch(mentionedUser.id);
+                await channel.permissionOverwrites.edit(targetMember.id, { Connect: false });
+                if (targetMember.voice.channelId === channel.id) await targetMember.voice.disconnect();
+                message.reply(`✅ **${mentionedUser.username}** is now blocked from your channel.`);
+            } catch (error) { message.reply('❌ Error denying user.'); }
+        },
+
+        '!voiceprivate': async (message) => {
+            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+            const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
+            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+            try {
+                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+                await channel.permissionOverwrites.edit(message.guild.id, { ViewChannel: false, Connect: false });
+                await channel.permissionOverwrites.edit(message.author.id, { ViewChannel: true, Connect: true, ManageChannels: true, MoveMembers: true });
+                channelInfo.isPrivate = true; saveVoiceConfig(config);
+                message.reply('🔒 Channel is now **private**! Use `!voicepermit @user` to allow specific users.');
+            } catch (error) { message.reply('❌ Error making channel private.'); }
+        },
+
+        '!cleanupvoice': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) { message.reply('❌ This is an admin-only command.'); return; }
+            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+            const config = loadVoiceConfig(); if (!config.voiceLogChannel) { message.reply('❌ No voice log channel configured. Use `!setupvoicelog` first.'); return; }
+            try {
+                const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
+                if (!logChannel) { message.reply('❌ Voice log channel not found.'); return; }
+                let deleted = 0; let lastId;
+                while (true) {
+                    const options = { limit: 100 };
+                    if (lastId) options.before = lastId;
+                    const messages = await logChannel.messages.fetch(options);
+                    if (messages.size === 0) break;
+                    for (const msg of messages.values()) { await msg.delete(); deleted++; }
+                    lastId = messages.last().id; if (messages.size < 100) break;
+                }
+                message.reply(`✅ Voice log channel cleaned! Deleted **${deleted}** messages.`);
+                await logChannel.send(`🧹 **Log Cleanup** - Channel cleared by ${message.author.username}`);
+            } catch (error) { console.error('Cleanup voice error (PiratBot):', error); message.reply('❌ Error cleaning voice log channel.'); }
+        },
+
+        '!deletevoice': async (message) => {
+            if (!isOwnerOrAdmin(message.member)) { message.reply('❌ This is an admin-only command.'); return; }
+            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+            const config = loadVoiceConfig();
+            const confirmMsg = await message.reply('⚠️ **WARNING: Voice System Deletion**\n\nType `CONFIRM` to proceed or `CANCEL` to abort');
+            const filter = (m) => m.author.id === message.author.id;
+            const collector = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
+            collector.on('collect', async (m) => {
+                if (m.content.toUpperCase() === 'CANCEL') { message.reply('❌ Voice system deletion cancelled.'); return; }
+                if (m.content.toUpperCase() !== 'CONFIRM') { message.reply('❌ Invalid response. Deletion cancelled.'); return; }
+                let deletedCount = 0; const errors = [];
+                try {
+                    if (config.joinToCreateChannel) { try { const joinChannel = await message.guild.channels.fetch(config.joinToCreateChannel); if (joinChannel) { await joinChannel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push('Join-to-Create channel'); } }
+                    if (config.voiceLogChannel) { try { const logChannel = await message.guild.channels.fetch(config.voiceLogChannel); if (logChannel) { await logChannel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push('Voice log channel'); } }
+                    if (config.activeChannels) { for (const channelId of Object.keys(config.activeChannels)) { try { const channel = await message.guild.channels.fetch(channelId); if (channel) { await channel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push(`Voice channel ${channelId}`); } } }
+                    config.joinToCreateChannel = null; config.joinToCreateCategory = null; config.voiceChannelCategory = null; config.voiceLogChannel = null; config.activeChannels = {}; saveVoiceConfig(config);
+                    let resultMsg = `✅ **Voice System Deleted!**\n\n🗑️ Deleted **${deletedCount}** channels\n🔄 Reset all voice settings`;
+                    if (errors.length > 0) resultMsg += `\n\n⚠️ **Errors:** Could not delete: ${errors.join(', ')}`;
+                    message.reply(resultMsg);
+                } catch (error) { console.error('Delete voice system error (PiratBot):', error); message.reply('❌ Error deleting voice system. Some components may remain.'); }
+            });
+            collector.on('end', (collected) => { if (collected.size === 0) message.reply('❌ Timeout. Voice system deletion cancelled.'); });
+        },
+        '!sendit': async (message) => {
+            if (!message.member.permissions.has('Administrator')) {
+                message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+                return;
+            }
+
+            const args = message.content.split(' ');
+            if (args.length !== 4 || args[2].toLowerCase() !== 'to') {
+                message.reply('❌ Invalid format! Use: `!sendit MESSAGE_ID to CHANNEL_ID`');
+                return;
+            }
+
+            const messageId = args[1];
+            const targetChannelId = args[3].replace(/[<#>]/g, '');
+
+            try {
+                const originalMessage = await message.channel.messages.fetch(messageId);
+                if (!originalMessage) {
+                    message.reply('❌ Message not found in this channel!');
+                    return;
+                }
+
+                const targetChannel = message.guild.channels.cache.get(targetChannelId);
+                if (!targetChannel) {
+                    message.reply('❌ Target channel not found!');
+                    return;
+                }
+
+                const content = originalMessage.content || '';
+                const attachments = Array.from(originalMessage.attachments.values());
+                const files = attachments.map(att => ({ attachment: att.url, name: att.name }));
+
+                if (content || files.length > 0) {
+                    await targetChannel.send({ content, files });
+                    message.reply(`✅ Message forwarded to <#${targetChannelId}>`);
+                    await message.delete();
+                } else {
+                    message.reply('❌ The message has no content or attachments to forward.');
+                }
+            } catch (error) {
+                console.error('PiratBot sendit error:', error);
+                message.reply(`❌ Failed to forward message. Error: ${error.message}`);
             }
         },
         // ...existing code...

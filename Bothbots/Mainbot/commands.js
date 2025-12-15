@@ -51,6 +51,10 @@ async function handleSecurityModeration(message) {
     }
 }
 
+const fs = require('fs');
+const axios = require('axios');
+const Groq = require('groq-sdk');
+
 // --- Timeout and Warn Helper ---
 async function timeoutAndWarn(message, reason) {
     try {
@@ -90,9 +94,7 @@ function loadServerLanguages() {
 function saveServerLanguages(data) {
     fs.writeFileSync(SERVER_LANG_FILE, JSON.stringify(data, null, 2));
 }
-const fs = require('fs');
-const axios = require('axios');
-const Groq = require('groq-sdk');
+
 
 const { getRandomResponse } = require('./utils');
 const { EmbedBuilder } = require('discord.js');
@@ -198,6 +200,8 @@ const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();
 // Maps helpdesk message ID -> origin channel ID (where !mungahelpdesk was executed)
 const helpdeskOrigins = new Map();
+// Maps support ticket message ID -> origin channel ID (where !munga-supportticket was executed)
+const supportOrigins = new Map();
 
 function setBumpReminder(channel, guild) {
     const channelId = channel.id;
@@ -432,6 +436,51 @@ const commandHandlers = {
                                     // remember which channel the user requested the helpdesk from
                                     try { helpdeskOrigins.set(sent.id, message.channel.id); } catch (e) { /* ignore */ }
                                     message.reply('✅ Helpdesk posted in the requested channel!');
+                                });
+                                collector.on('end', (collected) => {
+                                    if (collected.size === 0) {
+                                        message.reply('❌ Time expired. Please run the command again.');
+                                    }
+                                });
+                            },
+                            '!munga-supportticket': async (message) => {
+                                // Support ticket poster (any user)
+                                message.reply('Please send the target Channel ID where the support ticket embed should be posted. (60 seconds)');
+                                const filter = m => m.author.id === message.author.id && /^\d{17,20}$/.test(m.content.trim());
+                                const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                                collector.on('collect', async (msg) => {
+                                    const channelId = msg.content.trim();
+                                    const targetChannel = message.guild.channels.cache.get(channelId);
+                                    if (!targetChannel) {
+                                        message.reply('❌ Channel not found. Please check the ID.');
+                                        return;
+                                    }
+                                    const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
+
+                                    const supportEmbed = new EmbedBuilder()
+                                        .setColor('#2f3136')
+                                        .setAuthor({ name: 'Support Ticket', iconURL: 'https://i.imgur.com/4I7tViC.png' })
+                                        .setTitle('Create a Support Ticket')
+                                        .setDescription('Need help? Choose the appropriate option from the menu below to create a support ticket. Provide as much detail as possible when prompted.\n\nExamples of what to report:\n• Technical issues (bot errors, command failures, crashes)\n• Server abuse or harassment (spam, targeted threats, moderation requests)\n• Scam or phishing attempts (suspicious links, impersonation)\n• Advertising / recruitment (unsolicited promotions or bot invites)\n• Bug reports & feature requests (steps to reproduce, expected behavior)\n• Other (billing, access, or custom requests)')
+                                        .setImage('https://i.imgur.com/4I7tViC.png')
+                                        .setFooter({ text: 'Select a category to start a ticket — a staff member will respond.' });
+
+                                    const selectMenu = new StringSelectMenuBuilder()
+                                        .setCustomId('support_select')
+                                        .setPlaceholder('Choose a support category')
+                                        .addOptions([
+                                            { label: 'Technical Issue', description: 'Bot or server technical problem', value: 'support_technical', emoji: '🛠️' },
+                                            { label: 'Spam / Scam', description: 'Report spam, phishing or scams', value: 'support_spam', emoji: '⚠️' },
+                                            { label: 'Abuse / Harassment', description: 'Report abuse or threatening behavior', value: 'support_abuse', emoji: '🚨' },
+                                            { label: 'Advertising / Recruitment', description: 'Unwanted promotions or invites', value: 'support_ad', emoji: '📣' },
+                                            { label: 'Bug / Feature', description: 'Report a bug or request a feature', value: 'support_bug', emoji: '🐛' },
+                                            { label: 'Other', description: 'Other support inquiries', value: 'support_other', emoji: '❓' }
+                                        ]);
+
+                                    const row = new ActionRowBuilder().addComponents(selectMenu);
+                                    const sent = await targetChannel.send({ embeds: [supportEmbed], components: [row] });
+                                    try { supportOrigins.set(sent.id, message.channel.id); } catch (e) { /* ignore */ }
+                                    message.reply('✅ Support ticket embed posted in the requested channel!');
                                 });
                                 collector.on('end', (collected) => {
                                     if (collected.size === 0) {
@@ -1932,17 +1981,6 @@ const commandHandlers = {
         message.channel.send('!pongez');
     },
     '!info': (message, BOT_INFO) => message.reply(`Bot: ${BOT_INFO.name} v${BOT_INFO.version}\nStatus: Online 24/7`),
-    '!commands': (message) => {
-        message.reply(
-            '**Available Commands:**\n' +
-            '`!commands` - Show this list\n' +
-            '`!congithubacc` - Connect your GitHub account\n' +
-            '`!discongithubacc` - Disconnect your GitHub account\n' +
-            '`!gitrank` - Show your GitHub commit level\n' +
-            '`!gitleader` - Show the top 10 committers\n' +
-            '`!hi`, `!coffee`, `!devmeme`, `!mot`, `!gn`, `!gm`, `!ping`, `!info`, `!github`'
-        );
-    },
     '!congithubacc': (message) => {
         const discordId = message.author.id;
         const loginUrl = `https://thecoffeylounge.com/github-connect.html?discordId=${discordId}`;
@@ -1952,17 +1990,17 @@ const commandHandlers = {
         );
     },
     '!discongithubacc': async (message) => {
-        const discordId = message.author.id;
+        const discordUserId = message.author.id;
         let data = {};
         if (fs.existsSync('github_links.json')) {
             data = JSON.parse(fs.readFileSync('github_links.json'));
         }
-        if (data[discordId]) {
-            delete data[discordId];
+        if (data[discordUserId]) {
+            delete data[discordUserId];
             fs.writeFileSync('github_links.json', JSON.stringify(data, null, 2));
             try {
                 const guild = message.guild;
-                const member = await guild.members.fetch(discordId);
+                const member = await guild.members.fetch(discordUserId);
                 await member.roles.remove('1440681068708630621');
                 message.reply('Your GitHub account has been disconnected and the role removed.');
             } catch (err) {
@@ -2023,5 +2061,6 @@ module.exports = {
     setBumpReminder,
     restoreBumpReminders,
     handleSecurityModeration,
-    helpdeskOrigins
+    helpdeskOrigins,
+    supportOrigins
 };
