@@ -665,6 +665,13 @@ const commandHandlers = {
                     '`!skick @user` - Security kick a user (admin only)\n' +
                     '`!stimeout @user [minutes]` - Timeout a user for given minutes (admin only)\n' +
                     '`!stimeoutdel @user` - Remove timeout from a user (admin only)\n', inline: false },
+                { name: '» Voice System', value:
+                    '`!setupvoice` - Initialize the Join-to-Create voice system (admin only)\n' +
+                    '`!setupvoicelog` - Create a voice log channel (admin only)\n' +
+                    '`!voicename New Name` - Rename your private voice channel\n' +
+                    '`!voicelimit N` - Set user limit for your channel\n' +
+                    '`!voicelock` / `!voiceunlock` - Lock or unlock your channel\n' +
+                    '`!voicekick @user` - Kick a user from your private channel\n', inline: false },
                 { name: '» Information', value:
                     '`!helpme` - Show this help menu\n' +
                     '`!piratehelp` - Quick command reference\n', inline: false }
