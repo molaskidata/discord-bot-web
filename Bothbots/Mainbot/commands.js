@@ -1923,7 +1923,7 @@ const commandHandlers = {
                     '`!helpybump` - Bump/Disboard help\n' +
                     '`!helpybirth` - Birthday help', inline: false }
             )
-            .setImage('https://i.imgur.com/8dF1kMw.jpeg')
+            .setImage('https://i.imgur.com/yEnlJxN.png')
             .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
         message.reply({ embeds: [embed] });
     },
