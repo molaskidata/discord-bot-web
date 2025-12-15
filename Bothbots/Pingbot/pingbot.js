@@ -1,3 +1,20 @@
+    if (message.content === '!delbumpreminder2') {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
+        if (bumpReminders.has(message.channel.id)) {
+            clearTimeout(bumpReminders.get(message.channel.id));
+            bumpReminders.delete(message.channel.id);
+            const storedReminders = loadBumpReminders();
+            delete storedReminders[message.channel.id];
+            saveBumpRemindersToFile(storedReminders);
+            message.channel.send('🗑️ Bump reminder for this channel has been deleted.');
+        } else {
+            message.channel.send('❌ No active bump reminder for this channel.');
+        }
+        return;
+    }
 
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const path = require('path');

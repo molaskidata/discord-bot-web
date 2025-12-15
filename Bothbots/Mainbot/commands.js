@@ -250,6 +250,22 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+                                '!delbumpreminder': (message) => {
+                                    if (!isOwnerOrAdmin(message.member)) {
+                                        message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+                                        return;
+                                    }
+                                    if (bumpReminders.has(message.channel.id)) {
+                                        clearTimeout(bumpReminders.get(message.channel.id));
+                                        bumpReminders.delete(message.channel.id);
+                                        const storedReminders = loadBumpReminders();
+                                        delete storedReminders[message.channel.id];
+                                        saveBumpRemindersToFile(storedReminders);
+                                        message.channel.send('🗑️ Bump reminder for this channel has been deleted.');
+                                    } else {
+                                        message.channel.send('❌ No active bump reminder for this channel.');
+                                    }
+                                },
                             '!mungahelpdesk': async (message) => {
                                 // Nur Admins oder Bot-Owner
                                 if (!message.member.permissions.has('Administrator') && message.author.id !== '1105877268775051316') {
