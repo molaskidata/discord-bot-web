@@ -324,8 +324,9 @@ const commandHandlers = {
                                             { name: 'GitHub Commands', value: '• **!helpygithub** – GitHub integration help' },
                                             { name: 'Bump Commands', value: '• **!helpybump** – Bump/Disboard help' },
                                             { name: 'Birthday Commands', value: '• **!helpybirth** – Birthday system help' }
-                                        .setThumbnail('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExenV1MnFsbnJpbGExNXVjMmtpa2g3YWUxdjZpcWJjZHJxZGlkbWltaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ROrtpO7a9grYaosCks/giphy.gif')
-                                        .setFooter({ text: 'Choose a category using the menu below!' }));
+                                        )
+                                        .setImage('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExenV1MnFsbnJpbGExNXVjMmtpa2g3YWUxdjZpcWJjZHJxZGlkbWltaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ROrtpO7a9grYaosCks/giphy.gif')
+                                        .setFooter({ text: 'Choose a category using the menu below!' });
 
                                     const selectMenu = new StringSelectMenuBuilder()
                                         .setCustomId('helpdesk_select')
