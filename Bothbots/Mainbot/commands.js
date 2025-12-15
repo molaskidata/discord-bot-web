@@ -569,29 +569,41 @@ const commandHandlers = {
                 message.reply('⚠️ There is already a cleanup interval running in this channel. Use !cleanupdel to stop it first.');
                 return;
             }
-            message.reply('🧹 Cleanup enabled! All messages in this channel will be deleted automatically every hour.\n\n**Note:** You must run this command in the channel you want to clean up.');
-            const interval = setInterval(async () => {
+            message.reply('🧹 Cleanup enabled! I will delete all messages in this channel now and then every hour.\n\n**Note:** You must run this command in the channel you want to clean up.');
+
+            // helper to delete all messages in the channel (iterating in batches)
+            const doFullCleanup = async (chan) => {
                 let deleted = 0;
-                let lastId;
+                let lastId = null;
                 try {
                     while (true) {
                         const options = { limit: 100 };
                         if (lastId) options.before = lastId;
-                        const messages = await channel.messages.fetch(options);
+                        const messages = await chan.messages.fetch(options);
                         if (messages.size === 0) break;
+                        // iterate and delete each message (including pinned)
                         for (const msg of messages.values()) {
-                            if (msg.pinned) continue;
-                            await msg.delete();
-                            deleted++;
+                            try {
+                                await msg.delete();
+                                deleted++;
+                            } catch (err) {
+                                // ignore individual delete errors (rate limits / missing perms)
+                            }
                         }
                         lastId = messages.last().id;
                         if (messages.size < 100) break;
                     }
-                    channel.send(`🧹 Cleanup complete! **${deleted}** messages deleted.`);
+                    try { await chan.send(`🧹 Cleanup complete! **${deleted}** messages deleted.`); } catch (e) { /* ignore send errors */ }
                 } catch (err) {
-                    channel.send('❌ Error while deleting messages.');
+                    try { await chan.send('❌ Error while deleting messages.'); } catch (e) { }
                 }
-            }, 60 * 60 * 1000);
+            };
+
+            // run immediate cleanup
+            doFullCleanup(channel);
+
+            // schedule hourly cleanup
+            const interval = setInterval(() => doFullCleanup(channel), 60 * 60 * 1000);
             cleanupIntervals[channel.id] = interval;
         },
 
