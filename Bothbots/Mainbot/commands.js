@@ -399,7 +399,8 @@ const commandHandlers = {
                                     }
                                     const { ActionRowBuilder, StringSelectMenuBuilder, EmbedBuilder } = require('discord.js');
                                     const helpEmbed = new EmbedBuilder()
-                                        .setColor('#9b59ff') // light violet
+                                        .setColor('#80c20eff')
+                                        .setAuthor({ name: "!Code.Master()", iconURL: 'https://imgur.com/diztsFC.png' })
                                         .setTitle('Self Support / Bot Help')
                                         .setDescription('Choose a category to get help:')
                                         .addFields(
@@ -411,7 +412,7 @@ const commandHandlers = {
                                             { name: 'Bump Commands', value: '• **!helpybump** – Bump/Disboard help' },
                                             { name: 'Birthday Commands', value: '• **!helpybirth** – Birthday system help' }
                                         )
-                                        .setImage('https://media1.giphy.com/media/v1.Y2lkPTc5MGI3NjExenV1MnFsbnJpbGExNXVjMmtpa2g3YWUxdjZpcWJjZHJxZGlkbWltaCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/ROrtpO7a9grYaosCks/giphy.gif')
+                                        .setImage('https://imgur.com/VYHroXP.png')
                                         .setFooter({ text: 'Choose a category using the menu below!' });
 
                                     const selectMenu = new StringSelectMenuBuilder()
@@ -1849,6 +1850,7 @@ const commandHandlers = {
         const embed = new EmbedBuilder()
             .setColor('#11806a')
             .setTitle('★ Bot Command Help')
+            .setAuthor({ name: '!Code.Mater()', iconURL: 'https://imgur.com/8dF1kMw'})
             .setDescription('Here are all available commands:')
             .addFields(
                 { name: '★ General', value:
@@ -1921,7 +1923,7 @@ const commandHandlers = {
                     '`!helpybump` - Bump/Disboard help\n' +
                     '`!helpybirth` - Birthday help', inline: false }
             )
-            .setImage('https://media.discordapp.net/attachments/1226484495927218239/1448597565275635743/Screenshot_2025-12-11_094708.png?ex=693bd71d&is=693a859d&hm=152773c05569dbf0a2ff10953b93b93762afcce58391c94d358ef789b1e15968&=&format=webp&quality=lossless')
+            .setImage('https://imgur.com/yEnlJxN.png')
             .setFooter({ text: 'Powered by mungabee /aka ozzygirl', iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4' });
         message.reply({ embeds: [embed] });
     },

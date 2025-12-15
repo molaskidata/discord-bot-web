@@ -228,6 +228,7 @@ const commandHandlers = {
                     '`!dice` - Roll the dice\n' +
                     '`!compass` - Check direction\n', inline: false }
             )
+            .setImage('https://imgur.com/p95YIAZ.png')
             .setFooter({ text: 'Yo ho ho!' });
         message.reply({ embeds: [embed] });
     },
