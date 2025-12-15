@@ -74,7 +74,12 @@ const pirateGreetings = [
 
 const pirateFarewell = [
     "Fair winds and following seas, matey! ⚓",
-    const commandHandlers = {
+    "May your sails stay full and your rum never run dry!",
+    "Until our ships cross paths again, matey!",
+    "Yo ho ho, farewell!"
+];
+
+const commandHandlers = {
         '!setsecuritymod': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {
                 message.reply('❌ This is an admin-only command.');
@@ -160,29 +165,7 @@ const pirateFarewell = [
                 message.reply('❌ Failed to remove timeout.');
             }
         },
-        // ...bestehende Commands folgen...
-        } catch (err) {
-            message.reply('❌ Failed to timeout user.');
-        }
-    },
-    '!stimeoutdel': async (message) => {
-        if (!isOwnerOrAdmin(message.member)) {
-            message.reply('❌ This is an admin-only command.');
-            return;
-        }
-        const user = message.mentions.users.first();
-        if (!user) {
-            message.reply('Usage: !stimeoutdel @user');
-            return;
-        }
-        try {
-            const member = await message.guild.members.fetch(user.id);
-            await member.timeout(null, 'Manual security timeout removed');
-            message.reply(`✅ Timeout removed for ${user.tag}`);
-        } catch (err) {
-            message.reply('❌ Failed to remove timeout.');
-        }
-    },
+        // ...existing code...
     '!ahoy': (message) => message.reply(getRandomResponse(pirateGreetings)),
     '!farewell': (message) => message.reply(getRandomResponse(pirateFarewell)),
     '!treasure': (message) => message.reply(getRandomResponse(treasureQuotes)),
