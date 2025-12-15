@@ -250,6 +250,38 @@ function restoreBumpReminders(client) {
 }
 
 const commandHandlers = {
+                                    '!setupflirtlang': (message) => {
+                                        if (!isOwnerOrAdmin(message.member)) {
+                                            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+                                            return;
+                                        }
+                                        const args = message.content.split(' ');
+                                        if (args.length < 2) {
+                                            message.reply('Usage: !setupflirtlang [language]\nExample: !setupflirtlang English');
+                                            return;
+                                        }
+                                        const lang = args[1].toLowerCase();
+                                        const serverId = message.guild.id;
+                                        const langs = loadServerLanguages();
+                                        langs[serverId] = lang;
+                                        saveServerLanguages(langs);
+                                        message.reply(`✅ Flirt language for this server set to **${lang}**. The AI will now use this language for flirts.`);
+                                    },
+                                    '!removeflirtlang': (message) => {
+                                        if (!isOwnerOrAdmin(message.member)) {
+                                            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+                                            return;
+                                        }
+                                        const serverId = message.guild.id;
+                                        const langs = loadServerLanguages();
+                                        if (langs[serverId]) {
+                                            delete langs[serverId];
+                                            saveServerLanguages(langs);
+                                            message.reply('✅ Flirt language setting removed for this server. The AI will now auto-detect language for flirts.');
+                                        } else {
+                                            message.reply('No flirt language was set for this server.');
+                                        }
+                                    },
                                 '!delbumpreminder': (message) => {
                                     if (!isOwnerOrAdmin(message.member)) {
                                         message.reply('❌ This is an admin-only command and cannot be used by regular users.');
@@ -1762,11 +1794,13 @@ const commandHandlers = {
                     '`!voiceprivate` - Make channel private\n' +
                     '`!voicepermit @user` - Allow user to join\n' +
                     '`!voicedeny @user` - Block user from joining', inline: false },
-                { name: '★ Utilities *- only admin*', value:
+                { name: '★ Utilities (Admin only, Premium)', value:
                     '`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n' +
-                    '`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour. **You must run this command in the channel you want to clean up.** -*only admin, premium*\n' +
-                    '`!cleanupdel` - Stop the hourly auto-cleanup for this channel. **You must run this command in the channel where cleanup is active.** -*only admin, premium*\n' +
-                    // ...existing code...
+                    '`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour. Run this command in the channel you want to clean up.\n' +
+                    '`!cleanupdel` - Stop the hourly auto-cleanup for this channel. Run this command in the channel where cleanup is active.\n' +
+                    '`!setupflirtlang [language]` - Set AI flirt language for this server\n' +
+                    '`!removeflirtlang` - Remove AI flirt language setting for this server\n' +
+                    '`!flirt [text]` - Flirt with AI-generated responses', inline: false },
                 { name: '★ Twitch *-only admin*', value:
                     '`!settwitch` - Link Twitch account and configure clip notifications -*only admin*\n' +
                     '`!setchannel` - Create a new thread-only channel for clips \n' +
