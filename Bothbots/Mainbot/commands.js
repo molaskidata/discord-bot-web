@@ -361,6 +361,7 @@ const commandHandlers = {
                         const messages = await channel.messages.fetch(options);
                         if (messages.size === 0) break;
                         for (const msg of messages.values()) {
+                            if (msg.pinned) continue;
                             await msg.delete();
                             deleted++;
                         }
