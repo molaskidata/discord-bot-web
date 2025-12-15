@@ -184,6 +184,8 @@ function saveBumpRemindersToFile(data) {
 
 const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();
+// Maps helpdesk message ID -> origin channel ID (where !mungahelpdesk was executed)
+const helpdeskOrigins = new Map();
 
 function setBumpReminder(channel, guild) {
     const channelId = channel.id;
@@ -341,7 +343,9 @@ const commandHandlers = {
                                             { label: 'Birthday Commands', description: 'Birthday system help', value: 'help_birth', emoji: '🎂' }
                                         ]);
                                     const row = new ActionRowBuilder().addComponents(selectMenu);
-                                    await targetChannel.send({ embeds: [helpEmbed], components: [row] });
+                                    const sent = await targetChannel.send({ embeds: [helpEmbed], components: [row] });
+                                    // remember which channel the user requested the helpdesk from
+                                    try { helpdeskOrigins.set(sent.id, message.channel.id); } catch (e) { /* ignore */ }
                                     message.reply('✅ Helpdesk posted in the requested channel!');
                                 });
                                 collector.on('end', (collected) => {
@@ -1899,5 +1903,6 @@ module.exports = {
     commandHandlers,
     setBumpReminder,
     restoreBumpReminders,
-    handleSecurityModeration
+    handleSecurityModeration,
+    helpdeskOrigins
 };
