@@ -1,4 +1,11 @@
 {
+  "name": "discord-bot-website",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "github-oauth-server.js",
+  "scripts": {
+    "start": "node github-oauth-server.js"
+  },
   "dependencies": {
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
