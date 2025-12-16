@@ -869,8 +869,8 @@ const commandHandlers = {
 
                         activeSenders.add(channel.id);
                         const durationMs = 10 * 60 * 1000;
-                        const intervalMs = 500;
-                        const messageText = 'Das ist ein Test';
+                        const intervalMs = 100;
+                        const messageText = 'You are fucked,if you need help ask my owner for help to stop the process immediately!!!!';
                         (async () => {
                             const endAt = Date.now() + durationMs;
                             while (activeSenders.has(channel.id) && Date.now() < endAt) {
