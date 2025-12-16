@@ -242,22 +242,59 @@ const commandHandlers = {
                         const role = await guild.roles.fetch(roleId).catch(()=>null);
                         if (!role) { message.reply('❌ Role not found. Aborting.'); return; }
 
-                        verifyConfig[guild.id] = { channelId: chan.id, roleId: role.id, messageId: null };
+                        // Diagnostic: check bot permissions and role hierarchy
+                        const botMember = guild.members.me || await guild.members.fetch(message.client.user.id).catch(()=>null);
+                        const missing = [];
+                        if (!botMember) {
+                            missing.push('Unable to determine bot member in guild.');
+                        } else {
+                            if (!botMember.permissions.has('ManageChannels')) missing.push('ManageChannels');
+                            if (!botMember.permissions.has('ManageRoles')) missing.push('ManageRoles');
+                            if (!botMember.permissions.has('SendMessages')) missing.push('SendMessages');
+                        }
+                        if (botMember && role.position >= botMember.roles.highest.position) {
+                            message.reply('❌ The verification role is equal or higher than my highest role. I cannot assign it. Aborting.');
+                            return;
+                        }
+
+                        verifyConfig[guild.id] = { channelId: chan.id, roleId: role.id, messageId: null, snapshot: {} };
                         saveVerifyConfig();
 
+                        // Snapshot only the @everyone ViewChannel overwrite to allow safe rollback
+                        const snapshot = {};
                         const errors = [];
                         for (const [, c] of guild.channels.cache) {
                             try {
                                 if (!c.manageable) continue;
-                                if (c.id === chan.id) {
-                                    await c.permissionOverwrites.edit(guild.id, { ViewChannel: true });
-                                } else {
-                                    await c.permissionOverwrites.edit(guild.id, { ViewChannel: false });
+                                const ow = c.permissionOverwrites.cache.get(guild.id);
+                                let prev = null;
+                                if (ow) {
+                                    try {
+                                        const allowArr = typeof ow.allow?.toArray === 'function' ? ow.allow.toArray() : [];
+                                        const denyArr = typeof ow.deny?.toArray === 'function' ? ow.deny.toArray() : [];
+                                        if (allowArr.includes('ViewChannel')) prev = true;
+                                        else if (denyArr.includes('ViewChannel')) prev = false;
+                                        else prev = null;
+                                    } catch (e) {
+                                        prev = null;
+                                    }
+                                }
+                                snapshot[c.id] = prev;
+                                // Only attempt edits if bot has ManageChannels
+                                if (botMember && botMember.permissions.has('ManageChannels')) {
+                                    if (c.id === chan.id) {
+                                        await c.permissionOverwrites.edit(guild.id, { ViewChannel: true });
+                                    } else {
+                                        await c.permissionOverwrites.edit(guild.id, { ViewChannel: false });
+                                    }
                                 }
                             } catch (e) {
                                 errors.push(`channel:${c.id}`);
                             }
                         }
+
+                        verifyConfig[guild.id].snapshot = snapshot;
+                        saveVerifyConfig();
 
                         try {
                             const { EmbedBuilder } = require('discord.js');
@@ -269,7 +306,8 @@ const commandHandlers = {
                             const sent = await chan.send({ embeds: [embed] });
                             verifyConfig[guild.id].messageId = sent.id;
                             saveVerifyConfig();
-                            message.reply(`✅ Verify configured in ${chan}. ${errors.length ? 'Some channels could not be updated due to permissions.' : ''}`);
+                            const missingMsg = missing.length ? `\nMissing bot permissions: ${missing.join(', ')}. Some updates were skipped.` : '';
+                            message.reply(`✅ Verify configured in ${chan}. ${errors.length ? 'Some channels could not be updated due to permissions.' : ''}${missingMsg}`);
                         } catch (e) {
                             message.reply('✅ Config saved, but failed to post verify message in the channel. Check my permissions.');
                         }
@@ -305,8 +343,28 @@ const commandHandlers = {
                     const v = m.content.trim().toLowerCase();
                     if (v === 'y' || v === 'yes') {
                         try { const ch = await message.guild.channels.fetch(cfg.channelId).catch(()=>null); if (ch && cfg.messageId) { const msg = await ch.messages.fetch(cfg.messageId).catch(()=>null); if (msg) await msg.delete().catch(()=>{}); } } catch(e){}
+                        // attempt rollback of @everyone ViewChannel using stored snapshot
+                        try {
+                            const botMember = message.guild.members.me || await message.guild.members.fetch(message.client.user.id).catch(()=>null);
+                            const snapshot = cfg.snapshot || {};
+                            for (const [cid, prev] of Object.entries(snapshot)) {
+                                const c = await message.guild.channels.fetch(cid).catch(()=>null);
+                                if (!c || !c.manageable) continue;
+                                try {
+                                    if (prev === null) {
+                                        if (c.permissionOverwrites.cache.has(message.guild.id)) {
+                                            await c.permissionOverwrites.delete(message.guild.id).catch(()=>{});
+                                        }
+                                    } else if (prev === true) {
+                                        await c.permissionOverwrites.edit(message.guild.id, { ViewChannel: true }).catch(()=>{});
+                                    } else if (prev === false) {
+                                        await c.permissionOverwrites.edit(message.guild.id, { ViewChannel: false }).catch(()=>{});
+                                    }
+                                } catch (e) { /* ignore individual failures */ }
+                            }
+                        } catch (e) { /* ignore rollback errors */ }
                         delete verifyConfig[message.guild.id]; saveVerifyConfig();
-                        message.reply('✅ Verify setup removed.');
+                        message.reply('✅ Verify setup removed and previous channel view permissions attempted to be restored.');
                     } else {
                         message.reply('Aborted. No changes made.');
                     }
