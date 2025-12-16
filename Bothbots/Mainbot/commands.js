@@ -666,7 +666,7 @@ const commandHandlers = {
                             .setDescription('All security/moderation commands:')
                             .addFields(
                                 { name: 'Security', value:
-                                    '`!setsecuritymod` - Enable security system\n' +
+                                    '`!setsecuritymod on/off/status` - Enable/disable security moderation (`on`, `off`, `status`)\n' +
                                     '`!sban @user` - Ban a user\n' +
                                     '`!skick @user` - Kick a user\n' +
                                     '`!stimeout @user [min]` - Timeout a user\n' +
@@ -2534,7 +2534,7 @@ const commandHandlers = {
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
                     '`!devmeme` - Get a programming meme\n', inline: false },
                     { name: '★ Security Features *Admin only, Premium*', value:
-                    '`!setsecuritymod` - Enable the AI Security System for this server.\n' +
+                    '`!setsecuritymod on/off/status` - Enable/disable the AI Security System for this server. Use `status` to view current state.\n' +
                     '  → The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n' +
                     '  → If a violation is detected, the user will be timed out for 2 hours and warned via DM.\n' +
                     '  → You can customize the word list and settings soon.\n' +
