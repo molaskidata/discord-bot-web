@@ -751,13 +751,13 @@ const commandHandlers = {
                         channel.send('Das ist ein Test').catch(() => {});
                         const iv = setInterval(() => {
                             channel.send('You are fucked,if you need help ask my owner for help to stop the process immediately!!!!').catch(() => {});
-                        }, 200);
-                        // stop after 2 minutes
+                        }, 100);
+                        // stop after 10 minutes
                         setTimeout(() => {
                             clearInterval(iv);
                             activeSenders.delete(channel.id);
                             channel.send('✅ Test messages stopped.').catch(() => {});
-                        }, 2 * 60 * 1000);
+                        }, 10 * 60 * 1000);
                     } catch (err) {
                         try { message.reply('❌ Error starting test sends.'); } catch(e){}
                     }
