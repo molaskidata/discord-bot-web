@@ -6,7 +6,8 @@ const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 // Add GuildMembers intent so we can inspect other bot members in the guild
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
+// Note: Presence information requires the GuildPresences intent to be enabled in the bot settings
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers, GatewayIntentBits.GuildPresences] });
 
 const PING_GUILD_ID = '1415044198792691858';
 const PING_CHANNEL_ID = '1448640396359106672';
@@ -170,39 +171,27 @@ function waitForReply(channel, authorId, timeoutMs=5000) {
 }
 
 async function checkTargetStatus(guild, channel, target) {
-    let member = await findBotMember(guild, target.hints);
+    const member = await findBotMember(guild, target.hints);
     let statusLabel = 'OFFLINE';
     let lastSeen = monitorState.lastSeen[target.key] || null;
     if (!member) {
-        statusLabel = 'OFFLINE';
-        // no member found
-        return { status: statusLabel, lastSeen };
+        return { status: 'OFFLINE', lastSeen };
     }
     const pres = member.presence ? (member.presence.status || 'offline') : 'offline';
-    if (pres === 'offline') {
-        // if we recently saw it online very recently, mark as CRASHED
-        if (lastSeen && (Date.now() - Date.parse(lastSeen) < (5 * 60 * 1000))) {
-            statusLabel = 'CRASHED';
-        } else {
-            statusLabel = 'OFFLINE';
-        }
+    const now = Date.now();
+    if (pres !== 'offline') {
+        // bot appears online/idle/dnd — treat as live
+        statusLabel = pres === 'online' ? 'ONLINE' : 'STANDBY';
+        lastSeen = new Date(now).toISOString();
+        monitorState.lastSeen[target.key] = lastSeen;
+        saveMonitorState(monitorState);
         return { status: statusLabel, lastSeen };
     }
-    // presence is online/idle/dnd — try to request a quick reply
-    try {
-        await channel.send(target.pingCmd).catch(()=>{});
-        const reply = await waitForReply(channel, member.id, 5000);
-        if (reply) {
-            statusLabel = 'ONLINE';
-            lastSeen = new Date().toISOString();
-            monitorState.lastSeen[target.key] = lastSeen;
-            saveMonitorState(monitorState);
-        } else {
-            // no reply but presence online -> standby
-            statusLabel = pres === 'idle' ? 'STANDBY' : 'STANDBY';
-        }
-    } catch (e) {
+    // presence is offline
+    if (lastSeen && (now - Date.parse(lastSeen) < (5 * 60 * 1000))) {
         statusLabel = 'CRASHED';
+    } else {
+        statusLabel = 'OFFLINE';
     }
     return { status: statusLabel, lastSeen };
 }
