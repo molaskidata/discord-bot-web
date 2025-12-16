@@ -812,6 +812,40 @@ const commandHandlers = {
                     }
                 });
             },
+            '!security': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                const parts = message.content.split(' ').filter(Boolean);
+                const arg = parts[1] ? parts[1].toLowerCase() : null;
+                const gid = message.guild.id;
+                securityConfig[gid] = securityConfig[gid] || {};
+                if (!arg || arg === 'status') {
+                    const enabled = !!securityConfig[gid].enabled;
+                    const logId = securityConfig[gid].logChannelId || 'none';
+                    message.reply(`Security: ${enabled ? 'ENABLED' : 'disabled'}. Log channel: ${logId}`);
+                    return;
+                }
+                if (arg === 'on' || arg === 'enable') { securityConfig[gid].enabled = true; saveSecurityConfigMain(); message.reply('✅ Security enabled for this server.'); return; }
+                if (arg === 'off' || arg === 'disable') { securityConfig[gid].enabled = false; saveSecurityConfigMain(); message.reply('✅ Security disabled for this server.'); return; }
+                message.reply('Usage: !security <on|off|status>');
+            },
+            '!setseclog': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                const parts = message.content.split(' ').filter(Boolean);
+                const arg = parts[1] ? parts[1].trim() : null;
+                const gid = message.guild.id;
+                securityConfig[gid] = securityConfig[gid] || {};
+                if (!arg) { message.reply('Usage: !setseclog <channelId|none|create>'); return; }
+                if (arg.toLowerCase() === 'none') { securityConfig[gid].logChannelId = null; saveSecurityConfigMain(); message.reply('✅ Logging disabled for this server.'); return; }
+                if (arg.toLowerCase() === 'create') {
+                    try { const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] }); securityConfig[gid].logChannelId = ch.id; saveSecurityConfigMain(); message.reply(`✅ Created warn-log channel: ${ch}`); } catch (e) { message.reply('❌ Failed to create channel'); }
+                    return;
+                }
+                const maybe = arg.replace(/[^0-9]/g,'');
+                if (!maybe) { message.reply('❌ Invalid channel id'); return; }
+                const ch = await message.guild.channels.fetch(maybe).catch(()=>null);
+                if (!ch) { message.reply('❌ Channel not found'); return; }
+                securityConfig[gid].logChannelId = ch.id; saveSecurityConfigMain(); message.reply(`✅ Log channel set to ${ch}`);
+            },
         '!cleanup': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {
                 message.reply('❌ This is an admin-only command.');

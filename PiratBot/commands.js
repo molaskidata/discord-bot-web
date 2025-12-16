@@ -200,6 +200,46 @@ const commandHandlers = {
                 }
             });
         },
+            '!security': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                const parts = message.content.split(' ').filter(Boolean);
+                const arg = parts[1] ? parts[1].toLowerCase() : null;
+                const gid = message.guild.id;
+                securityConfig[gid] = securityConfig[gid] || {};
+                if (!arg || arg === 'status') {
+                    const enabled = !!securityConfig[gid].enabled;
+                    const logId = securityConfig[gid].logChannelId || 'none';
+                    message.reply(`Security: ${enabled ? 'ENABLED' : 'disabled'}. Log channel: ${logId}`);
+                    return;
+                }
+                if (arg === 'on' || arg === 'enable') {
+                    securityConfig[gid].enabled = true; saveSecurityConfig();
+                    message.reply('✅ Security enabled for this server.'); return;
+                }
+                if (arg === 'off' || arg === 'disable') {
+                    securityConfig[gid].enabled = false; saveSecurityConfig();
+                    message.reply('✅ Security disabled for this server.'); return;
+                }
+                message.reply('Usage: !security <on|off|status>');
+            },
+            '!setseclog': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                const parts = message.content.split(' ').filter(Boolean);
+                const arg = parts[1] ? parts[1].trim() : null;
+                const gid = message.guild.id;
+                securityConfig[gid] = securityConfig[gid] || {};
+                if (!arg) { message.reply('Usage: !setseclog <channelId|none|create>'); return; }
+                if (arg.toLowerCase() === 'none') { securityConfig[gid].logChannelId = null; saveSecurityConfig(); message.reply('✅ Logging disabled for this server.'); return; }
+                if (arg.toLowerCase() === 'create') {
+                    try { const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] }); securityConfig[gid].logChannelId = ch.id; saveSecurityConfig(); message.reply(`✅ Created warn-log channel: ${ch}`); } catch (e) { message.reply('❌ Failed to create channel'); }
+                    return;
+                }
+                const maybe = arg.replace(/[^0-9]/g,'');
+                if (!maybe) { message.reply('❌ Invalid channel id'); return; }
+                const ch = await message.guild.channels.fetch(maybe).catch(()=>null);
+                if (!ch) { message.reply('❌ Channel not found'); return; }
+                securityConfig[gid].logChannelId = ch.id; saveSecurityConfig(); message.reply(`✅ Log channel set to ${ch}`);
+            },
         '!sban': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {
                 message.reply('❌ This is an admin-only command.');
@@ -762,39 +802,45 @@ const commandHandlers = {
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder()
             .setColor('#2C1810')
-            .setTitle('⚓ PirateBot - Command Overview')
-            .setDescription('**Ahoy, matey!** Welcome aboard the finest pirate bot on the seven seas!\n\nHere be all the commands to help ye navigate:')
+            .setTitle('⚓ PirateBot - Full Command List')
+            .setDescription('**Ahoy, matey!** This is the full command reference for PirateBot. Use `!piratehelp` for a short list.')
             .addFields(
-                { name: '» Social Commands', value:
-                    '`!ahoy` - Get a hearty pirate greeting\n' +
-                    '`!farewell` - Bid farewell like a true buccaneer\n', inline: true },
-                { name: '» Loot & Adventure', value:
-                    '`!treasure` - Wisdom about treasure\n' +
-                    '`!sea` - Sea of Thieves quotes\n' +
-                    '`!piratecode` - Read the sacred Pirate Code\n', inline: true },
+                { name: '» Greetings', value:
+                    '`!ahoy` — Pirate greeting\n' +
+                    '`!farewell` — Pirate farewell\n' , inline: true },
+                { name: '» Core / Info', value:
+                    '`!helpme` — Full help (this message)\n' +
+                    '`!piratehelp` — Short reference\n' +
+                    '`!piratecode` — Read the Pirate Code\n', inline: true },
                 { name: '» Fun & Games', value:
-                    '`!dice` - Roll yer lucky dice\n' +
-                    '`!compass` - Check the wind direction\n' +
-                    '`!crew` - See how many mates be aboard\n' +
-                    '`!games` - Show games embed (Battleship & Mine/Raid)\n' +
-                    '`!bs start @user` / `!bs attack A1` - Battleship PvP\n' +
-                    '`!mine` / `!gold` / `!raid @user` - Mine gold and raid other ships\n', inline: false },
-                { name: '» Security & Moderation', value:
-                    '`!setsecuritymod` - Enable automatic security moderation for this server (admin only)\n' +
-                    '`!sban @user` - Security ban a user (admin only)\n' +
-                    '`!skick @user` - Security kick a user (admin only)\n' +
-                    '`!stimeout @user [minutes]` - Timeout a user for given minutes (admin only)\n' +
-                    '`!stimeoutdel @user` - Remove timeout from a user (admin only)\n', inline: false },
+                    '`!crew` — Show crew count\n' +
+                    '`!dice` — Roll the dice\n' +
+                    '`!compass` — Check direction\n' +
+                    '`!games` — Open games menu (Battleship & Mine/Raid)\n' +
+                    '`!bs start @user | <userId>` — Start Battleship (mention or ID)\n' +
+                    '`!bs attack A1` — Attack a coordinate\n' +
+                    '`!mine` — Mine gold\n' +
+                    '`!gold` — Show your gold balance\n' +
+                    '`!raid @user | <userId>` — Attempt to raid another player', inline: false },
+                { name: '» Security & Moderation (admins)', value:
+                    '`!setsecuritymod` — Enable security & set warn-log (interactive)\n' +
+                    '`!sban @user` — Ban user\n' +
+                    '`!skick @user` — Kick user\n' +
+                    '`!stimeout @user [minutes]` — Timeout user\n' +
+                    '`!stimeoutdel @user` — Remove timeout\n', inline: false },
                 { name: '» Voice System', value:
-                    '`!setupvoice` - Initialize the Join-to-Create voice system (admin only)\n' +
-                    '`!setupvoicelog` - Create a voice log channel (admin only)\n' +
-                    '`!voicename New Name` - Rename your private voice channel\n' +
-                    '`!voicelimit N` - Set user limit for your channel\n' +
-                    '`!voicelock` / `!voiceunlock` - Lock or unlock your channel\n' +
-                    '`!voicekick @user` - Kick a user from your private channel\n', inline: false },
-                { name: '» Information', value:
-                    '`!helpme` - Show this help menu\n' +
-                    '`!piratehelp` - Quick command reference\n', inline: false }
+                    '`!setupvoice` — Setup join-to-create channel (admin)\n' +
+                    '`!setupvoicelog` — Create voice log channel (admin)\n' +
+                    '`!voicename <name>` — Rename your private voice channel\n' +
+                    '`!voicelimit <n>` — Set user limit for your channel\n' +
+                    '`!voicelock` / `!voiceunlock` — Lock/unlock your channel\n' , inline: false },
+                { name: '» Tickets & Admin', value:
+                    '`!munga-supportticket` — Post support ticket selection menu\n' +
+                    '`!munga-ticketsystem` — Configure ticket logging (admin)\n' +
+                    '`!sendit` — Forward a message to another channel (admin)\n', inline: false },
+                { name: '» Misc / Troubleshooting', value:
+                    '`!ping` — Check bot latency (if present)\n' +
+                    'If a command fails, run it with the correct syntax or mention the user. For Battleship you can use a user mention or a user ID.', inline: false }
             )
             .setImage('https://i.imgur.com/RHZtWpV.png')
             .setFooter({ 
