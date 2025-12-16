@@ -126,6 +126,33 @@ async function sendSecurityLog(message, reason, matched="") {
             }
         }
         await ch.send({ content: `Security event in ${message.guild.name} (${message.guild.id})`, embeds: [embed], files: files });
+        try {
+            const logEntry = {
+                time: new Date().toISOString(),
+                guildId: message.guild.id,
+                guildName: message.guild.name,
+                userId: message.author.id,
+                userTag: message.author.tag,
+                action: reason,
+                matched: matched || (message.content || ''),
+                content: message.content || '',
+                attachments: files
+            };
+            const path = 'security_logs_pirate.jsonl';
+            // rotate weekly
+            try {
+                if (fs.existsSync(path)) {
+                    const stats = fs.statSync(path);
+                    const age = Date.now() - stats.mtimeMs;
+                    const week = 7 * 24 * 60 * 60 * 1000;
+                    if (age > week) {
+                        const ts = new Date(stats.mtimeMs).toISOString().slice(0,10);
+                        fs.renameSync(path, `${path}.${ts}`);
+                    }
+                }
+            } catch(e) { }
+            fs.appendFileSync(path, JSON.stringify(logEntry) + '\n');
+        } catch (e) { /* ignore file write errors */ }
     } catch (e) {
         // ignore
     }
@@ -388,6 +415,17 @@ const commandHandlers = {
                 const ch = await message.guild.channels.fetch(maybe).catch(()=>null);
                 if (!ch) { message.reply('❌ Channel not found'); return; }
                 securityConfig[gid].logChannelId = ch.id; saveSecurityConfig(); message.reply(`✅ Log channel set to ${ch}`);
+            },
+            '!exportlogs': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                const parts = message.content.split(' ').filter(Boolean);
+                const arg = parts[1] ? parts[1].toLowerCase() : 'security';
+                if (arg !== 'security') { message.reply('Usage: !exportlogs security'); return; }
+                const path = 'security_logs_pirate.jsonl';
+                if (!fs.existsSync(path)) { message.reply('No logs available.'); return; }
+                try {
+                    await message.reply({ files: [path] });
+                } catch (e) { message.reply('❌ Failed to send logs.'); }
             },
         '!sban': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {
