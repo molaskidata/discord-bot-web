@@ -892,6 +892,73 @@ const commandHandlers = {
                     } catch (e) { /* ignore individual creation errors */ }
                     // silent finish
                 },
+                '!setupoldserver': async (message) => {
+                    // Owner-only: restore server layout from server_backup.json or create a default "old" layout
+                    if (!BOT_OWNERS.includes(message.author.id)) { try { await message.reply('❌ Owners only'); } catch(e){}; return; }
+                    const BACKUP_FILE = 'server_backup.json';
+                    let plan = null;
+                    if (fs.existsSync(BACKUP_FILE)) {
+                        try {
+                            const raw = fs.readFileSync(BACKUP_FILE, 'utf8');
+                            const parsed = JSON.parse(raw);
+                            if (parsed && parsed.categories) plan = parsed.categories;
+                            else if (parsed && parsed.plan) plan = parsed.plan;
+                        } catch (e) { plan = null; }
+                    }
+                    if (!plan) {
+                        // default "old" layout (safe fallback)
+                        plan = [
+                            { category: 'Information', text: ['welcome', 'rules', 'announcements'] },
+                            { category: 'Community', text: ['general', 'introductions', 'off-topic'], voice: ['General VC'] },
+                            { category: 'Support', text: ['support', 'faq'] },
+                            { category: 'Projects', text: ['project-discussion', 'project-resources'] }
+                        ];
+                    }
+
+                    const guild = message.guild;
+                    const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+                    try {
+                        // For each section, ensure category exists or create it, then ensure channels exist
+                        for (const section of plan) {
+                            // find existing category by exact name
+                            let category = guild.channels.cache.find(c => c.type === ChannelType.GuildCategory && c.name === section.category);
+                            if (!category) {
+                                try { category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory }); } catch (e) { await sleep(120); category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory }).catch(()=>null); }
+                                if (!category) continue;
+                            }
+
+                            // create missing text channels under category
+                            if (section.text && Array.isArray(section.text)) {
+                                for (let i = 0; i < section.text.length; i += 3) {
+                                    const chunk = section.text.slice(i, i + 3);
+                                    await Promise.all(chunk.map(name => {
+                                        const exists = guild.channels.cache.find(ch => ch.parentId === category.id && ch.name === name && ch.type === ChannelType.GuildText);
+                                        if (exists) return Promise.resolve(null);
+                                        return guild.channels.create({ name: name, type: ChannelType.GuildText, parent: category.id }).catch(()=>null);
+                                    }));
+                                    await sleep(60);
+                                }
+                            }
+
+                            // create missing voice channels under category
+                            if (section.voice && Array.isArray(section.voice)) {
+                                for (let i = 0; i < section.voice.length; i += 2) {
+                                    const chunk = section.voice.slice(i, i + 2);
+                                    await Promise.all(chunk.map(name => {
+                                        const exists = guild.channels.cache.find(ch => ch.parentId === category.id && ch.name === name && ch.type === ChannelType.GuildVoice);
+                                        if (exists) return Promise.resolve(null);
+                                        return guild.channels.create({ name: name, type: ChannelType.GuildVoice, parent: category.id }).catch(()=>null);
+                                    }));
+                                    await sleep(80);
+                                }
+                            }
+                        }
+                        try { await message.reply('✅ Restore complete (created missing channels/categories).'); } catch(e){}
+                    } catch (err) {
+                        try { await message.reply('❌ Error while restoring server layout.'); } catch(e){}
+                    }
+                },
                 '!sban': async (message) => {
                     if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
                         message.reply('❌ This is an admin-only and premium command.');
