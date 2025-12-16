@@ -1093,6 +1093,36 @@ const commandHandlers = {
                         }
                     });
                 },
+                '!setsecuritymod': async (message) => {
+                    // Admin-only: enable/disable the security moderation system for this guild
+                    if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                    const guildId = message.guild.id;
+                    const parts = message.content.split(/\s+/);
+                    const arg = parts[1] ? parts[1].toLowerCase() : null;
+                    if (!securityConfig[guildId]) securityConfig[guildId] = {};
+
+                    if (!arg || arg === 'status') {
+                        const enabled = !!securityConfig[guildId].enabled;
+                        message.reply(`Security system is currently **${enabled ? 'ENABLED' : 'DISABLED'}**. Use ` +
+                                      '`!setsecuritymod on` or `!setsecuritymod off` to change.');
+                        return;
+                    }
+
+                    if (['on','enable','true','1'].includes(arg)) {
+                        securityConfig[guildId].enabled = true;
+                        saveSecurityConfigMain();
+                        message.reply('✅ Security moderation ENABLED for this server.');
+                        return;
+                    }
+                    if (['off','disable','false','0'].includes(arg)) {
+                        securityConfig[guildId].enabled = false;
+                        saveSecurityConfigMain();
+                        message.reply('✅ Security moderation DISABLED for this server.');
+                        return;
+                    }
+
+                    message.reply('❌ Invalid argument. Use `on`, `off`, or `status`.');
+                },
             // --- Verify system (mainbot) ---
             '!setverify': async (message) => {
                 if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
@@ -2512,7 +2542,8 @@ const commandHandlers = {
                     '`!skick @user` - Manually kick a user\n' +
                     '`!stimeout @user [minutes]` - Manually timeout a user\n' +
                     '`!stimeoutdel @user` - Remove timeout from a user\n' +
-                    '`!verify` - Run the verification process (users should use this in the verification channel)', inline: false },
+                    '`!setverify` - Set the Verification Message and channel for more safety\n' +
+                    '`!verify` - Verify your account (users should use this in the verification channel)', inline: false },
                 { name: '★ Voice Features *Admin only, Premium*', value:
                     '`!setupvoice` - Create Join-to-Create channel *(3 channels free!)*\n' +
                     '`!setupvoicelog` - Create voice log channel *(free)*\n' +
