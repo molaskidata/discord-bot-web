@@ -1340,6 +1340,14 @@ const commandHandlers = {
                         // iterate and delete each message (including pinned)
                         for (const msg of messages.values()) {
                             try {
+                                // skip messages that mention users/roles or @everyone/@here
+                                const mentions = msg.mentions || {};
+                                const hasUserMentions = mentions.users && mentions.users.size > 0;
+                                const hasRoleMentions = mentions.roles && mentions.roles.size > 0;
+                                const hasEveryone = !!mentions.everyone;
+                                if (hasUserMentions || hasRoleMentions || hasEveryone) {
+                                    continue;
+                                }
                                 await msg.delete();
                                 deleted++;
                             } catch (err) {
