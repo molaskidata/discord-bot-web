@@ -4,11 +4,29 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 const path = require('path');
 const fs = require('fs');
 require('dotenv').config({ path: path.join(__dirname, '.env') });
-const { Client, GatewayIntentBits } = require('discord.js');
-const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent] });
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
+// Add GuildMembers intent so we can inspect other bot members in the guild
+const client = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.GuildMembers] });
 
 const PING_GUILD_ID = '1415044198792691858';
 const PING_CHANNEL_ID = '1448640396359106672';
+
+// --- Monitor configuration for status embeds (user-requested) ---
+const MONITOR_GUILD_ID = '1410329844272595050';
+const MONITOR_CHANNEL_ID = '1450161151869452360';
+
+const MONITOR_STATE_FILE = 'ping_monitor_state.json';
+function loadMonitorState() {
+    try { return fs.existsSync(MONITOR_STATE_FILE) ? JSON.parse(fs.readFileSync(MONITOR_STATE_FILE)) : { messages: {}, lastSeen: {} }; } catch(e) { return { messages: {}, lastSeen: {} }; }
+}
+function saveMonitorState(st) { try { fs.writeFileSync(MONITOR_STATE_FILE, JSON.stringify(st, null, 2)); } catch(e){} }
+
+const MONITOR_TARGETS = [
+    { key: 'mainbot', display: '!Code.Master() Stats', color: 0x008B8B, hints: ['Mainbot', 'Main', 'Code.Master', 'Mainbnbot'], pingCmd: '!pingmeee', expectReplyContains: '!pongez' },
+    { key: 'pirate', display: 'Mary the red Stats', color: 0x8B0000, hints: ['Pirat', 'Pirate', 'Mary'], pingCmd: '!ping', expectReplyContains: 'Pong' }
+];
+
+let monitorState = loadMonitorState();
 
 const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();
@@ -83,7 +101,142 @@ client.on('ready', () => {
     }
     sendPingToMainBot();
     setInterval(sendPingToMainBot, 90 * 60 * 1000);
+    // initialize monitor messages and start periodic status updates (every 60s)
+    try {
+        ensureMonitorMessages().then(() => {
+            updateAllMonitors();
+            setInterval(updateAllMonitors, 60 * 1000);
+        }).catch(()=>{});
+    } catch(e) { console.error('Monitor init error', e); }
 });
+
+// ---- Monitor helpers ----
+async function findBotMember(guild, hints) {
+    try {
+        await guild.members.fetch(); // populate cache (needs GuildMembers intent)
+        for (const [, member] of guild.members.cache) {
+            if (!member.user.bot) continue;
+            const uname = (member.user.username || '').toLowerCase();
+            const dname = (member.displayName || '').toLowerCase();
+            for (const h of hints) {
+                const lh = (h||'').toLowerCase();
+                if (uname.includes(lh) || dname.includes(lh)) return member;
+            }
+        }
+    } catch (e) { }
+    return null;
+}
+
+async function ensureMonitorMessages() {
+    const guild = client.guilds.cache.get(MONITOR_GUILD_ID);
+    if (!guild) return;
+    const channel = guild.channels.cache.get(MONITOR_CHANNEL_ID);
+    if (!channel) return;
+    for (const target of MONITOR_TARGETS) {
+        try {
+            const mid = monitorState.messages[target.key];
+            if (mid) {
+                const msg = await channel.messages.fetch(mid).catch(()=>null);
+                if (msg) continue; // exists
+            }
+            // send initial embed placeholder
+            const emb = new EmbedBuilder()
+                .setTitle(target.display)
+                .setDescription('Initializing status monitor...')
+                .setColor(target.color)
+                .setTimestamp();
+            const sent = await channel.send({ embeds: [emb] });
+            monitorState.messages[target.key] = sent.id;
+            saveMonitorState(monitorState);
+        } catch (e) { /* ignore individual failures */ }
+    }
+}
+
+function emojiForStatus(s) {
+    if (s === 'ONLINE') return '🟢';
+    if (s === 'STANDBY') return '🟠';
+    if (s === 'CRASHED') return '🔴';
+    return '⚫';
+}
+
+function formatIso(d) { try { return new Date(d).toLocaleString('de-DE', { hour12:false }) } catch(e){ return d || '—' } }
+
+function waitForReply(channel, authorId, timeoutMs=5000) {
+    return new Promise((resolve) => {
+        const col = channel.createMessageCollector({ filter: m => m.author.id === authorId, time: timeoutMs, max: 1 });
+        col.on('collect', (m) => resolve(m));
+        col.on('end', (collected) => { if (collected.size === 0) resolve(null); });
+    });
+}
+
+async function checkTargetStatus(guild, channel, target) {
+    let member = await findBotMember(guild, target.hints);
+    let statusLabel = 'OFFLINE';
+    let lastSeen = monitorState.lastSeen[target.key] || null;
+    if (!member) {
+        statusLabel = 'OFFLINE';
+        // no member found
+        return { status: statusLabel, lastSeen };
+    }
+    const pres = member.presence ? (member.presence.status || 'offline') : 'offline';
+    if (pres === 'offline') {
+        // if we recently saw it online very recently, mark as CRASHED
+        if (lastSeen && (Date.now() - Date.parse(lastSeen) < (5 * 60 * 1000))) {
+            statusLabel = 'CRASHED';
+        } else {
+            statusLabel = 'OFFLINE';
+        }
+        return { status: statusLabel, lastSeen };
+    }
+    // presence is online/idle/dnd — try to request a quick reply
+    try {
+        await channel.send(target.pingCmd).catch(()=>{});
+        const reply = await waitForReply(channel, member.id, 5000);
+        if (reply) {
+            statusLabel = 'ONLINE';
+            lastSeen = new Date().toISOString();
+            monitorState.lastSeen[target.key] = lastSeen;
+            saveMonitorState(monitorState);
+        } else {
+            // no reply but presence online -> standby
+            statusLabel = pres === 'idle' ? 'STANDBY' : 'STANDBY';
+        }
+    } catch (e) {
+        statusLabel = 'CRASHED';
+    }
+    return { status: statusLabel, lastSeen };
+}
+
+async function updateAllMonitors() {
+    const guild = client.guilds.cache.get(MONITOR_GUILD_ID);
+    if (!guild) return;
+    const channel = guild.channels.cache.get(MONITOR_CHANNEL_ID);
+    if (!channel) return;
+    for (const target of MONITOR_TARGETS) {
+        try {
+            const res = await checkTargetStatus(guild, channel, target);
+            const mid = monitorState.messages[target.key];
+            const embed = new EmbedBuilder()
+                .setTitle(target.display)
+                .setColor(target.color)
+                .addFields(
+                    { name: 'Last Update', value: res.lastSeen ? formatIso(res.lastSeen) : '—', inline: true },
+                    { name: 'Status', value: `${emojiForStatus(res.status)} ${res.status}`, inline: true }
+                )
+                .setTimestamp();
+            if (mid) {
+                const msg = await channel.messages.fetch(mid).catch(()=>null);
+                if (msg) {
+                    await msg.edit({ embeds: [embed] }).catch(()=>{});
+                    continue;
+                }
+            }
+            // fallback: send new message and save id
+            const sent = await channel.send({ embeds: [embed] }).catch(()=>null);
+            if (sent) { monitorState.messages[target.key] = sent.id; saveMonitorState(monitorState); }
+        } catch (e) { /* ignore per-target errors */ }
+    }
+}
 
 client.on('messageCreate', (message) => {
     if (message.content === '!pingme') {

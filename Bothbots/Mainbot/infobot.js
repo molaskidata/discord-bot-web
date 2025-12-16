@@ -449,7 +449,7 @@ client.on('interactionCreate', async (interaction) => {
 
         if (id === 'ticket_save' || id === 'ticket_log') {
             if (!logChannelId) {
-                await interaction.reply({ content: 'No log channel configured for this server. Ask an admin to run !munga-ticketsystem.', ephemeral: true });
+                await interaction.reply({ content: 'No log channel configured for this server. Ask an admin to run !m-ticketsystem.', ephemeral: true });
                 return;
             }
             const filename = `ticket_${guild.id}_${channel.id}_${Date.now()}.txt`;

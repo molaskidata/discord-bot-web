@@ -575,7 +575,7 @@ const commandHandlers = {
                                     }
                                 });
                             },
-                            '!munga-ticketsystem': async (message) => {
+                            '!m-ticketsystem': async (message) => {
                                 if (!isOwnerOrAdmin(message.member)) {
                                     message.reply('❌ Admin only command.');
                                     return;
