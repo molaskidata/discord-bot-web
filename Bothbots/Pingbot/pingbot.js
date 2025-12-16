@@ -104,10 +104,11 @@ client.on('ready', () => {
     setInterval(sendPingToMainBot, 90 * 60 * 1000);
     // initialize monitor messages and start periodic status updates (every 60s)
     try {
-        ensureMonitorMessages().then(() => {
-            updateAllMonitors();
-            setInterval(updateAllMonitors, 60 * 1000);
-        }).catch(()=>{});
+        (async () => {
+            try { await ensureMonitorMessages(); } catch (e) { console.error('ensureMonitorMessages failed', e); }
+            try { await updateAllMonitors(); } catch (e) { console.error('updateAllMonitors initial failed', e); }
+            setInterval(() => { updateAllMonitors().catch(e=>console.error('updateAllMonitors error',e)); }, 60 * 1000);
+        })();
     } catch(e) { console.error('Monitor init error', e); }
 });
 
@@ -129,27 +130,31 @@ async function findBotMember(guild, hints) {
 }
 
 async function ensureMonitorMessages() {
-    const guild = client.guilds.cache.get(MONITOR_GUILD_ID);
-    if (!guild) return;
-    const channel = guild.channels.cache.get(MONITOR_CHANNEL_ID);
-    if (!channel) return;
+    let guild;
+    try { guild = await client.guilds.fetch(MONITOR_GUILD_ID); } catch (e) { console.error('ensureMonitorMessages: fetch guild failed', e); throw e; }
+    let channel;
+    try { channel = await guild.channels.fetch(MONITOR_CHANNEL_ID); } catch (e) { console.error('ensureMonitorMessages: fetch channel failed', e); throw e; }
+
     for (const target of MONITOR_TARGETS) {
         try {
             const mid = monitorState.messages[target.key];
             if (mid) {
                 const msg = await channel.messages.fetch(mid).catch(()=>null);
-                if (msg) continue; // exists
+                if (msg) continue; // exists and editable
             }
-            // send initial embed placeholder
+            const perms = channel.permissionsFor ? channel.permissionsFor(client.user) : null;
+            if (perms && (!perms.has('ViewChannel') || !perms.has('SendMessages') || !perms.has('EmbedLinks'))) {
+                console.warn(`ensureMonitorMessages: missing permissions for ${target.key} in channel ${MONITOR_CHANNEL_ID}`);
+                continue;
+            }
             const emb = new EmbedBuilder()
                 .setTitle(target.display)
                 .setDescription('Initializing status monitor...')
                 .setColor(target.color)
                 .setTimestamp();
             const sent = await channel.send({ embeds: [emb] });
-            monitorState.messages[target.key] = sent.id;
-            saveMonitorState(monitorState);
-        } catch (e) { /* ignore individual failures */ }
+            if (sent && sent.id) { monitorState.messages[target.key] = sent.id; saveMonitorState(monitorState); }
+        } catch (e) { console.error('ensureMonitorMessages per-target error', target.key, e); }
     }
 }
 
@@ -160,7 +165,7 @@ function emojiForStatus(s) {
     return '⚫';
 }
 
-function formatIso(d) { try { return new Date(d).toLocaleString('de-DE', { hour12:false }) } catch(e){ return d || '—' } }
+function formatIso(d) { try { return new Date(d).toLocaleString('de-DE', { hour12:false, year:'numeric', month:'2-digit', day:'2-digit', hour:'2-digit', minute:'2-digit', second:'2-digit' }) } catch(e){ return d || '—' } }
 
 function waitForReply(channel, authorId, timeoutMs=5000) {
     return new Promise((resolve) => {
@@ -197,10 +202,11 @@ async function checkTargetStatus(guild, channel, target) {
 }
 
 async function updateAllMonitors() {
-    const guild = client.guilds.cache.get(MONITOR_GUILD_ID);
-    if (!guild) return;
-    const channel = guild.channels.cache.get(MONITOR_CHANNEL_ID);
-    if (!channel) return;
+    let guild;
+    try { guild = await client.guilds.fetch(MONITOR_GUILD_ID); } catch (e) { console.error('updateAllMonitors: fetch guild failed', e); return; }
+    let channel;
+    try { channel = await guild.channels.fetch(MONITOR_CHANNEL_ID); } catch (e) { console.error('updateAllMonitors: fetch channel failed', e); return; }
+
     for (const target of MONITOR_TARGETS) {
         try {
             const res = await checkTargetStatus(guild, channel, target);
@@ -215,15 +221,14 @@ async function updateAllMonitors() {
                 .setTimestamp();
             if (mid) {
                 const msg = await channel.messages.fetch(mid).catch(()=>null);
-                if (msg) {
-                    await msg.edit({ embeds: [embed] }).catch(()=>{});
+                if (msg && msg.editable) {
+                    await msg.edit({ embeds: [embed] }).catch(e => console.error('updateAllMonitors: edit failed', e));
                     continue;
                 }
             }
-            // fallback: send new message and save id
-            const sent = await channel.send({ embeds: [embed] }).catch(()=>null);
+            const sent = await channel.send({ embeds: [embed] }).catch(e => { console.error('updateAllMonitors: send failed', e); return null; });
             if (sent) { monitorState.messages[target.key] = sent.id; saveMonitorState(monitorState); }
-        } catch (e) { /* ignore per-target errors */ }
+        } catch (e) { console.error('updateAllMonitors per-target error', target.key, e); }
     }
 }
 
