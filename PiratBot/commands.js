@@ -222,6 +222,97 @@ const commandHandlers = {
                 }
                 message.reply('Usage: !security <on|off|status>');
             },
+            // --- Verify system setup ---
+            '!setverify': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                const guild = message.guild;
+                const filter = (m) => m.author.id === message.author.id;
+                await message.reply('Please provide the CHANNEL ID where users must verify (or type `cancel`).');
+                const ccol = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                ccol.on('collect', async (m1) => {
+                    if (m1.content.toLowerCase() === 'cancel') { message.reply('Cancelled.'); return; }
+                    const chanId = m1.content.replace(/[^0-9]/g,'');
+                    const chan = await guild.channels.fetch(chanId).catch(()=>null);
+                    if (!chan) { message.reply('❌ Channel not found or inaccessible. Aborting.'); return; }
+                    await message.reply('Now provide the ROLE ID users should receive on verification (or `cancel`).');
+                    const rcol = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                    rcol.on('collect', async (m2) => {
+                        if (m2.content.toLowerCase() === 'cancel') { message.reply('Cancelled.'); return; }
+                        const roleId = m2.content.replace(/[^0-9]/g,'');
+                        const role = await guild.roles.fetch(roleId).catch(()=>null);
+                        if (!role) { message.reply('❌ Role not found. Aborting.'); return; }
+
+                        verifyConfig[guild.id] = { channelId: chan.id, roleId: role.id, messageId: null };
+                        saveVerifyConfig();
+
+                        const errors = [];
+                        for (const [, c] of guild.channels.cache) {
+                            try {
+                                if (!c.manageable) continue;
+                                if (c.id === chan.id) {
+                                    await c.permissionOverwrites.edit(guild.id, { ViewChannel: true });
+                                } else {
+                                    await c.permissionOverwrites.edit(guild.id, { ViewChannel: false });
+                                }
+                            } catch (e) {
+                                errors.push(`channel:${c.id}`);
+                            }
+                        }
+
+                        try {
+                            const { EmbedBuilder } = require('discord.js');
+                            const embed = new EmbedBuilder()
+                                .setTitle('Verify to access the server')
+                                .setDescription('To verify and get access to the server, type `!verify` in this channel. The staff will be notified if there are problems.')
+                                .setColor('#2b6cb0')
+                                .setFooter({ text: 'Verification — stay safe' });
+                            const sent = await chan.send({ embeds: [embed] });
+                            verifyConfig[guild.id].messageId = sent.id;
+                            saveVerifyConfig();
+                            message.reply(`✅ Verify configured in ${chan}. ${errors.length ? 'Some channels could not be updated due to permissions.' : ''}`);
+                        } catch (e) {
+                            message.reply('✅ Config saved, but failed to post verify message in the channel. Check my permissions.');
+                        }
+                    });
+                    rcol.on('end', (col) => { if (col.size===0) message.reply('Timeout waiting for role ID.'); });
+                });
+                ccol.on('end', (col) => { if (col.size===0) message.reply('Timeout waiting for channel ID.'); });
+            },
+
+            '!verify': async (message) => {
+                const cfg = verifyConfig[message.guild.id];
+                if (!cfg || !cfg.channelId) { message.reply('Verification is not configured on this server.'); return; }
+                if (message.channel.id !== cfg.channelId) { message.reply('Please verify in the verification channel.'); return; }
+                const member = message.member;
+                const role = await message.guild.roles.fetch(cfg.roleId).catch(()=>null);
+                if (!role) { message.reply('Verification role no longer exists. Contact an admin.'); return; }
+                try {
+                    await member.roles.add(role);
+                    message.reply('✅ You have been verified and the role was assigned. Welcome!');
+                } catch (e) {
+                    message.reply('❌ Failed to assign role. I may lack Manage Roles permission or the role is higher than my role.');
+                }
+            },
+
+            '!delverifysett': async (message) => {
+                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                const cfg = verifyConfig[message.guild.id];
+                if (!cfg) { message.reply('No verify setup found.'); return; }
+                await message.reply('Are you sure? Type `Y` to confirm deletion, `N` to cancel (60s).');
+                const filter = (m) => m.author.id === message.author.id;
+                const col = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                col.on('collect', async (m) => {
+                    const v = m.content.trim().toLowerCase();
+                    if (v === 'y' || v === 'yes') {
+                        try { const ch = await message.guild.channels.fetch(cfg.channelId).catch(()=>null); if (ch && cfg.messageId) { const msg = await ch.messages.fetch(cfg.messageId).catch(()=>null); if (msg) await msg.delete().catch(()=>{}); } } catch(e){}
+                        delete verifyConfig[message.guild.id]; saveVerifyConfig();
+                        message.reply('✅ Verify setup removed.');
+                    } else {
+                        message.reply('Aborted. No changes made.');
+                    }
+                });
+                col.on('end', (c) => { if (c.size===0) message.reply('Timeout. No changes made.'); });
+            },
             '!setseclog': async (message) => {
                 if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
                 const parts = message.content.split(' ').filter(Boolean);
@@ -281,7 +372,7 @@ const commandHandlers = {
             }
             const user = message.mentions.users.first();
             const args = message.content.split(' ');
-            const duration = parseInt(args[2]) || 120; // default 120 min
+            const duration = parseInt(args[2]) || 120;
             if (!user) {
                 message.reply('Usage: !stimeout @user [minutes]');
                 return;
@@ -713,10 +804,9 @@ const commandHandlers = {
                 message.reply(`❌ Failed to forward message. Error: ${error.message}`);
             }
         },
-        // ...existing code...
+
     '!ahoy': (message) => message.reply(getRandomResponse(pirateGreetings)),
     '!farewell': (message) => message.reply(getRandomResponse(pirateFarewell)),
-    // removed: '!treasure' and '!sea' (deprecated by request)
     '!piratecode': (message) => {
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder()
@@ -851,8 +941,15 @@ const commandHandlers = {
     }
 };
 
-// --- Simple Games & Persistence ---
 const GAMES_FILE = 'pirate_games.json';
+const VERIFY_FILE = 'pirate_verify_config.json';
+let verifyConfig = {};
+function loadVerifyConfig() {
+    if (fs.existsSync(VERIFY_FILE)) { try { return JSON.parse(fs.readFileSync(VERIFY_FILE)); } catch (e) { return {}; } }
+    return {};
+}
+function saveVerifyConfig() { fs.writeFileSync(VERIFY_FILE, JSON.stringify(verifyConfig, null, 2)); }
+verifyConfig = loadVerifyConfig();
 function loadGameData() {
     const fs = require('fs');
     if (fs.existsSync(GAMES_FILE)) return JSON.parse(fs.readFileSync(GAMES_FILE));
@@ -878,7 +975,6 @@ function makeEmptyBoard() {
 }
 
 function placeRandomShips(board, sizes = [2,2,2]) {
-    // place ships value 1 on board, naive random placement
     for (const size of sizes) {
         let placed = false;
         for (let attempt=0; attempt<200 && !placed; attempt++) {
@@ -893,7 +989,6 @@ function placeRandomShips(board, sizes = [2,2,2]) {
                 cells.push([rr,cc]);
             }
             if (cells.length===0) continue;
-            // check overlap
             if (cells.some(([rr,cc])=>board[rr][cc]===1)) continue;
             cells.forEach(([rr,cc])=> board[rr][cc]=1);
             placed = true;
@@ -902,7 +997,6 @@ function placeRandomShips(board, sizes = [2,2,2]) {
 }
 
 function boardToDisplay(board, reveal=false) {
-    // 0 empty, 1 ship, 2 miss, 3 hit
     const rows = ['A','B','C','D','E'];
     let out = '  1 2 3 4 5\n';
     for (let r=0;r<5;r++){
@@ -920,7 +1014,6 @@ function boardToDisplay(board, reveal=false) {
     return "```\n" + out + "```";
 }
 
-// Gaming embed command
 commandHandlers['!games'] = (message) => {
     const { EmbedBuilder } = require('discord.js');
     const embed = new EmbedBuilder()
@@ -935,7 +1028,6 @@ commandHandlers['!games'] = (message) => {
     message.reply({ embeds: [embed] });
 };
 
-// Battleship: start and attack
 commandHandlers['!bs'] = async (message) => {
     const parts = message.content.split(' ').filter(Boolean);
     const sub = parts[1] ? parts[1].toLowerCase() : null;
@@ -963,7 +1055,6 @@ commandHandlers['!bs'] = async (message) => {
     if (sub === 'attack') {
         const coord = parts[2];
         if (!coord) { message.reply('Usage: !bs attack A1'); return; }
-        // find active game where author is player and not finished
         const gid = Object.keys(data.battles).find(k => {
             const g = data.battles[k];
             return !g.finished && (g.playerA===message.author.id || g.playerB===message.author.id);
