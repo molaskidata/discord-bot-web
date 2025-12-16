@@ -16,48 +16,37 @@ const securityWordLists = [
 async function handleSecurityModeration(message) {
     if (!message.guild) return;
     const guildId = message.guild.id;
-    if (!securitySystemEnabled[guildId]) return;
-    if (!isPremiumUser(message.author.id)) return;
+    if (!isSecurityEnabledMain(guildId) && !securitySystemEnabled[guildId]) return;
     if (isOwnerOrAdmin(message.member)) return; // Don't moderate admins/owners
 
-    const content = message.content.toLowerCase();
-    // Check for invite links
+    const content = (message.content || '').toLowerCase();
+    async function report(reason, matched) {
+        await sendSecurityLogMain(message, reason, matched);
+        await timeoutAndWarn(message, reason);
+    }
+
     const inviteRegex = /(discord\.gg\/|discordapp\.com\/invite\/|discord\.com\/invite\/)/i;
-    if (inviteRegex.test(content)) {
-        await timeoutAndWarn(message, 'Invite links are not allowed!');
-        return;
-    }
-    // Check for spam (simple: repeated characters/words, can be improved)
-    if (/([a-zA-Z0-9])\1{6,}/.test(content) || /(.)\s*\1{6,}/.test(content)) {
-        await timeoutAndWarn(message, 'Spam detected!');
-        return;
-    }
-    // Check for blacklisted words
+    if (inviteRegex.test(content)) { await report('Invite links are not allowed!', 'invite link'); return; }
+    if (/([a-zA-Z0-9])\1{6,}/.test(content) || /(.)\s*\1{6,}/.test(content)) { await report('Spam detected!', 'spam'); return; }
     for (const word of securityWordLists) {
-        if (content.includes(word)) {
-            await timeoutAndWarn(message, `Inappropriate language detected: "${word}"`);
-            return;
-        }
+        if (content.includes(word)) { await report(`Inappropriate language detected: "${word}"`, word); return; }
     }
-    // Check for NSFW images (basic: attachment filename, can be improved with AI)
     if (message.attachments && message.attachments.size > 0) {
         for (const [, attachment] of message.attachments) {
-            const name = attachment.name.toLowerCase();
-            if (name.match(/(nude|nudes|porn|dick|boobs|sex|fuck|pussy|tits|vagina|penis|clit|anal|ass|nsfw|xxx|18\+|dickpic|dickpic|nacktbilder|nackt|milf|slut|cum|cumshot|hure|huren|arsch|fick|ficki|ficks|titten|titt|t1tt|nud3|nud3s|p0rn|p0rno|p3nis|kitzler|scheide|schlampe|nutt|nippel|nacktbilder|nackt|nude|nudes|nutt|p0rn|p0rno|p3nis|penis|porn|porno|puss|pussy|s3x|scheide|schlampe|sex|sexual|slut|slutti|t1tt|titt|titten|vag1na|vagina)/)) {
-                await timeoutAndWarn(message, 'NSFW/explicit image detected!');
-                return;
-            }
+            const name = (attachment.name || '').toLowerCase();
+            if (name.match(/(nude|nudes|porn|dick|boobs|sex|fuck|pussy|tits|vagina|penis|clit|anal|ass|nsfw|xxx|18\+|dickpic|nacktbilder|nackt|milf|slut|cum|cumshot|hure|huren|arsch|fick|titten|t1tt|nud3|p0rn|p0rno|p3nis|kitzler|scheide|schlampe|nutt|nippel)/)) { await report('NSFW/explicit image detected!', 'attachment: ' + name); return; }
         }
     }
 }
 
-const fs = require('fs');
 const axios = require('axios');
+const fs = require('fs');
 const Groq = require('groq-sdk');
 
 // --- Timeout and Warn Helper ---
 async function timeoutAndWarn(message, reason) {
     try {
+        try { await sendSecurityLogMain(message, reason); } catch (e) {}
         await message.delete();
         await message.member.timeout(2 * 60 * 60 * 1000, reason); // 2h timeout
         await message.author.send(`You have been timed out for 2 hours for: ${reason}`);
@@ -68,8 +57,23 @@ async function timeoutAndWarn(message, reason) {
 // --- Security Moderation Listener ---
 // Attach to your message event handler in your bot's main file:
 // client.on('messageCreate', handleSecurityModeration);
-// Security system state per guild
+// (fs already required above)
+
+// Security system state (backwards compat)
 const securitySystemEnabled = {};
+
+// Persistent security config
+const SECURITY_FILE = 'security_config.json';
+let securityConfig = {};
+function loadSecurityConfigMain() {
+    if (fs.existsSync(SECURITY_FILE)) {
+        try { return JSON.parse(fs.readFileSync(SECURITY_FILE)); } catch (e) { return {}; }
+    }
+    return {};
+}
+function saveSecurityConfigMain() { fs.writeFileSync(SECURITY_FILE, JSON.stringify(securityConfig, null, 2)); }
+securityConfig = loadSecurityConfigMain();
+function isSecurityEnabledMain(guildId) { return securityConfig[guildId] && securityConfig[guildId].enabled; }
 // Store cleanup intervals per channel
 const cleanupIntervals = {};
 const CLEANUP_FILE = 'cleanup_intervals.json';
@@ -93,6 +97,35 @@ function loadServerLanguages() {
 }
 function saveServerLanguages(data) {
     fs.writeFileSync(SERVER_LANG_FILE, JSON.stringify(data, null, 2));
+}
+
+// --- Security logging helper (Mainbot) ---
+async function sendSecurityLogMain(message, reason, matched="") {
+    try {
+        const guildId = message.guild ? message.guild.id : null;
+        if (!guildId) return;
+        const cfg = securityConfig[guildId];
+        const channelId = cfg && cfg.logChannelId ? cfg.logChannelId : null;
+        if (!channelId) return;
+        const client = message.client;
+        const ch = await client.channels.fetch(channelId).catch(()=>null);
+        if (!ch) return;
+        const { EmbedBuilder } = require('discord.js');
+        const embed = new EmbedBuilder()
+            .setTitle('Security Alert')
+            .setColor('#ff7700')
+            .addFields(
+                { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },
+                { name: 'Action', value: reason, inline: true },
+                { name: 'Matched', value: matched || (message.content || '—'), inline: false }
+            )
+            .setTimestamp();
+        let files = [];
+        if (message.attachments && message.attachments.size>0) {
+            for (const [,att] of message.attachments) { files.push(att.url); }
+        }
+        await ch.send({ content: `Security event in ${message.guild.name} (${message.guild.id})`, embeds: [embed], files: files });
+    } catch (e) { /* ignore */ }
 }
 
 
@@ -733,17 +766,51 @@ const commandHandlers = {
                     message.reply('❌ This is an admin-only command.');
                     return;
                 }
-                if (!isPremiumUser(message.author.id)) {
-                    message.reply('❌ This is a **Premium** feature!');
-                    return;
-                }
                 const guildId = message.guild.id;
-                if (securitySystemEnabled[guildId]) {
+                if (isSecurityEnabledMain(guildId) || securitySystemEnabled[guildId]) {
                     message.reply('⚠️ Security system is already enabled for this server.');
                     return;
                 }
-                securitySystemEnabled[guildId] = true;
-                message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages. You can customize the word list and settings soon.');
+                securityConfig[guildId] = securityConfig[guildId] || {};
+                securityConfig[guildId].enabled = true;
+                saveSecurityConfigMain();
+
+                const step = await message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.\\n\\nPlease provide the CHANNEL ID where I should send the warn logs (type `none` to disable logging, or type `!setchannelsec` to let me create a warn-log channel for you).');
+
+                const filter = (m) => m.author.id === message.author.id;
+                const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                collector.on('collect', async (m) => {
+                    const val = (m.content || '').trim();
+                    if (val.toLowerCase() === 'none') {
+                        securityConfig[guildId].logChannelId = null;
+                        saveSecurityConfigMain();
+                        message.reply('✅ Security enabled with no logging. All right! Now lean back, I work now for you and yes. 24/7 baby ;))');
+                        return;
+                    }
+                    if (val === '!setchannelsec' || val.toLowerCase() === 'create') {
+                        try {
+                            const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] });
+                            securityConfig[guildId].logChannelId = ch.id;
+                            saveSecurityConfigMain();
+                            message.reply(`✅ Created and set warn log channel: ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
+                        } catch (e) {
+                            message.reply('❌ Failed to create log channel. Please provide a channel ID or create one and run the command again.');
+                        }
+                        return;
+                    }
+                    const maybeId = val.replace(/[^0-9]/g, '');
+                    if (!maybeId) { message.reply('❌ Invalid input. Provide a channel ID, `none`, or `!setchannelsec`.'); return; }
+                    const ch = await message.guild.channels.fetch(maybeId).catch(()=>null);
+                    if (!ch) { message.reply('❌ Channel not found. Make sure I can access it and provide the numeric Channel ID.'); return; }
+                    securityConfig[guildId].logChannelId = ch.id;
+                    saveSecurityConfigMain();
+                    message.reply(`✅ Warn log channel set to ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
+                });
+                collector.on('end', (collected) => {
+                    if (collected.size === 0) {
+                        message.reply('⌛ Timeout: no channel provided. You can run `!setsecuritymod` again to set logging.');
+                    }
+                });
             },
         '!cleanup': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {

@@ -9,41 +9,68 @@ const securityWordLists = [
     // Add more: Danish, Serbisch, Kroatisch, Russisch, Finnisch, Italienisch, Spanisch
 ];
 
-// Security system state per guild
+const fs = require('fs');
+
+// Security system config per guild (persisted)
+const SECURITY_FILE = 'pirate_security_config.json';
+let securityConfig = {};
+function loadSecurityConfig() {
+    if (fs.existsSync(SECURITY_FILE)) {
+        try { return JSON.parse(fs.readFileSync(SECURITY_FILE)); } catch (e) { return {}; }
+    }
+    return {};
+}
+function saveSecurityConfig() {
+    fs.writeFileSync(SECURITY_FILE, JSON.stringify(securityConfig, null, 2));
+}
+securityConfig = loadSecurityConfig();
+
+// helper to know if enabled
+function isSecurityEnabled(guildId) {
+    return securityConfig[guildId] && securityConfig[guildId].enabled;
+}
+
+// Security system state per guild (kept for backward compatibility)
 const securitySystemEnabled = {};
 
 // --- Security Moderation Handler ---
 async function handleSecurityModeration(message) {
     if (!message.guild) return;
     const guildId = message.guild.id;
-    if (!securitySystemEnabled[guildId]) return;
+    if (!isSecurityEnabled(guildId) && !securitySystemEnabled[guildId]) return;
     if (isOwnerOrAdmin(message.member)) return; // Don't moderate admins/owners
 
-    const content = message.content.toLowerCase();
+    const content = (message.content || '').toLowerCase();
+    // helper to send a log before we delete/timeout
+    async function report(reason, matched) {
+        await sendSecurityLog(message, reason, matched);
+        await timeoutAndWarn(message, reason);
+    }
+
     // Check for invite links
     const inviteRegex = /(discord\.gg\/|discordapp\.com\/invite\/|discord\.com\/invite\/)/i;
     if (inviteRegex.test(content)) {
-        await timeoutAndWarn(message, 'Invite links are not allowed!');
+        await report('Invite links are not allowed!', 'invite link');
         return;
     }
     // Check for spam (simple: repeated characters/words, can be improved)
     if (/([a-zA-Z0-9])\1{6,}/.test(content) || /(.)\s*\1{6,}/.test(content)) {
-        await timeoutAndWarn(message, 'Spam detected!');
+        await report('Spam detected!', 'spam');
         return;
     }
     // Check for blacklisted words
     for (const word of securityWordLists) {
         if (content.includes(word)) {
-            await timeoutAndWarn(message, `Inappropriate language detected: "${word}"`);
+            await report(`Inappropriate language detected: "${word}"`, word);
             return;
         }
     }
     // Check for NSFW images (basic: attachment filename, can be improved with AI)
     if (message.attachments && message.attachments.size > 0) {
         for (const [, attachment] of message.attachments) {
-            const name = attachment.name.toLowerCase();
-            if (name.match(/(nude|nudes|porn|dick|boobs|sex|fuck|pussy|tits|vagina|penis|clit|anal|ass|nsfw|xxx|18\+|dickpic|dickpic|nacktbilder|nackt|milf|slut|cum|cumshot|hure|huren|arsch|fick|ficki|ficks|titten|titt|t1tt|nud3|nud3s|p0rn|p0rno|p3nis|kitzler|scheide|schlampe|nutt|nippel|nacktbilder|nackt|nude|nudes|nutt|p0rn|p0rno|p3nis|penis|porn|porno|puss|pussy|s3x|scheide|schlampe|sex|sexual|slut|slutti|t1tt|titt|titten|vag1na|vagina)/)) {
-                await timeoutAndWarn(message, 'NSFW/explicit image detected!');
+            const name = (attachment.name || '').toLowerCase();
+            if (name.match(/(nude|nudes|porn|dick|boobs|sex|fuck|pussy|tits|vagina|penis|clit|anal|ass|nsfw|xxx|18\+|dickpic|nacktbilder|nackt|milf|slut|cum|cumshot|hure|huren|arsch|fick|titten|t1tt|nud3|p0rn|p0rno|p3nis|kitzler|scheide|schlampe|nutt|nippel)/)) {
+                await report('NSFW/explicit image detected!', 'attachment: ' + name);
                 return;
             }
         }
@@ -53,6 +80,12 @@ async function handleSecurityModeration(message) {
 // --- Timeout and Warn Helper ---
 async function timeoutAndWarn(message, reason) {
     try {
+        // log the event to the configured warn log channel (if any)
+        try {
+            await sendSecurityLog(message, reason);
+        } catch (e) {
+            // ignore logging errors
+        }
         await message.delete();
         await message.member.timeout(2 * 60 * 60 * 1000, reason); // 2h timeout
         await message.author.send(`You have been timed out for 2 hours for: ${reason}`);
@@ -65,6 +98,38 @@ function isOwnerOrAdmin(member) {
     return member.permissions.has('Administrator');
 }
 module.exports.handleSecurityModeration = handleSecurityModeration;
+// --- Security logging helper ---
+async function sendSecurityLog(message, reason, matched="") {
+    try {
+        const guildId = message.guild ? message.guild.id : null;
+        if (!guildId) return;
+        const cfg = securityConfig[guildId];
+        const channelId = cfg && cfg.logChannelId ? cfg.logChannelId : null;
+        if (!channelId) return;
+        const client = message.client;
+        const ch = await client.channels.fetch(channelId).catch(()=>null);
+        if (!ch) return;
+        const { EmbedBuilder } = require('discord.js');
+        const embed = new EmbedBuilder()
+            .setTitle('Security Alert')
+            .setColor('#ff7700')
+            .addFields(
+                { name: 'User', value: `${message.author.tag} (${message.author.id})`, inline: true },
+                { name: 'Action', value: reason, inline: true },
+                { name: 'Matched', value: matched || (message.content || '—'), inline: false }
+            )
+            .setTimestamp();
+        let files = [];
+        if (message.attachments && message.attachments.size>0) {
+            for (const [,att] of message.attachments) {
+                files.push(att.url);
+            }
+        }
+        await ch.send({ content: `Security event in ${message.guild.name} (${message.guild.id})`, embeds: [embed], files: files });
+    } catch (e) {
+        // ignore
+    }
+}
 const { getRandomResponse } = require('../Bothbots/Mainbot/utils');
 const { loadVoiceConfig, saveVoiceConfig, isPremiumUser, loadVoiceLogs } = require('../Bothbots/Mainbot/voiceSystem');
 const pirateGreetings = [
@@ -88,12 +153,52 @@ const commandHandlers = {
                 return;
             }
             const guildId = message.guild.id;
-            if (securitySystemEnabled[guildId]) {
+            if (isSecurityEnabled(guildId) || securitySystemEnabled[guildId]) {
                 message.reply('⚠️ Security system is already enabled for this server.');
                 return;
             }
-            securitySystemEnabled[guildId] = true;
-            message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.');
+            // enable in config and ask for log channel
+            securityConfig[guildId] = securityConfig[guildId] || {};
+            securityConfig[guildId].enabled = true;
+            saveSecurityConfig();
+
+            const step = await message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.\n\nPlease provide the CHANNEL ID where I should send the warn logs (type `none` to disable logging, or type `!setchannelsec` to let me create a warn-log channel for you).');
+
+            const filter = (m) => m.author.id === message.author.id;
+            const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+            collector.on('collect', async (m) => {
+                const val = (m.content || '').trim();
+                if (val.toLowerCase() === 'none') {
+                    securityConfig[guildId].logChannelId = null;
+                    saveSecurityConfig();
+                    message.reply('✅ Security enabled with no logging. All actions will still be taken but not logged. All right! Now lean back, I work now for you and yes. 24/7 baby ;))');
+                    return;
+                }
+                if (val === '!setchannelsec' || val.toLowerCase() === 'create') {
+                    try {
+                        const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] });
+                        securityConfig[guildId].logChannelId = ch.id;
+                        saveSecurityConfig();
+                        message.reply(`✅ Created and set warn log channel: ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
+                    } catch (e) {
+                        message.reply('❌ Failed to create log channel. Please provide a channel ID or create one and run the command again.');
+                    }
+                    return;
+                }
+                // try to accept channel id
+                const maybeId = val.replace(/[^0-9]/g, '');
+                if (!maybeId) { message.reply('❌ Invalid input. Provide a channel ID, `none`, or `!setchannelsec`.'); return; }
+                const ch = await message.guild.channels.fetch(maybeId).catch(()=>null);
+                if (!ch) { message.reply('❌ Channel not found. Make sure I can access it and provide the numeric Channel ID.'); return; }
+                securityConfig[guildId].logChannelId = ch.id;
+                saveSecurityConfig();
+                message.reply(`✅ Warn log channel set to ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
+            });
+            collector.on('end', (collected) => {
+                if (collected.size === 0) {
+                    message.reply('⌛ Timeout: no channel provided. You can run `!setsecuritymod` again to set logging.');
+                }
+            });
         },
         '!sban': async (message) => {
             if (!isOwnerOrAdmin(message.member)) {
@@ -571,8 +676,7 @@ const commandHandlers = {
         // ...existing code...
     '!ahoy': (message) => message.reply(getRandomResponse(pirateGreetings)),
     '!farewell': (message) => message.reply(getRandomResponse(pirateFarewell)),
-    '!treasure': (message) => message.reply(getRandomResponse(treasureQuotes)),
-    '!sea': (message) => message.reply(getRandomResponse(seaQuotes)),
+    // removed: '!treasure' and '!sea' (deprecated by request)
     '!piratecode': (message) => {
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder()
@@ -616,26 +720,42 @@ const commandHandlers = {
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder()
             .setColor('#2C1810')
-            .setTitle('⚓ Pirate Bot Commands')
-            .setDescription('Arrr! Here be the commands ye can use:')
+            .setTitle('⚓ Pirate Bot — Quick Reference')
+            .setDescription('Arrr! Quick list of available commands (short reference):')
             .addFields(
-                { name: '» Greetings', value: 
-                    '`!ahoy` - Pirate greeting\n' +
-                    '`!farewell` - Say goodbye pirate-style\n', inline: false },
-                { name: '» Treasure & Sea', value:
-                    '`!treasure` - Treasure quotes\n' +
-                    '`!sea` - Sea of Thieves quotes\n' +
-                    '`!piratecode` - The Pirate Code\n', inline: false },
-                { name: '» Fun Commands', value:
-                    '`!crew` - Show crew count\n' +
-                    '`!dice` - Roll the dice\n' +
-                    '`!compass` - Check direction\n' +
-                    '`!games` - Show games embed (Battleship & Mine/Raid)\n' +
-                    '`!bs start @user` / `!bs attack A1` - Battleship PvP\n' +
-                    '`!mine` / `!gold` / `!raid @user` - Mine gold and raid other ships\n', inline: false },
+                { name: '» Greetings', value:
+                    '`!ahoy` — Pirate greeting\n' +
+                    '`!farewell` — Say goodbye pirate-style\n', inline: true },
+                { name: '» Fun & Games', value:
+                    '`!crew` — Show crew count\n' +
+                    '`!dice` — Roll the dice\n' +
+                    '`!compass` — Check direction\n' +
+                    '`!games` — Games menu (Battleship & Mine/Raid)\n' +
+                    '`!bs start @user|<id>` — Start Battleship (mention or ID)\n' +
+                    '`!bs attack A1` — Attack coordinate\n' +
+                    '`!mine` / `!gold` / `!raid @user|<id>` — Mine/inspect/raid', inline: false },
+                { name: '» Security (admins)', value:
+                    '`!setsecuritymod` — Enable security + set warn-log channel\n' +
+                    '`!sban @user` — Ban a user\n' +
+                    '`!skick @user` — Kick a user\n' +
+                    '`!stimeout @user [minutes]` — Timeout a user\n' +
+                    '`!stimeoutdel @user` — Remove timeout', inline: false },
+                { name: '» Voice System', value:
+                    '`!setupvoice` — Initialize Join-to-Create system (admin)\n' +
+                    '`!setupvoicelog` — Create voice-log channel (admin)\n' +
+                    '`!voicename <name>` — Rename your private voice channel\n' +
+                    '`!voicelimit <n>` — Set user limit\n' +
+                    '`!voicelock` / `!voiceunlock` — Lock/unlock your channel', inline: false },
+                { name: '» Tickets & Admin', value:
+                    '`!munga-supportticket` — Post support-ticket menu\n' +
+                    '`!munga-ticketsystem` — Configure ticket logging (admin)\n' +
+                    '`!sendit` — Forward a message to another channel (admin)', inline: false },
+                { name: '» Misc', value:
+                    '`!helpme` — Full help (detailed)\n' +
+                    '`!piratehelp` — This short reference', inline: false }
             )
             .setImage('https://i.imgur.com/p95YIAZ.png')
-            .setFooter({ text: 'Yo ho ho!' });
+            .setFooter({ text: 'Yo ho ho! — short reference' });
         message.reply({ embeds: [embed] });
     },
     '!helpme': (message) => {
@@ -775,8 +895,15 @@ commandHandlers['!bs'] = async (message) => {
     const sub = parts[1] ? parts[1].toLowerCase() : null;
     const data = loadGameData();
     if (sub === 'start') {
-        const target = message.mentions.users.first();
-        if (!target) { message.reply('Usage: !bs start @user'); return; }
+        let target = message.mentions.users.first();
+        if (!target && parts[2]) {
+            const maybeId = parts[2].replace(/[^0-9]/g, '');
+            if (maybeId) {
+                const member = await message.guild.members.fetch(maybeId).catch(()=>null);
+                if (member) target = member.user;
+            }
+        }
+        if (!target) { message.reply('Usage: !bs start @user  OR  !bs start <userId>'); return; }
         if (target.id === message.author.id) { message.reply('Cannot play against yourself.'); return; }
         const gid = `${message.guild.id}_${message.channel.id}_${Date.now()%10000}`;
         const boardA = makeEmptyBoard();
