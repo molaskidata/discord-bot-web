@@ -34,6 +34,7 @@ const express = require('express');
 const querystring = require('querystring');
 const fs = require('fs');
 const axios = require('axios');
+const persistence = require('./persistence');
 
 const BOT_INFO = {
     name: "CoderMaster",
