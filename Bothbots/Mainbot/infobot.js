@@ -131,6 +131,38 @@ app.get('/health', (req, res) => {
     res.status(200).send('OK');
 });
 
+// Public dashboard API for website (short, read-only)
+app.get('/api/dashboard', (req, res) => {
+    try {
+        const botReady = !!(client && client.user);
+        const presence = (client && client.presence && client.presence.status) ? client.presence.status : (botReady ? 'online' : 'offline');
+        const guildCount = client && client.guilds ? client.guilds.cache.size : 0;
+        const uptime = process.uptime();
+        // Short, English command summary (kept concise for dashboard)
+        const commands = [
+            { cmd: '!info', desc: 'Bot basic info' },
+            { cmd: '!ping', desc: 'Check bot latency' },
+            { cmd: '!help', desc: 'Full command list' },
+            { cmd: '!setsecuritymod', desc: 'Enable security (admin)' },
+            { cmd: '!sban', desc: 'Ban a user (admin)' },
+            { cmd: '!setupvoice', desc: 'Setup voice join-to-create (admin)' },
+            { cmd: '!munga-supportticket', desc: 'Post support ticket menu' },
+            { cmd: '!sendit', desc: 'Forward a message (admin)' }
+        ];
+
+        res.json({
+            status: botReady ? 'online' : 'offline',
+            presence,
+            uptime,
+            guildCount,
+            commands,
+            timestamp: new Date().toISOString()
+        });
+    } catch (e) {
+        res.status(500).json({ error: 'internal' });
+    }
+});
+
 const server = app.listen(PORT, () => {
     console.log(`✅ HTTP Server running on port ${PORT}`);
     console.log(`🌍 Accessible at http://localhost:${PORT}`);

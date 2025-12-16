@@ -24,6 +24,7 @@
     <div class="button-container" id="homeButtonContainer">
         <a href="/" class="nav-button active" data-page="home">🏠 Home</a>
         <a href="/github-connect.html" class="nav-button" data-page="github-connect">🔗 GitHub Connect</a>
+        <a href="#" class="nav-button" data-page="dashboard" id="codemasterTab">!Code.Master()</a>
         <a href="https://discord.gg/Xvqa7GFJGN" class="nav-button" target="_blank">
             🍩 To Discord Community
         </a>
@@ -50,6 +51,35 @@
                 <a href="https://github.com/molaskidata" class="github-button" target="_blank">
                     💻 GitHub
                 </a>
+            </div>
+        </div>
+        <!-- DASHBOARD PAGE -->
+        <div id="dashboard-page" class="page">
+            <div class="container" style="align-items:flex-start; gap:24px;">
+                <div style="flex:1; max-width:680px;">
+                    <div class="column" id="left-dashboard">
+                        <h2 class="col-headline">Server Overview</h2>
+                        <div id="server-count" style="font-size:2.2rem; font-weight:700; margin-bottom:12px; color:#fff">Servers: —</div>
+                        <div id="commands-list" style="margin-top:10px;">
+                            <h3 style="margin:6px 0 8px 0; color:#dff3ff;">Commands (short)</h3>
+                            <div id="cmds" style="display:flex;flex-direction:column;gap:8px;color:#eaf6ff;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="width:320px;">
+                    <div class="column" id="right-dashboard">
+                        <h2 class="col-headline">Bot Status</h2>
+                        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
+                            <div id="status-dot" style="width:18px;height:18px;border-radius:50%;background:gray;box-shadow:0 0 8px rgba(0,0,0,0.6);"></div>
+                            <div id="status-text" style="font-weight:600;color:#fff;font-size:1.1rem;">—</div>
+                        </div>
+                        <div style="margin-top:18px;color:#dcefff;">
+                            <div>Uptime: <span id="uptime">—</span></div>
+                            <div>Last checked: <span id="last-checked">—</span></div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="column">
@@ -146,6 +176,69 @@
                 navigateTo(page);
             });
         });
+
+        // Dashboard data fetch & rendering
+        async function fetchDashboard() {
+            // Use relative path so the site domain can proxy to the bot service (via nginx)
+            const url = '/api/dashboard';
+            try {
+                const res = await fetch(url, { cache: 'no-store' });
+                if (!res.ok) throw new Error('no-data');
+                const data = await res.json();
+                renderDashboard(data);
+            } catch (e) {
+                renderDashboard({ status: 'offline', presence: 'offline', guildCount: 0, commands: [], uptime: 0, timestamp: new Date().toISOString() });
+            }
+        }
+
+        function renderDashboard(data) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            const sc = document.getElementById('server-count');
+            const cmds = document.getElementById('cmds');
+            const up = document.getElementById('uptime');
+            const lc = document.getElementById('last-checked');
+
+            // Map status to colors
+            let color = '#808080';
+            let label = 'Offline';
+            if (data.status === 'online' || data.presence === 'online') { color = '#2ecc71'; label = 'Online'; }
+            else if (data.presence === 'idle' || data.presence === 'dnd') { color = '#f1c40f'; label = 'Stand By'; }
+            else if (data.status === 'crashed') { color = '#e74c3c'; label = 'Crashed'; }
+            else { color = '#7f8c8d'; label = 'Offline'; }
+
+            dot.style.background = color;
+            text.textContent = label;
+            sc.textContent = `Servers: ${data.guildCount || 0}`;
+            up.textContent = formatUptime(data.uptime || 0);
+            lc.textContent = new Date(data.timestamp || Date.now()).toLocaleString();
+
+            // commands
+            cmds.innerHTML = '';
+            (data.commands || []).forEach(c => {
+                const el = document.createElement('div');
+                el.style.display = 'flex';
+                el.style.justifyContent = 'space-between';
+                el.style.gap = '12px';
+                el.innerHTML = `<div style="font-weight:700;color:#cfefff;">${c.cmd}</div><div style="color:#e6f8ff;opacity:0.9">${c.desc}</div>`;
+                cmds.appendChild(el);
+            });
+        }
+
+        function formatUptime(sec) {
+            const s = Math.floor(sec || 0);
+            const h = Math.floor(s/3600); const m = Math.floor((s%3600)/60); const ss = s%60;
+            return `${h}h ${m}m ${ss}s`;
+        }
+
+        // auto refresh when on dashboard
+        setInterval(() => {
+            const dashboardVisible = document.getElementById('dashboard-page').classList.contains('active');
+            if (dashboardVisible) fetchDashboard();
+        }, 8000);
+
+        // ensure dashboard tab activates correct view
+        document.getElementById('codemasterTab').addEventListener('click', function(e){ e.preventDefault(); navigateTo('dashboard'); fetchDashboard(); });
 
         function navigateTo(page) {
             // Hide all pages
