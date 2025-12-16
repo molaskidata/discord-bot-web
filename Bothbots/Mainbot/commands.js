@@ -1910,8 +1910,8 @@ const commandHandlers = {
             '**🤖 Bump Reminder System Help**\n\n' +
             '**Automatic Detection:** I automatically detect when you use `/bump` and set a 2-hour reminder!\n\n' +
             '**Manual Commands:**\n' +
-            '`!setbumpreminder` - Manually set a 2-hour bump reminder *(admin only)*\n' +
-            '`!bumpstatus` - Check if there\'s an active reminder for this channel *(admin only)*\n' +
+            '`!setbumpreminder` - Manually set a 2-hour bump reminder\n' +
+            '`!bumpstatus` - Check if there\'s an active reminder for this channel\n' +
             '`!bumphelp` - Show this help message\n\n' +
             '**How it works:** After a successful bump, I\'ll remind you exactly when the next bump is available (2 hours later)! 🚀'
         );
@@ -2545,10 +2545,10 @@ const commandHandlers = {
                     '`!setverify` - Set the Verification Message and channel for more safety\n' +
                     '`!verify` - Verify your account (users should use this in the verification channel)', inline: false },
                 { name: '★ Voice Features *Admin only, Premium*', value:
-                    '`!setupvoice` - Create Join-to-Create channel *(3 channels free!)*\n' +
-                    '`!setupvoicelog` - Create voice log channel *(free)*\n' +
+                    '`!setupvoice` - Create Join-to-Create channel\n' +
+                    '`!setupvoicelog` - Create voice log channel\n' +
                     '`!cleanupvoice` - Clean voice log channel\n' +
-                    '`!deletevoice` - Delete entire voice system *(free)*\n' +
+                    '`!deletevoice` - Delete entire voice system\n' +
                     '`!voicename [name]` - Rename your voice channel\n' +
                     '`!voicelimit [0-99]` - Set user limit (0=unlimited)\n' +
                     '`!voicetemplate [gaming/study/chill]` - Apply template\n' +
@@ -2584,8 +2584,8 @@ const commandHandlers = {
                      '`!bumpreminderdel` - Deaktiviere den Bump-Reminder (Alias)\n' +
                      '`!bumpstatus` - Zeigt den Status des Bump-Reminders\n' +
                      '`!bumphelp` - Zeigt Hilfe zum Bump-System\n', inline: false },
-                { name: '★ Birthday', value:
-                    '`!birthdaychannel` - Set the birthday channel *Admin only*\n' +
+                { name: '★ Birthday *Admin only*', value:
+                    '`!birthdaychannel` - Set the birthday channel\n' +
                     '`!birthdayset` - Save your birthday', inline: false },
                 { name: '★ Help Categories', value:
                     '`!mungahelpdesk` - Shows all big help categories\n' +
