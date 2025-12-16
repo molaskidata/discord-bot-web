@@ -250,6 +250,18 @@
         // ensure dashboard tab activates correct view
         document.getElementById('codemasterTab').addEventListener('click', function(e){ e.preventDefault(); navigateTo('dashboard'); fetchDashboard(); });
 
+        // Screen-size detection: sets data attribute on <body> and reacts to resize
+        function updateScreenSizeClass() {
+            const w = window.innerWidth || document.documentElement.clientWidth;
+            const b = document.body;
+            if (w < 720) b.dataset.screensize = 'small';
+            else if (w < 1200) b.dataset.screensize = 'medium';
+            else b.dataset.screensize = 'large';
+        }
+        window.addEventListener('resize', updateScreenSizeClass);
+        // run once at load
+        updateScreenSizeClass();
+
         function navigateTo(page) {
             // Hide all pages
             document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
