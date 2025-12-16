@@ -147,7 +147,7 @@ app.get('/api/dashboard', (req, res) => {
             { cmd: '!setsecuritymod', desc: 'Enable security (admin)' },
             { cmd: '!sban', desc: 'Ban a user (admin)' },
             { cmd: '!setupvoice', desc: 'Setup voice join-to-create (admin)' },
-            { cmd: '!munga-supportticket', desc: 'Post support ticket menu' },
+            { cmd: '!mungabee-supportticket', desc: 'Post support ticket menu' },
             { cmd: '!sendit', desc: 'Forward a message (admin)' }
         ];
 
@@ -312,6 +312,7 @@ client.on('interactionCreate', async (interaction) => {
         case 'help_github': replyText = 'GitHub help: run `!helpygithub` to manage GitHub linking.'; break;
         case 'help_bump': replyText = 'Bump help: run `!helpybump` for bump/reminder commands.'; break;
         case 'help_birth': replyText = 'Birthday help: run `!helpybirth` to configure birthdays.'; break;
+        case 'support_help': replyText = 'Support / Tickets: run `!mungabee-supportticket` in a server channel to post the support ticket menu. Follow the prompts to post the ticket embed to a target channel.'; break;
         default: replyText = 'No information available for this selection.';
     }
 

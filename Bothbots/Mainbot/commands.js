@@ -272,7 +272,7 @@ const DISBOARD_BOT_ID = '302050872383242240';
 let bumpReminders = new Map();
 // Maps helpdesk message ID -> origin channel ID (where !mungahelpdesk was executed)
 const helpdeskOrigins = new Map();
-// Maps support ticket message ID -> origin channel ID (where !munga-supportticket was executed)
+// Maps support ticket message ID -> origin channel ID (where !mungabee-supportticket was executed)
 const supportOrigins = new Map();
 const TICKETS_CONFIG_FILE = 'tickets_config.json';
 function loadTicketsConfig() {
@@ -496,7 +496,8 @@ const commandHandlers = {
                                             { name: 'Twitch Commands', value: '• **!helpytwitch** – Twitch integration help' },
                                             { name: 'GitHub Commands', value: '• **!helpygithub** – GitHub integration help' },
                                             { name: 'Bump Commands', value: '• **!helpybump** – Bump/Disboard help' },
-                                            { name: 'Birthday Commands', value: '• **!helpybirth** – Birthday system help' }
+                                            { name: 'Birthday Commands', value: '• **!helpybirth** – Birthday system help' },
+                                            { name: 'Support / Tickets', value: '• **!mungabee-supportticket** – Post support ticket menu' }
                                         )
                                         .setImage('https://imgur.com/VYHroXP.png')
                                         .setFooter({ text: 'Choose a category using the menu below!' });
@@ -511,7 +512,8 @@ const commandHandlers = {
                                             { label: 'Twitch Commands', description: 'Twitch integration help', value: 'help_twitch', emoji: '📺' },
                                             { label: 'GitHub Commands', description: 'GitHub integration help', value: 'help_github', emoji: '🐙' },
                                             { label: 'Bump Commands', description: 'Bump/Disboard help', value: 'help_bump', emoji: '🔔' },
-                                            { label: 'Birthday Commands', description: 'Birthday system help', value: 'help_birth', emoji: '🎂' }
+                                            { label: 'Birthday Commands', description: 'Birthday system help', value: 'help_birth', emoji: '🎂' },
+                                            { label: 'Support / Tickets', description: 'Create or manage support tickets', value: 'support_help', emoji: '🎫' }
                                         ]);
                                     const row = new ActionRowBuilder().addComponents(selectMenu);
                                     const sent = await targetChannel.send({ embeds: [helpEmbed], components: [row] });
@@ -525,7 +527,7 @@ const commandHandlers = {
                                     }
                                 });
                             },
-                            '!munga-supportticket': async (message) => {
+                            '!mungabee-supportticket': async (message) => {
                                 // Support ticket poster (any user)
                                 message.reply('Please send the target Channel ID where the support ticket embed should be posted. (60 seconds)');
                                 const filter = m => m.author.id === message.author.id && /^\d{17,20}$/.test(m.content.trim());
@@ -665,7 +667,8 @@ const commandHandlers = {
                                     '`!sban @user` - Ban a user\n' +
                                     '`!skick @user` - Kick a user\n' +
                                     '`!stimeout @user [min]` - Timeout a user\n' +
-                                    '`!stimeoutdel @user` - Remove timeout', inline: false }
+                                    '`!stimeoutdel @user` - Remove timeout\n' +
+                                    '`!verify` - Run verification (users run this in the verification channel)', inline: false }
                             )
                             .setFooter({ text: 'Security features only' });
                         message.reply({ embeds: [embed] });
@@ -2261,7 +2264,7 @@ const commandHandlers = {
                     '`!hi` - Say hello and get a hello from me\n' +
                     '`!coffee` - Tell your friends it\'s coffee time!\n' +
                     '`!devmeme` - Get a programming meme\n', inline: false },
-                { name: '★ Security Features *Admin only, Premium*', value:
+                    { name: '★ Security Features *Admin only, Premium*', value:
                     '`!setsecuritymod` - Enable the AI Security System for this server.\n' +
                     '  → The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n' +
                     '  → If a violation is detected, the user will be timed out for 2 hours and warned via DM.\n' +
@@ -2269,7 +2272,8 @@ const commandHandlers = {
                     '`!sban @user` - Manually ban a user\n' +
                     '`!skick @user` - Manually kick a user\n' +
                     '`!stimeout @user [minutes]` - Manually timeout a user\n' +
-                    '`!stimeoutdel @user` - Remove timeout from a user', inline: false },
+                    '`!stimeoutdel @user` - Remove timeout from a user\n' +
+                    '`!verify` - Run the verification process (users should use this in the verification channel)', inline: false },
                 { name: '★ Voice Features *Admin only, Premium*', value:
                     '`!setupvoice` - Create Join-to-Create channel *(3 channels free!)*\n' +
                     '`!setupvoicelog` - Create voice log channel *(free)*\n' +
