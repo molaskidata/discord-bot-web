@@ -3,12 +3,12 @@ import './style.css'
 document.querySelector('#app').innerHTML = `
   <div>
     <h1>☕ Coffee & Codes Activity</h1>
-    <p>Discord Activity für die Coffee & Codes Community</p>
-    <button id="connect-btn">Mit Discord verbinden</button>
+    <p>Discord activity for the Coffee & Codes community</p>
+    <button id="connect-btn">Connect with Discord</button>
     <div id="activity-content" style="display: none;">
-      <h2>🎮 Activity läuft!</h2>
-      <p>Willkommen in der Coffee & Codes Activity!</p>
-      <p>Hier könnt ihr zusammen abhängen und coden! ☕💻</p>
+      <h2>🎮 Activity is running!</h2>
+      <p>Welcome to the Coffee & Codes activity!</p>
+      <p>Hang out together and code! ☕💻</p>
     </div>
   </div>
 `;

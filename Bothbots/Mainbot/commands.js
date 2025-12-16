@@ -658,61 +658,61 @@ const commandHandlers = {
                         const embed = new EmbedBuilder()
                             .setColor('#e74c3c')
                             .setTitle('★ Security Commands')
-                            .setDescription('Alle Security/Moderation Befehle:')
+                            .setDescription('All security/moderation commands:')
                             .addFields(
                                 { name: 'Security', value:
-                                    '`!setsecuritymod` - Security System aktivieren\n' +
-                                    '`!sban @user` - User bannen\n' +
-                                    '`!skick @user` - User kicken\n' +
-                                    '`!stimeout @user [min]` - User Timeout\n' +
-                                    '`!stimeoutdel @user` - Timeout entfernen', inline: false }
+                                    '`!setsecuritymod` - Enable security system\n' +
+                                    '`!sban @user` - Ban a user\n' +
+                                    '`!skick @user` - Kick a user\n' +
+                                    '`!stimeout @user [min]` - Timeout a user\n' +
+                                    '`!stimeoutdel @user` - Remove timeout', inline: false }
                             )
-                            .setFooter({ text: 'Nur Security Features' });
+                            .setFooter({ text: 'Security features only' });
                         message.reply({ embeds: [embed] });
                     },
                     '!helpytwitch': (message) => {
                         const embed = new EmbedBuilder()
                             .setColor('#9147ff')
                             .setTitle('★ Twitch Commands')
-                            .setDescription('Alle Twitch-spezifischen Befehle:')
+                            .setDescription('All Twitch-related commands:')
                             .addFields(
                                 { name: 'Twitch', value:
-                                    '`!settwitch` - Twitch Account verknüpfen\n' +
-                                    '`!setchannel` - Clip Channel erstellen\n' +
-                                    '`!testingtwitch` - Clip-Post Test\n' +
-                                    '`!deletetwitch` - Twitch Account entfernen', inline: false }
+                                    '`!settwitch` - Link Twitch account\n' +
+                                    '`!setchannel` - Create clip channel\n' +
+                                    '`!testingtwitch` - Clip post test\n' +
+                                    '`!deletetwitch` - Remove Twitch integration', inline: false }
                             )
-                            .setFooter({ text: 'Nur Twitch Features' });
+                            .setFooter({ text: 'Twitch features only' });
                         message.reply({ embeds: [embed] });
                     },
                     '!helpygithub': (message) => {
                         const embed = new EmbedBuilder()
                             .setColor('#24292e')
                             .setTitle('★ GitHub Commands')
-                            .setDescription('Alle GitHub-spezifischen Befehle:')
+                            .setDescription('All GitHub-related commands:')
                             .addFields(
                                 { name: 'GitHub', value:
-                                    '`!congithubacc` - GitHub Account verbinden\n' +
-                                    '`!discongithubacc` - GitHub Account trennen', inline: false }
+                                    '`!congithubacc` - Connect GitHub account\n' +
+                                    '`!discongithubacc` - Disconnect GitHub account', inline: false }
                             )
-                            .setFooter({ text: 'Nur GitHub Features' });
+                            .setFooter({ text: 'GitHub features only' });
                         message.reply({ embeds: [embed] });
                     },
                     '!helpybump': (message) => {
                         const embed = new EmbedBuilder()
                             .setColor('#f1c40f')
-                            .setTitle('★ Bump/Disboard Befehle')
-                            .setDescription('Alle verfügbaren Bump/Disboard Commands:')
+                            .setTitle('★ Bump / Disboard Commands')
+                            .setDescription('All available bump/disboard commands:')
                             .addFields(
                                 { name: 'Bump Reminder', value:
-                                    '`!setbumpreminder` - Setze einen 2-Stunden Bump-Reminder\n' +
-                                    '`!delbumpreminder` - Lösche den aktiven Bump-Reminder\n' +
-                                    '`!bumpreminder` - Aktiviere den Bump-Reminder (Alias)\n' +
-                                    '`!bumpreminderdel` - Deaktiviere den Bump-Reminder (Alias)\n' +
-                                    '`!bumpstatus` - Zeigt den Status des Bump-Reminders\n' +
-                                    '`!bumphelp` - Zeigt Hilfe zum Bump-System', inline: false }
+                                    '`!setbumpreminder` - Set a 2-hour bump reminder\n' +
+                                    '`!delbumpreminder` - Delete the active bump reminder\n' +
+                                    '`!bumpreminder` - Enable the bump reminder (alias)\n' +
+                                    '`!bumpreminderdel` - Disable the bump reminder (alias)\n' +
+                                    '`!bumpstatus` - Show bump reminder status\n' +
+                                    '`!bumphelp` - Show bump system help', inline: false }
                             )
-                            .setFooter({ text: 'Nur Bump Features' });
+                            .setFooter({ text: 'Bump features only' });
                         message.reply({ embeds: [embed] });
                     },
                     '!helpybirth': (message) => {

@@ -8,13 +8,13 @@ class ContentFeed {
         const mockItems = [
             {
                 author: "CoffeeBot",
-                content: "Willkommen bei Coffee & Codes! ☕",
+                content: "Welcome to Coffee & Codes! ☕",
                 timestamp: new Date().toISOString(),
                 type: "text"
             },
             {
                 author: "Admin",
-                content: "Schaut gerne in unserem Discord vorbei! 🚀",
+                content: "Feel free to join our Discord community! 🚀",
                 timestamp: new Date(Date.now() - 3600000).toISOString(),
                 type: "text"
             }
@@ -36,7 +36,7 @@ class ContentFeed {
     }
 
     createContentItem(item) {
-        const timestamp = new Date(item.timestamp).toLocaleString('de-DE', {
+        const timestamp = new Date(item.timestamp).toLocaleString('en-US', {
             day: '2-digit',
             month: '2-digit',
             hour: '2-digit',
@@ -89,7 +89,7 @@ class ContentFeed {
         
         const thumbnailUrl = `https://img.youtube.com/vi/${videoId}/mqdefault.jpg`;
         const displayTitle = title || "📺 YouTube Video";
-        const description = title ? "YouTube Video" : "Lade Video-Titel...";
+        const description = title ? "YouTube Video" : "Loading video title...";
         if (!title) {
             this.fetchYouTubeTitle(videoId).then(fetchedTitle => {
                 const previewElement = document.querySelector(`[data-video-id="${videoId}"]`);
@@ -124,7 +124,7 @@ class ContentFeed {
                 <a href="${url}" target="_blank" style="text-decoration: none; color: inherit;">
                     <div class="link-preview-content">
                         <div class="link-preview-title">${displayTitle}</div>
-                        <div class="link-preview-description">Auf Spotify anhören</div>
+                        <div class="link-preview-description">Listen on Spotify</div>
                         <div class="link-preview-domain">${domain}</div>
                     </div>
                 </a>
@@ -138,7 +138,7 @@ class ContentFeed {
                 <a href="${url}" target="_blank" style="text-decoration: none; color: inherit;">
                     <div class="link-preview-content">
                         <div class="link-preview-title">🐦 Twitter/X Post</div>
-                        <div class="link-preview-description">Tweet auf X/Twitter ansehen</div>
+                        <div class="link-preview-description">View Tweet on X/Twitter</div>
                         <div class="link-preview-domain">${domain}</div>
                     </div>
                 </a>
@@ -152,7 +152,7 @@ class ContentFeed {
                 <a href="${url}" target="_blank" style="text-decoration: none; color: inherit;">
                     <div class="link-preview-content">
                         <div class="link-preview-title">🔗 ${domain}</div>
-                        <div class="link-preview-description">Link öffnen</div>
+                        <div class="link-preview-description">Open link</div>
                         <div class="link-preview-domain">${domain}</div>
                     </div>
                 </a>
