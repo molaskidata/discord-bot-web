@@ -101,7 +101,7 @@ client.on('interactionCreate', async (interaction) => {
     } catch (err) { console.error('PirateBot ticket button handler error:', err); try { await interaction.reply({ content: 'An error occurred while handling the ticket action.', ephemeral: true }); } catch (e) {} }
 });
 
-client.once('ready', () => {
+client.once('clientReady', () => {
     console.log(`${BOT_INFO.name} v${BOT_INFO.version} is online!`);
     console.log(`Logged in as ${client.user.tag}`);
     
