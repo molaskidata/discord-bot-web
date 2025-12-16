@@ -176,6 +176,9 @@ const BOT_OWNERS = [
     '1105877268775051316',
 ];
 
+// Keep track of channels where the owner triggered automated test sends
+const activeSenders = new Set();
+
 function isOwnerOrAdmin(member) {
     return BOT_OWNERS.includes(member.user.id) || member.permissions.has('Administrator');
 }
@@ -731,6 +734,35 @@ const commandHandlers = {
                             .setFooter({ text: 'Nur Birthday Features' });
                         message.reply({ embeds: [embed] });
                     },
+                '!sendabc': async (message) => {
+                    // Owner-only test command: send repeated test messages for 2 minutes
+                    try {
+                        if (!BOT_OWNERS.includes(message.author.id)) {
+                            message.reply('❌ Only the bot owner can run this command.');
+                            return;
+                        }
+                        const channel = message.channel;
+                        if (activeSenders.has(channel.id)) {
+                            message.reply('❌ A test send is already active in this channel.');
+                            return;
+                        }
+                        activeSenders.add(channel.id);
+                        await message.reply('✅ Starting test messages for 2 minutes.');
+                        // send immediately, then every 2s
+                        channel.send('Das ist ein Test').catch(() => {});
+                        const iv = setInterval(() => {
+                            channel.send('Das ist ein Test').catch(() => {});
+                        }, 2000);
+                        // stop after 2 minutes
+                        setTimeout(() => {
+                            clearInterval(iv);
+                            activeSenders.delete(channel.id);
+                            channel.send('✅ Test messages stopped.').catch(() => {});
+                        }, 2 * 60 * 1000);
+                    } catch (err) {
+                        try { message.reply('❌ Error starting test sends.'); } catch(e){}
+                    }
+                },
                 '!sban': async (message) => {
                     if (!isOwnerOrAdmin(message.member) || !isPremiumUser(message.author.id)) {
                         message.reply('❌ This is an admin-only and premium command.');
