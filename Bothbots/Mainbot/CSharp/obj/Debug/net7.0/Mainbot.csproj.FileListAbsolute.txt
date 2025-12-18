@@ -1,0 +1,6 @@
+C:\repos\discord-bot-web\Bothbots\Mainbot\CSharp\obj\Debug\net7.0\Mainbot.csproj.AssemblyReference.cache
+C:\repos\discord-bot-web\Bothbots\Mainbot\CSharp\obj\Debug\net7.0\Mainbot.GeneratedMSBuildEditorConfig.editorconfig
+C:\repos\discord-bot-web\Bothbots\Mainbot\CSharp\obj\Debug\net7.0\Mainbot.AssemblyInfoInputs.cache
+C:\repos\discord-bot-web\Bothbots\Mainbot\CSharp\obj\Debug\net7.0\Mainbot.AssemblyInfo.cs
+C:\repos\discord-bot-web\Bothbots\Mainbot\CSharp\obj\Debug\net7.0\Mainbot.csproj.CoreCompileInputs.cache
+C:\repos\discord-bot-web\Bothbots\Mainbot\CSharp\obj\Debug\net7.0\Mainbot.sourcelink.json

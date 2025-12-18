@@ -1,11 +1,11 @@
 // --- Security System Word Lists (multi-language, extend as needed) ---
 const securityWordLists = [
     // German (provided)
-    'anal','anus','arsch','boobs','cl1t','clit','dick','dickpic','fick','ficki','ficks','fuck','fucking','hure','huren','hurens','kitzler','milf','nackt','nacktbilder','nippel','nud3','nude','nudes','nutt','p0rn','p0rno','p3nis','penis','porn','porno','puss','pussy','s3x','scheide','schlampe','sex','sexual','slut','slutti','t1tt','titt','titten','vag1na','vagina',
-    'arschloch','asozial','bastard','behindert','depp','dödel','dumm','dummi','hund','hundesohn','idiot','lappen','lappi','opfa','opfer','sohnedings','sohnemann','sohns','spast','spasti','wichser','wix','wixx','wixxer',
-    'geh sterben','gehsterben','go die','ich bring dich um','ich töte dich','kill yourself','killyourself','kys','self harm','selfharm','sterb','suizid','töd dich','töt dich','verreck','verreckt','cl1ck','click here','discordgift','free nitro','freenitro','gift you nitro','steamgift','abschlacht','abschlachten','abst3chen','abstechen','abstich','angreifen','att4ck','attack','attackieren','aufhaengen','aufhängen','ausloeschen','auslöschen','ausradieren','bedroh','bedrohe','bedrohen','blut','brechdirdieknochen','bring dich um','bringdichum','bringmichum','erdrücken','erdruecken','erhaengen','erhängen','ermorden','erschies','erschießen','erstech','erstechen','erwuergen','erwürg','erwürgen','gefährd','gefährlich','k1ll','kill','kille','killer','knochenbrechen','m0rd','m4ssaker','massaker','mord','morden','pruegeln','prügeln','schiess','schieß','schlagdich','schlagmich','shoot','stech','stich','toeten','töten','umbr1ng','umbracht','umbringen',
+    'anal', 'anus', 'arsch', 'boobs', 'cl1t', 'clit', 'dick', 'dickpic', 'fick', 'ficki', 'ficks', 'fuck', 'fucking', 'hure', 'huren', 'hurens', 'kitzler', 'milf', 'nackt', 'nacktbilder', 'nippel', 'nud3', 'nude', 'nudes', 'nutt', 'p0rn', 'p0rno', 'p3nis', 'penis', 'porn', 'porno', 'puss', 'pussy', 's3x', 'scheide', 'schlampe', 'sex', 'sexual', 'slut', 'slutti', 't1tt', 'titt', 'titten', 'vag1na', 'vagina',
+    'arschloch', 'asozial', 'bastard', 'behindert', 'depp', 'dödel', 'dumm', 'dummi', 'hund', 'hundesohn', 'idiot', 'lappen', 'lappi', 'opfa', 'opfer', 'sohnedings', 'sohnemann', 'sohns', 'spast', 'spasti', 'wichser', 'wix', 'wixx', 'wixxer',
+    'geh sterben', 'gehsterben', 'go die', 'ich bring dich um', 'ich töte dich', 'kill yourself', 'killyourself', 'kys', 'self harm', 'selfharm', 'sterb', 'suizid', 'töd dich', 'töt dich', 'verreck', 'verreckt', 'cl1ck', 'click here', 'discordgift', 'free nitro', 'freenitro', 'gift you nitro', 'steamgift', 'abschlacht', 'abschlachten', 'abst3chen', 'abstechen', 'abstich', 'angreifen', 'att4ck', 'attack', 'attackieren', 'aufhaengen', 'aufhängen', 'ausloeschen', 'auslöschen', 'ausradieren', 'bedroh', 'bedrohe', 'bedrohen', 'blut', 'brechdirdieknochen', 'bring dich um', 'bringdichum', 'bringmichum', 'erdrücken', 'erdruecken', 'erhaengen', 'erhängen', 'ermorden', 'erschies', 'erschießen', 'erstech', 'erstechen', 'erwuergen', 'erwürg', 'erwürgen', 'gefährd', 'gefährlich', 'k1ll', 'kill', 'kille', 'killer', 'knochenbrechen', 'm0rd', 'm4ssaker', 'massaker', 'mord', 'morden', 'pruegeln', 'prügeln', 'schiess', 'schieß', 'schlagdich', 'schlagmich', 'shoot', 'stech', 'stich', 'toeten', 'töten', 'umbr1ng', 'umbracht', 'umbringen',
     // English (partial, extend as needed)
-    'anal','anus','ass','boobs','clit','dick','dickpic','fuck','fucking','whore','milf','nude','nudes','nipple','porn','porno','pussy','sex','slut','tits','vagina','bastard','idiot','dumb','stupid','retard','spastic','wanker','go die','kill yourself','kys','suicide','self harm','selfharm','die','murder','kill','attack','blood','shoot','stab','hang','dangerous','massacre','threat','gift nitro','free nitro','discordgift','click here','steamgift',
+    'anal', 'anus', 'ass', 'boobs', 'clit', 'dick', 'dickpic', 'fuck', 'fucking', 'whore', 'milf', 'nude', 'nudes', 'nipple', 'porn', 'porno', 'pussy', 'sex', 'slut', 'tits', 'vagina', 'bastard', 'idiot', 'dumb', 'stupid', 'retard', 'spastic', 'wanker', 'go die', 'kill yourself', 'kys', 'suicide', 'self harm', 'selfharm', 'die', 'murder', 'kill', 'attack', 'blood', 'shoot', 'stab', 'hang', 'dangerous', 'massacre', 'threat', 'gift nitro', 'free nitro', 'discordgift', 'click here', 'steamgift',
     // Add more: Danish, Serbisch, Kroatisch, Russisch, Finnisch, Italienisch, Spanisch
 ];
 
@@ -99,7 +99,7 @@ function isOwnerOrAdmin(member) {
 }
 module.exports.handleSecurityModeration = handleSecurityModeration;
 // --- Security logging helper ---
-async function sendSecurityLog(message, reason, matched="") {
+async function sendSecurityLog(message, reason, matched = "") {
     try {
         const guildId = message.guild ? message.guild.id : null;
         if (!guildId) return;
@@ -107,7 +107,7 @@ async function sendSecurityLog(message, reason, matched="") {
         const channelId = cfg && cfg.logChannelId ? cfg.logChannelId : null;
         if (!channelId) return;
         const client = message.client;
-        const ch = await client.channels.fetch(channelId).catch(()=>null);
+        const ch = await client.channels.fetch(channelId).catch(() => null);
         if (!ch) return;
         const { EmbedBuilder } = require('discord.js');
         const embed = new EmbedBuilder()
@@ -120,8 +120,8 @@ async function sendSecurityLog(message, reason, matched="") {
             )
             .setTimestamp();
         let files = [];
-        if (message.attachments && message.attachments.size>0) {
-            for (const [,att] of message.attachments) {
+        if (message.attachments && message.attachments.size > 0) {
+            for (const [, att] of message.attachments) {
                 files.push(att.url);
             }
         }
@@ -146,11 +146,11 @@ async function sendSecurityLog(message, reason, matched="") {
                     const age = Date.now() - stats.mtimeMs;
                     const week = 7 * 24 * 60 * 60 * 1000;
                     if (age > week) {
-                        const ts = new Date(stats.mtimeMs).toISOString().slice(0,10);
+                        const ts = new Date(stats.mtimeMs).toISOString().slice(0, 10);
                         fs.renameSync(path, `${path}.${ts}`);
                     }
                 }
-            } catch(e) { }
+            } catch (e) { }
             fs.appendFileSync(path, JSON.stringify(logEntry) + '\n');
         } catch (e) { /* ignore file write errors */ }
     } catch (e) {
@@ -174,732 +174,732 @@ const pirateFarewell = [
 ];
 
 const commandHandlers = {
-        '!setsecuritymod': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) {
-                message.reply('❌ This is an admin-only command.');
-                return;
-            }
-            const guildId = message.guild.id;
-            if (isSecurityEnabled(guildId) || securitySystemEnabled[guildId]) {
-                message.reply('⚠️ Security system is already enabled for this server.');
-                return;
-            }
-            // enable in config and ask for log channel
-            securityConfig[guildId] = securityConfig[guildId] || {};
-            securityConfig[guildId].enabled = true;
-            saveSecurityConfig();
+    '!setsecuritymod': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const guildId = message.guild.id;
+        if (isSecurityEnabled(guildId) || securitySystemEnabled[guildId]) {
+            message.reply('⚠️ Security system is already enabled for this server.');
+            return;
+        }
+        // enable in config and ask for log channel
+        securityConfig[guildId] = securityConfig[guildId] || {};
+        securityConfig[guildId].enabled = true;
+        saveSecurityConfig();
 
-            const step = await message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.\n\nPlease provide the CHANNEL ID where I should send the warn logs (type `none` to disable logging, or type `!setchannelsec` to let me create a warn-log channel for you).');
+        const step = await message.reply('🛡️ Security system has been enabled for this server! The bot will now monitor for spam, NSFW, invite links, and offensive language in all supported languages.\n\nPlease provide the CHANNEL ID where I should send the warn logs (type `none` to disable logging, or type `!setchannelsec` to let me create a warn-log channel for you).');
 
-            const filter = (m) => m.author.id === message.author.id;
-            const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
-            collector.on('collect', async (m) => {
-                const val = (m.content || '').trim();
-                if (val.toLowerCase() === 'none') {
-                    securityConfig[guildId].logChannelId = null;
-                    saveSecurityConfig();
-                    message.reply('✅ Security enabled with no logging. All actions will still be taken but not logged. All right! Now lean back, I work now for you and yes. 24/7 baby ;))');
-                    return;
-                }
-                if (val === '!setchannelsec' || val.toLowerCase() === 'create') {
-                    try {
-                        const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] });
-                        securityConfig[guildId].logChannelId = ch.id;
-                        saveSecurityConfig();
-                        message.reply(`✅ Created and set warn log channel: ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
-                    } catch (e) {
-                        message.reply('❌ Failed to create log channel. Please provide a channel ID or create one and run the command again.');
-                    }
-                    return;
-                }
-                // try to accept channel id
-                const maybeId = val.replace(/[^0-9]/g, '');
-                if (!maybeId) { message.reply('❌ Invalid input. Provide a channel ID, `none`, or `!setchannelsec`.'); return; }
-                const ch = await message.guild.channels.fetch(maybeId).catch(()=>null);
-                if (!ch) { message.reply('❌ Channel not found. Make sure I can access it and provide the numeric Channel ID.'); return; }
-                securityConfig[guildId].logChannelId = ch.id;
+        const filter = (m) => m.author.id === message.author.id;
+        const collector = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+        collector.on('collect', async (m) => {
+            const val = (m.content || '').trim();
+            if (val.toLowerCase() === 'none') {
+                securityConfig[guildId].logChannelId = null;
                 saveSecurityConfig();
-                message.reply(`✅ Warn log channel set to ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
-            });
-            collector.on('end', (collected) => {
-                if (collected.size === 0) {
-                    message.reply('⌛ Timeout: no channel provided. You can run `!setsecuritymod` again to set logging.');
-                }
-            });
-        },
-            '!security': async (message) => {
-                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
-                const parts = message.content.split(' ').filter(Boolean);
-                const arg = parts[1] ? parts[1].toLowerCase() : null;
-                const gid = message.guild.id;
-                securityConfig[gid] = securityConfig[gid] || {};
-                if (!arg || arg === 'status') {
-                    const enabled = !!securityConfig[gid].enabled;
-                    const logId = securityConfig[gid].logChannelId || 'none';
-                    message.reply(`Security: ${enabled ? 'ENABLED' : 'disabled'}. Log channel: ${logId}`);
-                    return;
-                }
-                if (arg === 'on' || arg === 'enable') {
-                    securityConfig[gid].enabled = true; saveSecurityConfig();
-                    message.reply('✅ Security enabled for this server.'); return;
-                }
-                if (arg === 'off' || arg === 'disable') {
-                    securityConfig[gid].enabled = false; saveSecurityConfig();
-                    message.reply('✅ Security disabled for this server.'); return;
-                }
-                message.reply('Usage: !security <on|off|status>');
-            },
-            // --- Verify system setup ---
-            '!setverify': async (message) => {
-                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
-                const guild = message.guild;
-                const filter = (m) => m.author.id === message.author.id;
-                await message.reply('Please provide the CHANNEL ID where users must verify (or type `cancel`).');
-                const ccol = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
-                ccol.on('collect', async (m1) => {
-                    if (m1.content.toLowerCase() === 'cancel') { message.reply('Cancelled.'); return; }
-                    const chanId = m1.content.replace(/[^0-9]/g,'');
-                    const chan = await guild.channels.fetch(chanId).catch(()=>null);
-                    if (!chan) { message.reply('❌ Channel not found or inaccessible. Aborting.'); return; }
-                    await message.reply('Now provide the ROLE ID users should receive on verification (or `cancel`).');
-                    const rcol = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
-                    rcol.on('collect', async (m2) => {
-                        if (m2.content.toLowerCase() === 'cancel') { message.reply('Cancelled.'); return; }
-                        const roleId = m2.content.replace(/[^0-9]/g,'');
-                        const role = await guild.roles.fetch(roleId).catch(()=>null);
-                        if (!role) { message.reply('❌ Role not found. Aborting.'); return; }
-
-                        // Diagnostic: check bot permissions and role hierarchy
-                        const botMember = guild.members.me || await guild.members.fetch(message.client.user.id).catch(()=>null);
-                        const missing = [];
-                        if (!botMember) {
-                            missing.push('Unable to determine bot member in guild.');
-                        } else {
-                            if (!botMember.permissions.has('ManageChannels')) missing.push('ManageChannels');
-                            if (!botMember.permissions.has('ManageRoles')) missing.push('ManageRoles');
-                            if (!botMember.permissions.has('SendMessages')) missing.push('SendMessages');
-                        }
-                        if (botMember && role.position >= botMember.roles.highest.position) {
-                            message.reply('❌ The verification role is equal or higher than my highest role. I cannot assign it. Aborting.');
-                            return;
-                        }
-
-                        verifyConfig[guild.id] = { channelId: chan.id, roleId: role.id, messageId: null, snapshot: {} };
-                        saveVerifyConfig();
-
-                        // Snapshot only the @everyone ViewChannel overwrite to allow safe rollback
-                        const snapshot = {};
-                        const errors = [];
-                        for (const [, c] of guild.channels.cache) {
-                            try {
-                                if (!c.manageable) continue;
-                                const ow = c.permissionOverwrites.cache.get(guild.id);
-                                let prev = null;
-                                if (ow) {
-                                    try {
-                                        const allowArr = typeof ow.allow?.toArray === 'function' ? ow.allow.toArray() : [];
-                                        const denyArr = typeof ow.deny?.toArray === 'function' ? ow.deny.toArray() : [];
-                                        if (allowArr.includes('ViewChannel')) prev = true;
-                                        else if (denyArr.includes('ViewChannel')) prev = false;
-                                        else prev = null;
-                                    } catch (e) {
-                                        prev = null;
-                                    }
-                                }
-                                snapshot[c.id] = prev;
-                                // Only attempt edits if bot has ManageChannels
-                                if (botMember && botMember.permissions.has('ManageChannels')) {
-                                    if (c.id === chan.id) {
-                                        await c.permissionOverwrites.edit(guild.id, { ViewChannel: true });
-                                    } else {
-                                        await c.permissionOverwrites.edit(guild.id, { ViewChannel: false });
-                                    }
-                                }
-                            } catch (e) {
-                                errors.push(`channel:${c.id}`);
-                            }
-                        }
-
-                        verifyConfig[guild.id].snapshot = snapshot;
-                        saveVerifyConfig();
-
-                        try {
-                            const { EmbedBuilder } = require('discord.js');
-                            const embed = new EmbedBuilder()
-                                .setTitle('Verify to access the server')
-                                .setDescription('To verify and get access to the server, type `!verify` in this channel. The staff will be notified if there are problems.')
-                                .setColor('#2b6cb0')
-                                .setFooter({ text: 'Verification — stay safe' });
-                            const sent = await chan.send({ embeds: [embed] });
-                            verifyConfig[guild.id].messageId = sent.id;
-                            saveVerifyConfig();
-                            const missingMsg = missing.length ? `\nMissing bot permissions: ${missing.join(', ')}. Some updates were skipped.` : '';
-                            message.reply(`✅ Verify configured in ${chan}. ${errors.length ? 'Some channels could not be updated due to permissions.' : ''}${missingMsg}`);
-                        } catch (e) {
-                            message.reply('✅ Config saved, but failed to post verify message in the channel. Check my permissions.');
-                        }
-                    });
-                    rcol.on('end', (col) => { if (col.size===0) message.reply('Timeout waiting for role ID.'); });
-                });
-                ccol.on('end', (col) => { if (col.size===0) message.reply('Timeout waiting for channel ID.'); });
-            },
-
-            '!verify': async (message) => {
-                const cfg = verifyConfig[message.guild.id];
-                if (!cfg || !cfg.channelId) { message.reply('Verification is not configured on this server.'); return; }
-                if (message.channel.id !== cfg.channelId) { message.reply('Please verify in the verification channel.'); return; }
-                const member = message.member;
-                const role = await message.guild.roles.fetch(cfg.roleId).catch(()=>null);
-                if (!role) { message.reply('Verification role no longer exists. Contact an admin.'); return; }
+                message.reply('✅ Security enabled with no logging. All actions will still be taken but not logged. All right! Now lean back, I work now for you and yes. 24/7 baby ;))');
+                return;
+            }
+            if (val === '!setchannelsec' || val.toLowerCase() === 'create') {
                 try {
-                    await member.roles.add(role);
-                    message.reply('✅ You have been verified and the role was assigned. Welcome!');
+                    const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] });
+                    securityConfig[guildId].logChannelId = ch.id;
+                    saveSecurityConfig();
+                    message.reply(`✅ Created and set warn log channel: ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
                 } catch (e) {
-                    message.reply('❌ Failed to assign role. I may lack Manage Roles permission or the role is higher than my role.');
+                    message.reply('❌ Failed to create log channel. Please provide a channel ID or create one and run the command again.');
                 }
-            },
+                return;
+            }
+            // try to accept channel id
+            const maybeId = val.replace(/[^0-9]/g, '');
+            if (!maybeId) { message.reply('❌ Invalid input. Provide a channel ID, `none`, or `!setchannelsec`.'); return; }
+            const ch = await message.guild.channels.fetch(maybeId).catch(() => null);
+            if (!ch) { message.reply('❌ Channel not found. Make sure I can access it and provide the numeric Channel ID.'); return; }
+            securityConfig[guildId].logChannelId = ch.id;
+            saveSecurityConfig();
+            message.reply(`✅ Warn log channel set to ${ch}. All right! Now lean back, I work now for you and yes. 24/7 baby ;))`);
+        });
+        collector.on('end', (collected) => {
+            if (collected.size === 0) {
+                message.reply('⌛ Timeout: no channel provided. You can run `!setsecuritymod` again to set logging.');
+            }
+        });
+    },
+    '!security': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+        const parts = message.content.split(' ').filter(Boolean);
+        const arg = parts[1] ? parts[1].toLowerCase() : null;
+        const gid = message.guild.id;
+        securityConfig[gid] = securityConfig[gid] || {};
+        if (!arg || arg === 'status') {
+            const enabled = !!securityConfig[gid].enabled;
+            const logId = securityConfig[gid].logChannelId || 'none';
+            message.reply(`Security: ${enabled ? 'ENABLED' : 'disabled'}. Log channel: ${logId}`);
+            return;
+        }
+        if (arg === 'on' || arg === 'enable') {
+            securityConfig[gid].enabled = true; saveSecurityConfig();
+            message.reply('✅ Security enabled for this server.'); return;
+        }
+        if (arg === 'off' || arg === 'disable') {
+            securityConfig[gid].enabled = false; saveSecurityConfig();
+            message.reply('✅ Security disabled for this server.'); return;
+        }
+        message.reply('Usage: !security <on|off|status>');
+    },
+    // --- Verify system setup ---
+    '!setverify': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+        const guild = message.guild;
+        const filter = (m) => m.author.id === message.author.id;
+        await message.reply('Please provide the CHANNEL ID where users must verify (or type `cancel`).');
+        const ccol = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+        ccol.on('collect', async (m1) => {
+            if (m1.content.toLowerCase() === 'cancel') { message.reply('Cancelled.'); return; }
+            const chanId = m1.content.replace(/[^0-9]/g, '');
+            const chan = await guild.channels.fetch(chanId).catch(() => null);
+            if (!chan) { message.reply('❌ Channel not found or inaccessible. Aborting.'); return; }
+            await message.reply('Now provide the ROLE ID users should receive on verification (or `cancel`).');
+            const rcol = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+            rcol.on('collect', async (m2) => {
+                if (m2.content.toLowerCase() === 'cancel') { message.reply('Cancelled.'); return; }
+                const roleId = m2.content.replace(/[^0-9]/g, '');
+                const role = await guild.roles.fetch(roleId).catch(() => null);
+                if (!role) { message.reply('❌ Role not found. Aborting.'); return; }
 
-            '!delverifysett': async (message) => {
-                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
-                const cfg = verifyConfig[message.guild.id];
-                if (!cfg) { message.reply('No verify setup found.'); return; }
-                await message.reply('Are you sure? Type `Y` to confirm deletion, `N` to cancel (60s).');
-                const filter = (m) => m.author.id === message.author.id;
-                const col = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
-                col.on('collect', async (m) => {
-                    const v = m.content.trim().toLowerCase();
-                    if (v === 'y' || v === 'yes') {
-                        try { const ch = await message.guild.channels.fetch(cfg.channelId).catch(()=>null); if (ch && cfg.messageId) { const msg = await ch.messages.fetch(cfg.messageId).catch(()=>null); if (msg) await msg.delete().catch(()=>{}); } } catch(e){}
-                        // attempt rollback of @everyone ViewChannel using stored snapshot
-                        try {
-                            const botMember = message.guild.members.me || await message.guild.members.fetch(message.client.user.id).catch(()=>null);
-                            const snapshot = cfg.snapshot || {};
-                            for (const [cid, prev] of Object.entries(snapshot)) {
-                                const c = await message.guild.channels.fetch(cid).catch(()=>null);
-                                if (!c || !c.manageable) continue;
-                                try {
-                                    if (prev === null) {
-                                        if (c.permissionOverwrites.cache.has(message.guild.id)) {
-                                            await c.permissionOverwrites.delete(message.guild.id).catch(()=>{});
-                                        }
-                                    } else if (prev === true) {
-                                        await c.permissionOverwrites.edit(message.guild.id, { ViewChannel: true }).catch(()=>{});
-                                    } else if (prev === false) {
-                                        await c.permissionOverwrites.edit(message.guild.id, { ViewChannel: false }).catch(()=>{});
-                                    }
-                                } catch (e) { /* ignore individual failures */ }
-                            }
-                        } catch (e) { /* ignore rollback errors */ }
-                        delete verifyConfig[message.guild.id]; saveVerifyConfig();
-                        message.reply('✅ Verify setup removed and previous channel view permissions attempted to be restored.');
-                    } else {
-                        message.reply('Aborted. No changes made.');
-                    }
-                });
-                col.on('end', (c) => { if (c.size===0) message.reply('Timeout. No changes made.'); });
-            },
-            '!setseclog': async (message) => {
-                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
-                const parts = message.content.split(' ').filter(Boolean);
-                const arg = parts[1] ? parts[1].trim() : null;
-                const gid = message.guild.id;
-                securityConfig[gid] = securityConfig[gid] || {};
-                if (!arg) { message.reply('Usage: !setseclog <channelId|none|create>'); return; }
-                if (arg.toLowerCase() === 'none') { securityConfig[gid].logChannelId = null; saveSecurityConfig(); message.reply('✅ Logging disabled for this server.'); return; }
-                if (arg.toLowerCase() === 'create') {
-                    try { const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] }); securityConfig[gid].logChannelId = ch.id; saveSecurityConfig(); message.reply(`✅ Created warn-log channel: ${ch}`); } catch (e) { message.reply('❌ Failed to create channel'); }
+                // Diagnostic: check bot permissions and role hierarchy
+                const botMember = guild.members.me || await guild.members.fetch(message.client.user.id).catch(() => null);
+                const missing = [];
+                if (!botMember) {
+                    missing.push('Unable to determine bot member in guild.');
+                } else {
+                    if (!botMember.permissions.has('ManageChannels')) missing.push('ManageChannels');
+                    if (!botMember.permissions.has('ManageRoles')) missing.push('ManageRoles');
+                    if (!botMember.permissions.has('SendMessages')) missing.push('SendMessages');
+                }
+                if (botMember && role.position >= botMember.roles.highest.position) {
+                    message.reply('❌ The verification role is equal or higher than my highest role. I cannot assign it. Aborting.');
                     return;
                 }
-                const maybe = arg.replace(/[^0-9]/g,'');
-                if (!maybe) { message.reply('❌ Invalid channel id'); return; }
-                const ch = await message.guild.channels.fetch(maybe).catch(()=>null);
-                if (!ch) { message.reply('❌ Channel not found'); return; }
-                securityConfig[gid].logChannelId = ch.id; saveSecurityConfig(); message.reply(`✅ Log channel set to ${ch}`);
-            },
-            '!exportlogs': async (message) => {
-                if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
-                const parts = message.content.split(' ').filter(Boolean);
-                const arg = parts[1] ? parts[1].toLowerCase() : 'security';
-                if (arg !== 'security') { message.reply('Usage: !exportlogs security'); return; }
-                const path = 'security_logs_pirate.jsonl';
-                if (!fs.existsSync(path)) { message.reply('No logs available.'); return; }
+
+                verifyConfig[guild.id] = { channelId: chan.id, roleId: role.id, messageId: null, snapshot: {} };
+                saveVerifyConfig();
+
+                // Snapshot only the @everyone ViewChannel overwrite to allow safe rollback
+                const snapshot = {};
+                const errors = [];
+                for (const [, c] of guild.channels.cache) {
+                    try {
+                        if (!c.manageable) continue;
+                        const ow = c.permissionOverwrites.cache.get(guild.id);
+                        let prev = null;
+                        if (ow) {
+                            try {
+                                const allowArr = typeof ow.allow?.toArray === 'function' ? ow.allow.toArray() : [];
+                                const denyArr = typeof ow.deny?.toArray === 'function' ? ow.deny.toArray() : [];
+                                if (allowArr.includes('ViewChannel')) prev = true;
+                                else if (denyArr.includes('ViewChannel')) prev = false;
+                                else prev = null;
+                            } catch (e) {
+                                prev = null;
+                            }
+                        }
+                        snapshot[c.id] = prev;
+                        // Only attempt edits if bot has ManageChannels
+                        if (botMember && botMember.permissions.has('ManageChannels')) {
+                            if (c.id === chan.id) {
+                                await c.permissionOverwrites.edit(guild.id, { ViewChannel: true });
+                            } else {
+                                await c.permissionOverwrites.edit(guild.id, { ViewChannel: false });
+                            }
+                        }
+                    } catch (e) {
+                        errors.push(`channel:${c.id}`);
+                    }
+                }
+
+                verifyConfig[guild.id].snapshot = snapshot;
+                saveVerifyConfig();
+
                 try {
-                    await message.reply({ files: [path] });
-                } catch (e) { message.reply('❌ Failed to send logs.'); }
-            },
-        '!sban': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) {
-                message.reply('❌ This is an admin-only command.');
-                return;
+                    const { EmbedBuilder } = require('discord.js');
+                    const embed = new EmbedBuilder()
+                        .setTitle('Verify to access the server')
+                        .setDescription('To verify and get access to the server, type `!verify` in this channel. The staff will be notified if there are problems.')
+                        .setColor('#2b6cb0')
+                        .setFooter({ text: 'Verification — stay safe' });
+                    const sent = await chan.send({ embeds: [embed] });
+                    verifyConfig[guild.id].messageId = sent.id;
+                    saveVerifyConfig();
+                    const missingMsg = missing.length ? `\nMissing bot permissions: ${missing.join(', ')}. Some updates were skipped.` : '';
+                    message.reply(`✅ Verify configured in ${chan}. ${errors.length ? 'Some channels could not be updated due to permissions.' : ''}${missingMsg}`);
+                } catch (e) {
+                    message.reply('✅ Config saved, but failed to post verify message in the channel. Check my permissions.');
+                }
+            });
+            rcol.on('end', (col) => { if (col.size === 0) message.reply('Timeout waiting for role ID.'); });
+        });
+        ccol.on('end', (col) => { if (col.size === 0) message.reply('Timeout waiting for channel ID.'); });
+    },
+
+    '!verify': async (message) => {
+        const cfg = verifyConfig[message.guild.id];
+        if (!cfg || !cfg.channelId) { message.reply('Verification is not configured on this server.'); return; }
+        if (message.channel.id !== cfg.channelId) { message.reply('Please verify in the verification channel.'); return; }
+        const member = message.member;
+        const role = await message.guild.roles.fetch(cfg.roleId).catch(() => null);
+        if (!role) { message.reply('Verification role no longer exists. Contact an admin.'); return; }
+        try {
+            await member.roles.add(role);
+            message.reply('✅ You have been verified and the role was assigned. Welcome!');
+        } catch (e) {
+            message.reply('❌ Failed to assign role. I may lack Manage Roles permission or the role is higher than my role.');
+        }
+    },
+
+    '!delverifysett': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+        const cfg = verifyConfig[message.guild.id];
+        if (!cfg) { message.reply('No verify setup found.'); return; }
+        await message.reply('Are you sure? Type `Y` to confirm deletion, `N` to cancel (60s).');
+        const filter = (m) => m.author.id === message.author.id;
+        const col = message.channel.createMessageCollector({ filter, time: 60000, max: 1 });
+        col.on('collect', async (m) => {
+            const v = m.content.trim().toLowerCase();
+            if (v === 'y' || v === 'yes') {
+                try { const ch = await message.guild.channels.fetch(cfg.channelId).catch(() => null); if (ch && cfg.messageId) { const msg = await ch.messages.fetch(cfg.messageId).catch(() => null); if (msg) await msg.delete().catch(() => { }); } } catch (e) { }
+                // attempt rollback of @everyone ViewChannel using stored snapshot
+                try {
+                    const botMember = message.guild.members.me || await message.guild.members.fetch(message.client.user.id).catch(() => null);
+                    const snapshot = cfg.snapshot || {};
+                    for (const [cid, prev] of Object.entries(snapshot)) {
+                        const c = await message.guild.channels.fetch(cid).catch(() => null);
+                        if (!c || !c.manageable) continue;
+                        try {
+                            if (prev === null) {
+                                if (c.permissionOverwrites.cache.has(message.guild.id)) {
+                                    await c.permissionOverwrites.delete(message.guild.id).catch(() => { });
+                                }
+                            } else if (prev === true) {
+                                await c.permissionOverwrites.edit(message.guild.id, { ViewChannel: true }).catch(() => { });
+                            } else if (prev === false) {
+                                await c.permissionOverwrites.edit(message.guild.id, { ViewChannel: false }).catch(() => { });
+                            }
+                        } catch (e) { /* ignore individual failures */ }
+                    }
+                } catch (e) { /* ignore rollback errors */ }
+                delete verifyConfig[message.guild.id]; saveVerifyConfig();
+                message.reply('✅ Verify setup removed and previous channel view permissions attempted to be restored.');
+            } else {
+                message.reply('Aborted. No changes made.');
             }
-            const user = message.mentions.users.first();
-            if (!user) {
-                message.reply('Usage: !sban @user');
-                return;
-            }
-            try {
-                await message.guild.members.ban(user.id, { reason: 'Manual security ban' });
-                message.reply(`🔨 Banned ${user.tag}`);
-            } catch (err) {
-                message.reply('❌ Failed to ban user.');
-            }
-        },
-        '!skick': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) {
-                message.reply('❌ This is an admin-only command.');
-                return;
-            }
-            const user = message.mentions.users.first();
-            if (!user) {
-                message.reply('Usage: !skick @user');
-                return;
-            }
-            try {
-                await message.guild.members.kick(user.id, 'Manual security kick');
-                message.reply(`👢 Kicked ${user.tag}`);
-            } catch (err) {
-                message.reply('❌ Failed to kick user.');
-            }
-        },
-        '!stimeout': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) {
-                message.reply('❌ This is an admin-only command.');
-                return;
-            }
-            const user = message.mentions.users.first();
-            const args = message.content.split(' ');
-            const duration = parseInt(args[2]) || 120;
-            if (!user) {
-                message.reply('Usage: !stimeout @user [minutes]');
-                return;
-            }
-            try {
-                const member = await message.guild.members.fetch(user.id);
-                await member.timeout(duration * 60 * 1000, 'Manual security timeout');
-                message.reply(`⏳ Timed out ${user.tag} for ${duration} minutes.`);
-            } catch (err) {
-                message.reply('❌ Failed to timeout user.');
-            }
-        },
-        '!stimeoutdel': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) {
-                message.reply('❌ This is an admin-only command.');
-                return;
-            }
-            const user = message.mentions.users.first();
-            if (!user) {
-                message.reply('Usage: !stimeoutdel @user');
-                return;
-            }
-            try {
-                const member = await message.guild.members.fetch(user.id);
-                await member.timeout(null, 'Manual security timeout removed');
-                message.reply(`✅ Timeout removed for ${user.tag}`);
-            } catch (err) {
-                message.reply('❌ Failed to remove timeout.');
-            }
-        },
-        '!setupvoice': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) {
-                message.reply('❌ This is an admin-only command.');
+        });
+        col.on('end', (c) => { if (c.size === 0) message.reply('Timeout. No changes made.'); });
+    },
+    '!setseclog': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+        const parts = message.content.split(' ').filter(Boolean);
+        const arg = parts[1] ? parts[1].trim() : null;
+        const gid = message.guild.id;
+        securityConfig[gid] = securityConfig[gid] || {};
+        if (!arg) { message.reply('Usage: !setseclog <channelId|none|create>'); return; }
+        if (arg.toLowerCase() === 'none') { securityConfig[gid].logChannelId = null; saveSecurityConfig(); message.reply('✅ Logging disabled for this server.'); return; }
+        if (arg.toLowerCase() === 'create') {
+            try { const ch = await message.guild.channels.create({ name: 'warn-logs', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] }); securityConfig[gid].logChannelId = ch.id; saveSecurityConfig(); message.reply(`✅ Created warn-log channel: ${ch}`); } catch (e) { message.reply('❌ Failed to create channel'); }
+            return;
+        }
+        const maybe = arg.replace(/[^0-9]/g, '');
+        if (!maybe) { message.reply('❌ Invalid channel id'); return; }
+        const ch = await message.guild.channels.fetch(maybe).catch(() => null);
+        if (!ch) { message.reply('❌ Channel not found'); return; }
+        securityConfig[gid].logChannelId = ch.id; saveSecurityConfig(); message.reply(`✅ Log channel set to ${ch}`);
+    },
+    '!exportlogs': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) { message.reply('❌ Admins only'); return; }
+        const parts = message.content.split(' ').filter(Boolean);
+        const arg = parts[1] ? parts[1].toLowerCase() : 'security';
+        if (arg !== 'security') { message.reply('Usage: !exportlogs security'); return; }
+        const path = 'security_logs_pirate.jsonl';
+        if (!fs.existsSync(path)) { message.reply('No logs available.'); return; }
+        try {
+            await message.reply({ files: [path] });
+        } catch (e) { message.reply('❌ Failed to send logs.'); }
+    },
+    '!sban': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        if (!user) {
+            message.reply('Usage: !sban @user');
+            return;
+        }
+        try {
+            await message.guild.members.ban(user.id, { reason: 'Manual security ban' });
+            message.reply(`🔨 Banned ${user.tag}`);
+        } catch (err) {
+            message.reply('❌ Failed to ban user.');
+        }
+    },
+    '!skick': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        if (!user) {
+            message.reply('Usage: !skick @user');
+            return;
+        }
+        try {
+            await message.guild.members.kick(user.id, 'Manual security kick');
+            message.reply(`👢 Kicked ${user.tag}`);
+        } catch (err) {
+            message.reply('❌ Failed to kick user.');
+        }
+    },
+    '!stimeout': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        const args = message.content.split(' ');
+        const duration = parseInt(args[2]) || 120;
+        if (!user) {
+            message.reply('Usage: !stimeout @user [minutes]');
+            return;
+        }
+        try {
+            const member = await message.guild.members.fetch(user.id);
+            await member.timeout(duration * 60 * 1000, 'Manual security timeout');
+            message.reply(`⏳ Timed out ${user.tag} for ${duration} minutes.`);
+        } catch (err) {
+            message.reply('❌ Failed to timeout user.');
+        }
+    },
+    '!stimeoutdel': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+        const user = message.mentions.users.first();
+        if (!user) {
+            message.reply('Usage: !stimeoutdel @user');
+            return;
+        }
+        try {
+            const member = await message.guild.members.fetch(user.id);
+            await member.timeout(null, 'Manual security timeout removed');
+            message.reply(`✅ Timeout removed for ${user.tag}`);
+        } catch (err) {
+            message.reply('❌ Failed to remove timeout.');
+        }
+    },
+    '!setupvoice': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
+
+        const config = loadVoiceConfig();
+
+        const step1 = await message.reply(
+            '**Voice System Setup - Step 1/2** 🎙️\n\n' +
+            'In which **Category** should the `➕ Join to Create` channel be created?\n\n' +
+            '**Answer:** Send the Category ID (Right-click → Copy ID)\n' +
+            '**Cancel:** Type `cancel`'
+        );
+
+        const filter1 = (m) => m.author.id === message.author.id;
+        const collector1 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
+
+        collector1.on('collect', async (m) => {
+            if (m.content.toLowerCase() === 'cancel') {
+                message.reply('❌ Voice System Setup cancelled.');
                 return;
             }
 
-            const config = loadVoiceConfig();
+            const joinCategory = m.content.trim();
+            const category1 = await message.guild.channels.fetch(joinCategory).catch(() => null);
+            if (!category1 || category1.type !== 4) {
+                message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
+                return;
+            }
 
-            const step1 = await message.reply(
-                '**Voice System Setup - Step 1/2** 🎙️\n\n' +
-                'In which **Category** should the `➕ Join to Create` channel be created?\n\n' +
-                '**Answer:** Send the Category ID (Right-click → Copy ID)\n' +
-                '**Cancel:** Type `cancel`'
+            const step2 = await message.reply(
+                '**Voice System Setup - Step 2/2** 🎙️\n\n' +
+                'In which **Category** should the **created Voice Channels** be placed?\n\n' +
+                '**Answer:** Send the Category ID\n' +
+                '**Tip:** Can be the same or a different category'
             );
 
-            const filter1 = (m) => m.author.id === message.author.id;
-            const collector1 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
+            const collector2 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
 
-            collector1.on('collect', async (m) => {
-                if (m.content.toLowerCase() === 'cancel') {
+            collector2.on('collect', async (m2) => {
+                if (m2.content.toLowerCase() === 'cancel') {
                     message.reply('❌ Voice System Setup cancelled.');
                     return;
                 }
 
-                const joinCategory = m.content.trim();
-                const category1 = await message.guild.channels.fetch(joinCategory).catch(() => null);
-                if (!category1 || category1.type !== 4) {
+                const voiceCategory = m2.content.trim();
+                const category2 = await message.guild.channels.fetch(voiceCategory).catch(() => null);
+                if (!category2 || category2.type !== 4) {
                     message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
                     return;
                 }
 
-                const step2 = await message.reply(
-                    '**Voice System Setup - Step 2/2** 🎙️\n\n' +
-                    'In which **Category** should the **created Voice Channels** be placed?\n\n' +
-                    '**Answer:** Send the Category ID\n' +
-                    '**Tip:** Can be the same or a different category'
-                );
+                try {
+                    const joinChannel = await message.guild.channels.create({
+                        name: '➕ Join to Create',
+                        type: 2,
+                        parent: joinCategory,
+                        permissionOverwrites: [
+                            {
+                                id: message.guild.id,
+                                allow: ['Connect', 'ViewChannel']
+                            }
+                        ]
+                    });
 
-                const collector2 = message.channel.createMessageCollector({ filter: filter1, time: 60000, max: 1 });
+                    config.joinToCreateChannel = joinChannel.id;
+                    config.joinToCreateCategory = joinCategory;
+                    config.voiceChannelCategory = voiceCategory;
+                    saveVoiceConfig(config);
 
-                collector2.on('collect', async (m2) => {
-                    if (m2.content.toLowerCase() === 'cancel') {
-                        message.reply('❌ Voice System Setup cancelled.');
-                        return;
-                    }
+                    const cat1 = await message.guild.channels.fetch(joinCategory);
+                    const cat2 = await message.guild.channels.fetch(voiceCategory);
 
-                    const voiceCategory = m2.content.trim();
-                    const category2 = await message.guild.channels.fetch(voiceCategory).catch(() => null);
-                    if (!category2 || category2.type !== 4) {
-                        message.reply('❌ Invalid Category ID! Please try again with `!setupvoice`.');
-                        return;
-                    }
-
-                    try {
-                        const joinChannel = await message.guild.channels.create({
-                            name: '➕ Join to Create',
-                            type: 2,
-                            parent: joinCategory,
-                            permissionOverwrites: [
-                                {
-                                    id: message.guild.id,
-                                    allow: ['Connect', 'ViewChannel']
-                                }
-                            ]
-                        });
-
-                        config.joinToCreateChannel = joinChannel.id;
-                        config.joinToCreateCategory = joinCategory;
-                        config.voiceChannelCategory = voiceCategory;
-                        saveVoiceConfig(config);
-
-                        const cat1 = await message.guild.channels.fetch(joinCategory);
-                        const cat2 = await message.guild.channels.fetch(voiceCategory);
-
-                        message.reply(
-                            `✅ **Voice System successfully set up!**\n\n` +
-                            `📍 Join-to-Create: ${joinChannel} in **${cat1.name}**\n` +
-                            `📍 New channels will be created in: **${cat2.name}**`
-                        );
-                    } catch (error) {
-                        console.error('Setup voice error (PiratBot):', error);
-                        message.reply('❌ Error creating voice system.');
-                    }
-                });
-
-                collector2.on('end', (collected) => {
-                    if (collected.size === 0) {
-                        message.reply('❌ Timeout. Please restart setup with `!setupvoice`.');
-                    }
-                });
+                    message.reply(
+                        `✅ **Voice System successfully set up!**\n\n` +
+                        `📍 Join-to-Create: ${joinChannel} in **${cat1.name}**\n` +
+                        `📍 New channels will be created in: **${cat2.name}**`
+                    );
+                } catch (error) {
+                    console.error('Setup voice error (PiratBot):', error);
+                    message.reply('❌ Error creating voice system.');
+                }
             });
 
-            collector1.on('end', (collected) => {
+            collector2.on('end', (collected) => {
                 if (collected.size === 0) {
                     message.reply('❌ Timeout. Please restart setup with `!setupvoice`.');
                 }
             });
-        },
+        });
 
-        '!setupvoicelog': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) {
-                message.reply('❌ This is an admin-only command.');
-                return;
+        collector1.on('end', (collected) => {
+            if (collected.size === 0) {
+                message.reply('❌ Timeout. Please restart setup with `!setupvoice`.');
             }
+        });
+    },
 
-            const config = loadVoiceConfig();
+    '!setupvoicelog': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) {
+            message.reply('❌ This is an admin-only command.');
+            return;
+        }
 
-            try {
-                const logChannel = await message.guild.channels.create({
-                    name: '📋-voice-logs',
-                    type: 0,
-                    permissionOverwrites: [
-                        {
-                            id: message.guild.id,
-                            deny: ['ViewChannel']
-                        }
-                    ]
-                });
+        const config = loadVoiceConfig();
 
-                config.voiceLogChannel = logChannel.id;
-                saveVoiceConfig(config);
-
-                message.reply(`✅ Voice log channel created: ${logChannel}! Only admins can see it.`);
-            } catch (error) {
-                console.error('Setup voice log error (PiratBot):', error);
-                message.reply('❌ Error creating voice log channel.');
-            }
-        },
-
-        '!voicename': async (message) => {
-            const newName = message.content.replace('!voicename', '').trim();
-            if (!newName) {
-                message.reply('Usage: `!voicename New Channel Name`');
-                return;
-            }
-
-            const config = loadVoiceConfig();
-            const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
-                message.reply('❌ You must be in your own voice channel to use this command.');
-                return;
-            }
-
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                await channel.setName(newName);
-                message.reply(`✅ Channel renamed to **${newName}**`);
-            } catch (error) {
-                message.reply('❌ Error renaming channel.');
-            }
-        },
-
-        '!voicelimit': async (message) => {
-            const limit = parseInt(message.content.replace('!voicelimit', '').trim());
-            if (isNaN(limit) || limit < 0 || limit > 99) {
-                message.reply('Usage: `!voicelimit [0-99]` (0 = unlimited)');
-                return;
-            }
-
-            const config = loadVoiceConfig();
-            const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
-                message.reply('❌ You must be in your own voice channel to use this command.');
-                return;
-            }
-
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                await channel.setUserLimit(limit);
-                message.reply(`✅ User limit set to **${limit === 0 ? 'Unlimited' : limit}**`);
-            } catch (error) {
-                message.reply('❌ Error setting user limit.');
-            }
-        },
-
-        '!voicetemplate': async (message) => {
-            const template = message.content.replace('!voicetemplate', '').trim().toLowerCase();
-            if (!message.member.voice.channelId) {
-                message.reply('❌ You must be in a voice channel to use this command.');
-                return;
-            }
-
-            const config = loadVoiceConfig();
-            const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
-                message.reply('❌ You must be in your own voice channel to use this command.');
-                return;
-            }
-
-            const templates = config.templates;
-            if (!templates[template]) {
-                message.reply(`❌ Invalid template. Available: \`gaming\`, \`study\`, \`chill\``);
-                return;
-            }
-
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                const templateData = templates[template];
-                await channel.setName(`${templateData.name} - ${message.author.username}`);
-                if (templateData.limit > 0) await channel.setUserLimit(templateData.limit);
-                channelInfo.template = template;
-                saveVoiceConfig(config);
-                message.reply(`✅ Applied **${template}** template!`);
-            } catch (error) {
-                message.reply('❌ Error applying template.');
-            }
-        },
-
-        '!voicelock': async (message) => {
-            const config = loadVoiceConfig();
-            const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
-                message.reply('❌ You must be in your own voice channel to use this command.');
-                return;
-            }
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                await channel.permissionOverwrites.edit(message.guild.id, { Connect: false });
-                message.reply('🔒 Channel locked! Only current members can stay.');
-            } catch (error) {
-                message.reply('❌ Error locking channel.');
-            }
-        },
-
-        '!voiceunlock': async (message) => {
-            const config = loadVoiceConfig();
-            const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) {
-                message.reply('❌ You must be in your own voice channel to use this command.');
-                return;
-            }
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                await channel.permissionOverwrites.edit(message.guild.id, { Connect: true });
-                message.reply('🔓 Channel unlocked!');
-            } catch (error) {
-                message.reply('❌ Error unlocking channel.');
-            }
-        },
-
-        '!voicekick': async (message) => {
-            const mentionedUser = message.mentions.users.first();
-            if (!mentionedUser) { message.reply('Usage: `!voicekick @user`'); return; }
-            const config = loadVoiceConfig();
-            const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
-            try {
-                const targetMember = await message.guild.members.fetch(mentionedUser.id);
-                if (targetMember.voice.channelId === message.member.voice.channelId) {
-                    await targetMember.voice.disconnect();
-                    message.reply(`✅ Kicked **${mentionedUser.username}** from the channel.`);
-                } else {
-                    message.reply('❌ That user is not in your voice channel.');
-                }
-            } catch (error) { message.reply('❌ Error kicking user.'); }
-        },
-
-        '!voicestats': async (message) => {
-            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature! Contact the bot owner for premium access.'); return; }
-            const logs = loadVoiceLogs();
-            const stats = logs.stats;
-            const sortedUsers = Object.entries(stats).sort(([, a], [, b]) => b.totalJoins - a.totalJoins).slice(0, 10);
-            if (sortedUsers.length === 0) { message.reply('❌ No voice activity recorded yet.'); return; }
-            const { EmbedBuilder } = require('discord.js');
-            const embed = new EmbedBuilder()
-                .setColor('#11806a')
-                .setTitle('🎙️ Voice Activity Stats')
-                .setDescription('Top voice channel users:')
-                .addFields(sortedUsers.map(([userId, data], index) => ({ name: `${index + 1}. ${data.username}`, value: `Joins: **${data.totalJoins}** | Created: **${data.channelsCreated}**`, inline: false })))
-                .setFooter({ text: 'Premium Feature' });
-            message.reply({ embeds: [embed] });
-        },
-
-        '!voicepermit': async (message) => {
-            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
-            const mentionedUser = message.mentions.users.first(); if (!mentionedUser) { message.reply('Usage: `!voicepermit @user`'); return; }
-            const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                const targetMember = await message.guild.members.fetch(mentionedUser.id);
-                await channel.permissionOverwrites.edit(targetMember.id, { Connect: true, Speak: true });
-                message.reply(`✅ **${mentionedUser.username}** can now join your channel.`);
-            } catch (error) { message.reply('❌ Error permitting user.'); }
-        },
-
-        '!voicedeny': async (message) => {
-            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
-            const mentionedUser = message.mentions.users.first(); if (!mentionedUser) { message.reply('Usage: `!voicedeny @user`'); return; }
-            const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                const targetMember = await message.guild.members.fetch(mentionedUser.id);
-                await channel.permissionOverwrites.edit(targetMember.id, { Connect: false });
-                if (targetMember.voice.channelId === channel.id) await targetMember.voice.disconnect();
-                message.reply(`✅ **${mentionedUser.username}** is now blocked from your channel.`);
-            } catch (error) { message.reply('❌ Error denying user.'); }
-        },
-
-        '!voiceprivate': async (message) => {
-            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
-            const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
-            if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
-            try {
-                const channel = await message.guild.channels.fetch(message.member.voice.channelId);
-                await channel.permissionOverwrites.edit(message.guild.id, { ViewChannel: false, Connect: false });
-                await channel.permissionOverwrites.edit(message.author.id, { ViewChannel: true, Connect: true, ManageChannels: true, MoveMembers: true });
-                channelInfo.isPrivate = true; saveVoiceConfig(config);
-                message.reply('🔒 Channel is now **private**! Use `!voicepermit @user` to allow specific users.');
-            } catch (error) { message.reply('❌ Error making channel private.'); }
-        },
-
-        '!cleanupvoice': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) { message.reply('❌ This is an admin-only command.'); return; }
-            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
-            const config = loadVoiceConfig(); if (!config.voiceLogChannel) { message.reply('❌ No voice log channel configured. Use `!setupvoicelog` first.'); return; }
-            try {
-                const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
-                if (!logChannel) { message.reply('❌ Voice log channel not found.'); return; }
-                let deleted = 0; let lastId;
-                while (true) {
-                    const options = { limit: 100 };
-                    if (lastId) options.before = lastId;
-                    const messages = await logChannel.messages.fetch(options);
-                    if (messages.size === 0) break;
-                    for (const msg of messages.values()) { await msg.delete(); deleted++; }
-                    lastId = messages.last().id; if (messages.size < 100) break;
-                }
-                message.reply(`✅ Voice log channel cleaned! Deleted **${deleted}** messages.`);
-                await logChannel.send(`🧹 **Log Cleanup** - Channel cleared by ${message.author.username}`);
-            } catch (error) { console.error('Cleanup voice error (PiratBot):', error); message.reply('❌ Error cleaning voice log channel.'); }
-        },
-
-        '!deletevoice': async (message) => {
-            if (!isOwnerOrAdmin(message.member)) { message.reply('❌ This is an admin-only command.'); return; }
-            if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
-            const config = loadVoiceConfig();
-            const confirmMsg = await message.reply('⚠️ **WARNING: Voice System Deletion**\n\nType `CONFIRM` to proceed or `CANCEL` to abort');
-            const filter = (m) => m.author.id === message.author.id;
-            const collector = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
-            collector.on('collect', async (m) => {
-                if (m.content.toUpperCase() === 'CANCEL') { message.reply('❌ Voice system deletion cancelled.'); return; }
-                if (m.content.toUpperCase() !== 'CONFIRM') { message.reply('❌ Invalid response. Deletion cancelled.'); return; }
-                let deletedCount = 0; const errors = [];
-                try {
-                    if (config.joinToCreateChannel) { try { const joinChannel = await message.guild.channels.fetch(config.joinToCreateChannel); if (joinChannel) { await joinChannel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push('Join-to-Create channel'); } }
-                    if (config.voiceLogChannel) { try { const logChannel = await message.guild.channels.fetch(config.voiceLogChannel); if (logChannel) { await logChannel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push('Voice log channel'); } }
-                    if (config.activeChannels) { for (const channelId of Object.keys(config.activeChannels)) { try { const channel = await message.guild.channels.fetch(channelId); if (channel) { await channel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push(`Voice channel ${channelId}`); } } }
-                    config.joinToCreateChannel = null; config.joinToCreateCategory = null; config.voiceChannelCategory = null; config.voiceLogChannel = null; config.activeChannels = {}; saveVoiceConfig(config);
-                    let resultMsg = `✅ **Voice System Deleted!**\n\n🗑️ Deleted **${deletedCount}** channels\n🔄 Reset all voice settings`;
-                    if (errors.length > 0) resultMsg += `\n\n⚠️ **Errors:** Could not delete: ${errors.join(', ')}`;
-                    message.reply(resultMsg);
-                } catch (error) { console.error('Delete voice system error (PiratBot):', error); message.reply('❌ Error deleting voice system. Some components may remain.'); }
+        try {
+            const logChannel = await message.guild.channels.create({
+                name: '📋-voice-logs',
+                type: 0,
+                permissionOverwrites: [
+                    {
+                        id: message.guild.id,
+                        deny: ['ViewChannel']
+                    }
+                ]
             });
-            collector.on('end', (collected) => { if (collected.size === 0) message.reply('❌ Timeout. Voice system deletion cancelled.'); });
-        },
-        '!sendit': async (message) => {
-            if (!message.member.permissions.has('Administrator')) {
-                message.reply('❌ This is an admin-only command and cannot be used by regular users.');
-                return;
+
+            config.voiceLogChannel = logChannel.id;
+            saveVoiceConfig(config);
+
+            message.reply(`✅ Voice log channel created: ${logChannel}! Only admins can see it.`);
+        } catch (error) {
+            console.error('Setup voice log error (PiratBot):', error);
+            message.reply('❌ Error creating voice log channel.');
+        }
+    },
+
+    '!voicename': async (message) => {
+        const newName = message.content.replace('!voicename', '').trim();
+        if (!newName) {
+            message.reply('Usage: `!voicename New Channel Name`');
+            return;
+        }
+
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.setName(newName);
+            message.reply(`✅ Channel renamed to **${newName}**`);
+        } catch (error) {
+            message.reply('❌ Error renaming channel.');
+        }
+    },
+
+    '!voicelimit': async (message) => {
+        const limit = parseInt(message.content.replace('!voicelimit', '').trim());
+        if (isNaN(limit) || limit < 0 || limit > 99) {
+            message.reply('Usage: `!voicelimit [0-99]` (0 = unlimited)');
+            return;
+        }
+
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.setUserLimit(limit);
+            message.reply(`✅ User limit set to **${limit === 0 ? 'Unlimited' : limit}**`);
+        } catch (error) {
+            message.reply('❌ Error setting user limit.');
+        }
+    },
+
+    '!voicetemplate': async (message) => {
+        const template = message.content.replace('!voicetemplate', '').trim().toLowerCase();
+        if (!message.member.voice.channelId) {
+            message.reply('❌ You must be in a voice channel to use this command.');
+            return;
+        }
+
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+
+        const templates = config.templates;
+        if (!templates[template]) {
+            message.reply(`❌ Invalid template. Available: \`gaming\`, \`study\`, \`chill\``);
+            return;
+        }
+
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            const templateData = templates[template];
+            await channel.setName(`${templateData.name} - ${message.author.username}`);
+            if (templateData.limit > 0) await channel.setUserLimit(templateData.limit);
+            channelInfo.template = template;
+            saveVoiceConfig(config);
+            message.reply(`✅ Applied **${template}** template!`);
+        } catch (error) {
+            message.reply('❌ Error applying template.');
+        }
+    },
+
+    '!voicelock': async (message) => {
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.permissionOverwrites.edit(message.guild.id, { Connect: false });
+            message.reply('🔒 Channel locked! Only current members can stay.');
+        } catch (error) {
+            message.reply('❌ Error locking channel.');
+        }
+    },
+
+    '!voiceunlock': async (message) => {
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) {
+            message.reply('❌ You must be in your own voice channel to use this command.');
+            return;
+        }
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.permissionOverwrites.edit(message.guild.id, { Connect: true });
+            message.reply('🔓 Channel unlocked!');
+        } catch (error) {
+            message.reply('❌ Error unlocking channel.');
+        }
+    },
+
+    '!voicekick': async (message) => {
+        const mentionedUser = message.mentions.users.first();
+        if (!mentionedUser) { message.reply('Usage: `!voicekick @user`'); return; }
+        const config = loadVoiceConfig();
+        const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+        try {
+            const targetMember = await message.guild.members.fetch(mentionedUser.id);
+            if (targetMember.voice.channelId === message.member.voice.channelId) {
+                await targetMember.voice.disconnect();
+                message.reply(`✅ Kicked **${mentionedUser.username}** from the channel.`);
+            } else {
+                message.reply('❌ That user is not in your voice channel.');
             }
+        } catch (error) { message.reply('❌ Error kicking user.'); }
+    },
 
-            const args = message.content.split(' ');
-            if (args.length !== 4 || args[2].toLowerCase() !== 'to') {
-                message.reply('❌ Invalid format! Use: `!sendit MESSAGE_ID to CHANNEL_ID`');
-                return;
+    '!voicestats': async (message) => {
+        if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature! Contact the bot owner for premium access.'); return; }
+        const logs = loadVoiceLogs();
+        const stats = logs.stats;
+        const sortedUsers = Object.entries(stats).sort(([, a], [, b]) => b.totalJoins - a.totalJoins).slice(0, 10);
+        if (sortedUsers.length === 0) { message.reply('❌ No voice activity recorded yet.'); return; }
+        const { EmbedBuilder } = require('discord.js');
+        const embed = new EmbedBuilder()
+            .setColor('#11806a')
+            .setTitle('🎙️ Voice Activity Stats')
+            .setDescription('Top voice channel users:')
+            .addFields(sortedUsers.map(([userId, data], index) => ({ name: `${index + 1}. ${data.username}`, value: `Joins: **${data.totalJoins}** | Created: **${data.channelsCreated}**`, inline: false })))
+            .setFooter({ text: 'Premium Feature' });
+        message.reply({ embeds: [embed] });
+    },
+
+    '!voicepermit': async (message) => {
+        if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+        const mentionedUser = message.mentions.users.first(); if (!mentionedUser) { message.reply('Usage: `!voicepermit @user`'); return; }
+        const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            const targetMember = await message.guild.members.fetch(mentionedUser.id);
+            await channel.permissionOverwrites.edit(targetMember.id, { Connect: true, Speak: true });
+            message.reply(`✅ **${mentionedUser.username}** can now join your channel.`);
+        } catch (error) { message.reply('❌ Error permitting user.'); }
+    },
+
+    '!voicedeny': async (message) => {
+        if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+        const mentionedUser = message.mentions.users.first(); if (!mentionedUser) { message.reply('Usage: `!voicedeny @user`'); return; }
+        const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            const targetMember = await message.guild.members.fetch(mentionedUser.id);
+            await channel.permissionOverwrites.edit(targetMember.id, { Connect: false });
+            if (targetMember.voice.channelId === channel.id) await targetMember.voice.disconnect();
+            message.reply(`✅ **${mentionedUser.username}** is now blocked from your channel.`);
+        } catch (error) { message.reply('❌ Error denying user.'); }
+    },
+
+    '!voiceprivate': async (message) => {
+        if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+        const config = loadVoiceConfig(); const channelInfo = config.activeChannels[message.member.voice.channelId];
+        if (!channelInfo || channelInfo.ownerId !== message.author.id) { message.reply('❌ You must be in your own voice channel to use this command.'); return; }
+        try {
+            const channel = await message.guild.channels.fetch(message.member.voice.channelId);
+            await channel.permissionOverwrites.edit(message.guild.id, { ViewChannel: false, Connect: false });
+            await channel.permissionOverwrites.edit(message.author.id, { ViewChannel: true, Connect: true, ManageChannels: true, MoveMembers: true });
+            channelInfo.isPrivate = true; saveVoiceConfig(config);
+            message.reply('🔒 Channel is now **private**! Use `!voicepermit @user` to allow specific users.');
+        } catch (error) { message.reply('❌ Error making channel private.'); }
+    },
+
+    '!cleanupvoice': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) { message.reply('❌ This is an admin-only command.'); return; }
+        if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+        const config = loadVoiceConfig(); if (!config.voiceLogChannel) { message.reply('❌ No voice log channel configured. Use `!setupvoicelog` first.'); return; }
+        try {
+            const logChannel = await message.guild.channels.fetch(config.voiceLogChannel);
+            if (!logChannel) { message.reply('❌ Voice log channel not found.'); return; }
+            let deleted = 0; let lastId;
+            while (true) {
+                const options = { limit: 100 };
+                if (lastId) options.before = lastId;
+                const messages = await logChannel.messages.fetch(options);
+                if (messages.size === 0) break;
+                for (const msg of messages.values()) { await msg.delete(); deleted++; }
+                lastId = messages.last().id; if (messages.size < 100) break;
             }
+            message.reply(`✅ Voice log channel cleaned! Deleted **${deleted}** messages.`);
+            await logChannel.send(`🧹 **Log Cleanup** - Channel cleared by ${message.author.username}`);
+        } catch (error) { console.error('Cleanup voice error (PiratBot):', error); message.reply('❌ Error cleaning voice log channel.'); }
+    },
 
-            const messageId = args[1];
-            const targetChannelId = args[3].replace(/[<#>]/g, '');
-
+    '!deletevoice': async (message) => {
+        if (!isOwnerOrAdmin(message.member)) { message.reply('❌ This is an admin-only command.'); return; }
+        if (!isPremiumUser(message.author.id)) { message.reply('❌ This is a **Premium** feature!'); return; }
+        const config = loadVoiceConfig();
+        const confirmMsg = await message.reply('⚠️ **WARNING: Voice System Deletion**\n\nType `CONFIRM` to proceed or `CANCEL` to abort');
+        const filter = (m) => m.author.id === message.author.id;
+        const collector = message.channel.createMessageCollector({ filter, time: 30000, max: 1 });
+        collector.on('collect', async (m) => {
+            if (m.content.toUpperCase() === 'CANCEL') { message.reply('❌ Voice system deletion cancelled.'); return; }
+            if (m.content.toUpperCase() !== 'CONFIRM') { message.reply('❌ Invalid response. Deletion cancelled.'); return; }
+            let deletedCount = 0; const errors = [];
             try {
-                const originalMessage = await message.channel.messages.fetch(messageId);
-                if (!originalMessage) {
-                    message.reply('❌ Message not found in this channel!');
-                    return;
-                }
+                if (config.joinToCreateChannel) { try { const joinChannel = await message.guild.channels.fetch(config.joinToCreateChannel); if (joinChannel) { await joinChannel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push('Join-to-Create channel'); } }
+                if (config.voiceLogChannel) { try { const logChannel = await message.guild.channels.fetch(config.voiceLogChannel); if (logChannel) { await logChannel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push('Voice log channel'); } }
+                if (config.activeChannels) { for (const channelId of Object.keys(config.activeChannels)) { try { const channel = await message.guild.channels.fetch(channelId); if (channel) { await channel.delete('Voice system deletion'); deletedCount++; } } catch (err) { errors.push(`Voice channel ${channelId}`); } } }
+                config.joinToCreateChannel = null; config.joinToCreateCategory = null; config.voiceChannelCategory = null; config.voiceLogChannel = null; config.activeChannels = {}; saveVoiceConfig(config);
+                let resultMsg = `✅ **Voice System Deleted!**\n\n🗑️ Deleted **${deletedCount}** channels\n🔄 Reset all voice settings`;
+                if (errors.length > 0) resultMsg += `\n\n⚠️ **Errors:** Could not delete: ${errors.join(', ')}`;
+                message.reply(resultMsg);
+            } catch (error) { console.error('Delete voice system error (PiratBot):', error); message.reply('❌ Error deleting voice system. Some components may remain.'); }
+        });
+        collector.on('end', (collected) => { if (collected.size === 0) message.reply('❌ Timeout. Voice system deletion cancelled.'); });
+    },
+    '!sendit': async (message) => {
+        if (!message.member.permissions.has('Administrator')) {
+            message.reply('❌ This is an admin-only command and cannot be used by regular users.');
+            return;
+        }
 
-                const targetChannel = message.guild.channels.cache.get(targetChannelId);
-                if (!targetChannel) {
-                    message.reply('❌ Target channel not found!');
-                    return;
-                }
+        const args = message.content.split(' ');
+        if (args.length !== 4 || args[2].toLowerCase() !== 'to') {
+            message.reply('❌ Invalid format! Use: `!sendit MESSAGE_ID to CHANNEL_ID`');
+            return;
+        }
 
-                const content = originalMessage.content || '';
-                const attachments = Array.from(originalMessage.attachments.values());
-                const files = attachments.map(att => ({ attachment: att.url, name: att.name }));
+        const messageId = args[1];
+        const targetChannelId = args[3].replace(/[<#>]/g, '');
 
-                if (content || files.length > 0) {
-                    await targetChannel.send({ content, files });
-                    message.reply(`✅ Message forwarded to <#${targetChannelId}>`);
-                    await message.delete();
-                } else {
-                    message.reply('❌ The message has no content or attachments to forward.');
-                }
-            } catch (error) {
-                console.error('PiratBot sendit error:', error);
-                message.reply(`❌ Failed to forward message. Error: ${error.message}`);
+        try {
+            const originalMessage = await message.channel.messages.fetch(messageId);
+            if (!originalMessage) {
+                message.reply('❌ Message not found in this channel!');
+                return;
             }
-        },
+
+            const targetChannel = message.guild.channels.cache.get(targetChannelId);
+            if (!targetChannel) {
+                message.reply('❌ Target channel not found!');
+                return;
+            }
+
+            const content = originalMessage.content || '';
+            const attachments = Array.from(originalMessage.attachments.values());
+            const files = attachments.map(att => ({ attachment: att.url, name: att.name }));
+
+            if (content || files.length > 0) {
+                await targetChannel.send({ content, files });
+                message.reply(`✅ Message forwarded to <#${targetChannelId}>`);
+                await message.delete();
+            } else {
+                message.reply('❌ The message has no content or attachments to forward.');
+            }
+        } catch (error) {
+            console.error('PiratBot sendit error:', error);
+            message.reply(`❌ Failed to forward message. Error: ${error.message}`);
+        }
+    },
 
     '!ahoy': (message) => message.reply(getRandomResponse(pirateGreetings)),
     '!farewell': (message) => message.reply(getRandomResponse(pirateFarewell)),
@@ -923,7 +923,7 @@ const commandHandlers = {
                 { name: 'Article XI', value: 'The musicians shall have rest on the Sabbath Day only by right. On all other days by favour only.', inline: false }
             )
             .setImage('https://i.imgur.com/lqJBNWW.png')
-            .setFooter({ 
+            .setFooter({
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
             });
@@ -949,36 +949,48 @@ const commandHandlers = {
             .setTitle('⚓ Pirate Bot — Quick Reference')
             .setDescription('Arrr! Quick list of available commands (short reference):')
             .addFields(
-                { name: '» Greetings', value:
-                    '`!ahoy` — Pirate greeting\n' +
-                    '`!farewell` — Say goodbye pirate-style\n', inline: true },
-                { name: '» Fun & Games', value:
-                    '`!crew` — Show crew count\n' +
-                    '`!dice` — Roll the dice\n' +
-                    '`!compass` — Check direction\n' +
-                    '`!games` — Games menu (Battleship & Mine/Raid)\n' +
-                    '`!bs start @user|<id>` — Start Battleship (mention or ID)\n' +
-                    '`!bs attack A1` — Attack coordinate\n' +
-                    '`!mine` / `!gold` / `!raid @user|<id>` — Mine/inspect/raid', inline: false },
-                { name: '» Security (admins)', value:
-                    '`!setsecuritymod` — Enable security + set warn-log channel\n' +
-                    '`!sban @user` — Ban a user\n' +
-                    '`!skick @user` — Kick a user\n' +
-                    '`!stimeout @user [minutes]` — Timeout a user\n' +
-                    '`!stimeoutdel @user` — Remove timeout', inline: false },
-                { name: '» Voice System', value:
-                    '`!setupvoice` — Initialize Join-to-Create system (admin)\n' +
-                    '`!setupvoicelog` — Create voice-log channel (admin)\n' +
-                    '`!voicename <name>` — Rename your private voice channel\n' +
-                    '`!voicelimit <n>` — Set user limit\n' +
-                    '`!voicelock` / `!voiceunlock` — Lock/unlock your channel', inline: false },
-                { name: '» Tickets & Admin', value:
-                    '`!munga-supportticket` — Post support-ticket menu\n' +
-                    '`!munga-ticketsystem` — Configure ticket logging (admin)\n' +
-                    '`!sendit` — Forward a message to another channel (admin)', inline: false },
-                { name: '» Misc', value:
-                    '`!helpme` — Full help (detailed)\n' +
-                    '`!piratehelp` — This short reference', inline: false }
+                {
+                    name: '» Greetings', value:
+                        '`!ahoy` — Pirate greeting\n' +
+                        '`!farewell` — Say goodbye pirate-style\n', inline: true
+                },
+                {
+                    name: '» Fun & Games', value:
+                        '`!crew` — Show crew count\n' +
+                        '`!dice` — Roll the dice\n' +
+                        '`!compass` — Check direction\n' +
+                        '`!games` — Games menu (Battleship & Mine/Raid)\n' +
+                        '`!bs start @user|<id>` — Start Battleship (mention or ID)\n' +
+                        '`!bs attack A1` — Attack coordinate\n' +
+                        '`!mine` / `!gold` / `!raid @user|<id>` — Mine/inspect/raid', inline: false
+                },
+                {
+                    name: '» Security (admins)', value:
+                        '`!setsecuritymod` — Enable security + set warn-log channel\n' +
+                        '`!sban @user` — Ban a user\n' +
+                        '`!skick @user` — Kick a user\n' +
+                        '`!stimeout @user [minutes]` — Timeout a user\n' +
+                        '`!stimeoutdel @user` — Remove timeout', inline: false
+                },
+                {
+                    name: '» Voice System', value:
+                        '`!setupvoice` — Initialize Join-to-Create system (admin)\n' +
+                        '`!setupvoicelog` — Create voice-log channel (admin)\n' +
+                        '`!voicename <name>` — Rename your private voice channel\n' +
+                        '`!voicelimit <n>` — Set user limit\n' +
+                        '`!voicelock` / `!voiceunlock` — Lock/unlock your channel', inline: false
+                },
+                {
+                    name: '» Tickets & Admin', value:
+                        '`!munga-supportticket` — Post support-ticket menu\n' +
+                        '`!munga-ticketsystem` — Configure ticket logging (admin)\n' +
+                        '`!sendit` — Forward a message to another channel (admin)', inline: false
+                },
+                {
+                    name: '» Misc', value:
+                        '`!helpme` — Full help (detailed)\n' +
+                        '`!piratehelp` — This short reference', inline: false
+                }
             )
             .setImage('https://i.imgur.com/p95YIAZ.png')
             .setFooter({ text: 'Yo ho ho! — short reference' });
@@ -991,45 +1003,59 @@ const commandHandlers = {
             .setTitle('⚓ PirateBot - Full Command List')
             .setDescription('**Ahoy, matey!** This is the full command reference for PirateBot. Use `!piratehelp` for a short list.')
             .addFields(
-                { name: '» Greetings', value:
-                    '`!ahoy` — Pirate greeting\n' +
-                    '`!farewell` — Pirate farewell\n' , inline: true },
-                { name: '» Core / Info', value:
-                    '`!helpme` — Full help (this message)\n' +
-                    '`!piratehelp` — Short reference\n' +
-                    '`!piratecode` — Read the Pirate Code\n', inline: true },
-                { name: '» Fun & Games', value:
-                    '`!crew` — Show crew count\n' +
-                    '`!dice` — Roll the dice\n' +
-                    '`!compass` — Check direction\n' +
-                    '`!games` — Open games menu (Battleship & Mine/Raid)\n' +
-                    '`!bs start @user | <userId>` — Start Battleship (mention or ID)\n' +
-                    '`!bs attack A1` — Attack a coordinate\n' +
-                    '`!mine` — Mine gold\n' +
-                    '`!gold` — Show your gold balance\n' +
-                    '`!raid @user | <userId>` — Attempt to raid another player', inline: false },
-                { name: '» Security & Moderation (admins)', value:
-                    '`!setsecuritymod` — Enable security & set warn-log (interactive)\n' +
-                    '`!sban @user` — Ban user\n' +
-                    '`!skick @user` — Kick user\n' +
-                    '`!stimeout @user [minutes]` — Timeout user\n' +
-                    '`!stimeoutdel @user` — Remove timeout\n', inline: false },
-                { name: '» Voice System', value:
-                    '`!setupvoice` — Setup join-to-create channel (admin)\n' +
-                    '`!setupvoicelog` — Create voice log channel (admin)\n' +
-                    '`!voicename <name>` — Rename your private voice channel\n' +
-                    '`!voicelimit <n>` — Set user limit for your channel\n' +
-                    '`!voicelock` / `!voiceunlock` — Lock/unlock your channel\n' , inline: false },
-                { name: '» Tickets & Admin', value:
-                    '`!munga-supportticket` — Post support ticket selection menu\n' +
-                    '`!munga-ticketsystem` — Configure ticket logging (admin)\n' +
-                    '`!sendit` — Forward a message to another channel (admin)\n', inline: false },
-                { name: '» Misc / Troubleshooting', value:
-                    '`!ping` — Check bot latency (if present)\n' +
-                    'If a command fails, run it with the correct syntax or mention the user. For Battleship you can use a user mention or a user ID.', inline: false }
+                {
+                    name: '» Greetings', value:
+                        '`!ahoy` — Pirate greeting\n' +
+                        '`!farewell` — Pirate farewell\n', inline: true
+                },
+                {
+                    name: '» Core / Info', value:
+                        '`!helpme` — Full help (this message)\n' +
+                        '`!piratehelp` — Short reference\n' +
+                        '`!piratecode` — Read the Pirate Code\n', inline: true
+                },
+                {
+                    name: '» Fun & Games', value:
+                        '`!crew` — Show crew count\n' +
+                        '`!dice` — Roll the dice\n' +
+                        '`!compass` — Check direction\n' +
+                        '`!games` — Open games menu (Battleship & Mine/Raid)\n' +
+                        '`!bs start @user | <userId>` — Start Battleship (mention or ID)\n' +
+                        '`!bs attack A1` — Attack a coordinate\n' +
+                        '`!mine` — Mine gold\n' +
+                        '`!gold` — Show your gold balance\n' +
+                        '`!raid @user | <userId>` — Attempt to raid another player', inline: false
+                },
+                {
+                    name: '» Security & Moderation (admins)', value:
+                        '`!setsecuritymod` — Enable security & set warn-log (interactive)\n' +
+                        '`!sban @user` — Ban user\n' +
+                        '`!skick @user` — Kick user\n' +
+                        '`!stimeout @user [minutes]` — Timeout user\n' +
+                        '`!stimeoutdel @user` — Remove timeout\n', inline: false
+                },
+                {
+                    name: '» Voice System', value:
+                        '`!setupvoice` — Setup join-to-create channel (admin)\n' +
+                        '`!setupvoicelog` — Create voice log channel (admin)\n' +
+                        '`!voicename <name>` — Rename your private voice channel\n' +
+                        '`!voicelimit <n>` — Set user limit for your channel\n' +
+                        '`!voicelock` / `!voiceunlock` — Lock/unlock your channel\n', inline: false
+                },
+                {
+                    name: '» Tickets & Admin', value:
+                        '`!munga-supportticket` — Post support ticket selection menu\n' +
+                        '`!munga-ticketsystem` — Configure ticket logging (admin)\n' +
+                        '`!sendit` — Forward a message to another channel (admin)\n', inline: false
+                },
+                {
+                    name: '» Misc / Troubleshooting', value:
+                        '`!ping` — Check bot latency (if present)\n' +
+                        'If a command fails, run it with the correct syntax or mention the user. For Battleship you can use a user mention or a user ID.', inline: false
+                }
             )
             .setImage('https://i.imgur.com/RHZtWpV.png')
-            .setFooter({ 
+            .setFooter({
                 text: 'Fair winds and following seas! | Made by mungabee',
                 iconURL: 'https://avatars.githubusercontent.com/u/235295616?v=4'
             });
@@ -1070,39 +1096,39 @@ function makeEmptyBoard() {
     return Array.from({ length: 5 }, () => Array(5).fill(0));
 }
 
-function placeRandomShips(board, sizes = [2,2,2]) {
+function placeRandomShips(board, sizes = [2, 2, 2]) {
     for (const size of sizes) {
         let placed = false;
-        for (let attempt=0; attempt<200 && !placed; attempt++) {
+        for (let attempt = 0; attempt < 200 && !placed; attempt++) {
             const horiz = Math.random() < 0.5;
-            const r = Math.floor(Math.random()*5);
-            const c = Math.floor(Math.random()*5);
+            const r = Math.floor(Math.random() * 5);
+            const c = Math.floor(Math.random() * 5);
             const cells = [];
-            for (let i=0;i<size;i++) {
-                const rr = r + (horiz?0:i);
-                const cc = c + (horiz?i:0);
-                if (rr>4||cc>4) { cells.length=0; break; }
-                cells.push([rr,cc]);
+            for (let i = 0; i < size; i++) {
+                const rr = r + (horiz ? 0 : i);
+                const cc = c + (horiz ? i : 0);
+                if (rr > 4 || cc > 4) { cells.length = 0; break; }
+                cells.push([rr, cc]);
             }
-            if (cells.length===0) continue;
-            if (cells.some(([rr,cc])=>board[rr][cc]===1)) continue;
-            cells.forEach(([rr,cc])=> board[rr][cc]=1);
+            if (cells.length === 0) continue;
+            if (cells.some(([rr, cc]) => board[rr][cc] === 1)) continue;
+            cells.forEach(([rr, cc]) => board[rr][cc] = 1);
             placed = true;
         }
     }
 }
 
-function boardToDisplay(board, reveal=false) {
-    const rows = ['A','B','C','D','E'];
+function boardToDisplay(board, reveal = false) {
+    const rows = ['A', 'B', 'C', 'D', 'E'];
     let out = '  1 2 3 4 5\n';
-    for (let r=0;r<5;r++){
+    for (let r = 0; r < 5; r++) {
         out += rows[r] + ' ';
-        for (let c=0;c<5;c++){
+        for (let c = 0; c < 5; c++) {
             const v = board[r][c];
             let ch = '·';
-            if (v===2) ch = 'o';
-            if (v===3) ch = 'X';
-            if (reveal && v===1) ch = 'S';
+            if (v === 2) ch = 'o';
+            if (v === 3) ch = 'X';
+            if (reveal && v === 1) ch = 'S';
             out += ch + ' ';
         }
         out += '\n';
@@ -1117,7 +1143,7 @@ commandHandlers['!games'] = (message) => {
         .setDescription('Play interactive pirate games: Battleship and Gold Raid. Use the commands below to play!')
         .setImage('https://i.imgur.com/o8M34zS.png')
         .addFields(
-            { name: 'Battleship (PvP)', value: '!bs start @user - Start a battleship game. Then use !bs attack A1 to shoot. (5x5 grid, 3 ships)' },
+            { name: 'Battleship (PvP)', value: '\'!bs start @user\' - Start a battleship game. Then use \'!bs attack A1\' to shoot. (5x5 grid, 3 ships)' },
             { name: 'Mine & Raid', value: '!mine - Mine gold for your ship. !gold - Show your gold. !raid @user - Attempt to steal gold from another player (cooldown).' }
         )
         .setFooter({ text: 'Have fun sailing the seas!' });
@@ -1133,13 +1159,13 @@ commandHandlers['!bs'] = async (message) => {
         if (!target && parts[2]) {
             const maybeId = parts[2].replace(/[^0-9]/g, '');
             if (maybeId) {
-                const member = await message.guild.members.fetch(maybeId).catch(()=>null);
+                const member = await message.guild.members.fetch(maybeId).catch(() => null);
                 if (member) target = member.user;
             }
         }
         if (!target) { message.reply('Usage: !bs start @user  OR  !bs start <userId>'); return; }
         if (target.id === message.author.id) { message.reply('Cannot play against yourself.'); return; }
-        const gid = `${message.guild.id}_${message.channel.id}_${Date.now()%10000}`;
+        const gid = `${message.guild.id}_${message.channel.id}_${Date.now() % 10000}`;
         const boardA = makeEmptyBoard();
         const boardB = makeEmptyBoard();
         placeRandomShips(boardA); placeRandomShips(boardB);
@@ -1153,14 +1179,14 @@ commandHandlers['!bs'] = async (message) => {
         if (!coord) { message.reply('Usage: !bs attack A1'); return; }
         const gid = Object.keys(data.battles).find(k => {
             const g = data.battles[k];
-            return !g.finished && (g.playerA===message.author.id || g.playerB===message.author.id);
+            return !g.finished && (g.playerA === message.author.id || g.playerB === message.author.id);
         });
         if (!gid) { message.reply('No active battles found for you. Start one with `!bs start @user`.'); return; }
         const game = data.battles[gid];
         if (game.turn !== message.author.id) { message.reply('Not your turn.'); return; }
         const idx = coordToIndex(coord);
         if (!idx) { message.reply('Invalid coordinate. Use A1..E5.'); return; }
-        const opponentBoard = (game.playerA===message.author.id) ? game.boardB : game.boardA;
+        const opponentBoard = (game.playerA === message.author.id) ? game.boardB : game.boardA;
         const cell = opponentBoard[idx.r][idx.c];
         if (cell === 2 || cell === 3) { message.reply('Already attacked that coordinate.'); return; }
         let reply = '';
@@ -1172,7 +1198,7 @@ commandHandlers['!bs'] = async (message) => {
             reply = `🌊 Miss at ${coord}.`;
         }
         // check win
-        const opponentHasShips = opponentBoard.some(row => row.some(v => v===1));
+        const opponentHasShips = opponentBoard.some(row => row.some(v => v === 1));
         if (!opponentHasShips) {
             game.finished = true;
             reply += `\n🏴‍☠️ <@${message.author.id}> sank all ships and won!`;
@@ -1201,9 +1227,9 @@ commandHandlers['!mine'] = (message) => {
     const pid = message.author.id;
     const now = Date.now();
     const p = data.players[pid] || { gold: 0, lastMine: 0 };
-    if (now - (p.lastMine || 0) < 60*1000) { message.reply('You must wait 60s between mines.'); return; }
-    const found = Math.floor(Math.random()*20) + 5; // 5-24 gold
-    p.gold = (p.gold||0) + found;
+    if (now - (p.lastMine || 0) < 60 * 1000) { message.reply('You must wait 60s between mines.'); return; }
+    const found = Math.floor(Math.random() * 20) + 5; // 5-24 gold
+    p.gold = (p.gold || 0) + found;
     p.lastMine = now;
     data.players[pid] = p;
     saveGameData(data);
@@ -1213,7 +1239,7 @@ commandHandlers['!mine'] = (message) => {
 commandHandlers['!gold'] = (message) => {
     const data = loadGameData();
     const p = data.players[message.author.id] || { gold: 0 };
-    message.reply(`🏴‍☠️ You have **${p.gold||0}** gold stored on your ship.`);
+    message.reply(`🏴‍☠️ You have **${p.gold || 0}** gold stored on your ship.`);
 };
 
 commandHandlers['!raid'] = (message) => {
@@ -1224,15 +1250,15 @@ commandHandlers['!raid'] = (message) => {
     const attacker = data.players[message.author.id] || { gold: 0, lastRaid: 0 };
     const defender = data.players[target.id] || { gold: 0 };
     const now = Date.now();
-    if (now - (attacker.lastRaid || 0) < 2*60*1000) { message.reply('Raid cooldown: 2 minutes.'); return; }
+    if (now - (attacker.lastRaid || 0) < 2 * 60 * 1000) { message.reply('Raid cooldown: 2 minutes.'); return; }
     if (!defender.gold || defender.gold <= 0) { message.reply('Target has no gold to steal.'); return; }
     // chance-based steal
     const success = Math.random() < 0.5; // 50%
     let stolen = 0;
     if (success) {
-        stolen = Math.max(1, Math.floor(defender.gold * (Math.random()*0.15 + 0.05))); // steal 5-20%
+        stolen = Math.max(1, Math.floor(defender.gold * (Math.random() * 0.15 + 0.05))); // steal 5-20%
         defender.gold = Math.max(0, defender.gold - stolen);
-        attacker.gold = (attacker.gold||0) + stolen;
+        attacker.gold = (attacker.gold || 0) + stolen;
         attacker.lastRaid = now;
         data.players[message.author.id] = attacker;
         data.players[target.id] = defender;
@@ -1307,8 +1333,8 @@ commandHandlers['!munga-ticketsystem'] = async (message) => {
         if (val.toLowerCase() === '!create') {
             try {
                 const created = await message.guild.channels.create({ name: 'tickets-log', type: 0, permissionOverwrites: [{ id: message.guild.id, deny: ['ViewChannel'] }] });
-                message.guild.roles.cache.filter(r => r.permissions.has('Administrator')).forEach(role => { created.permissionOverwrites.create(role, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => {}); });
-                created.permissionOverwrites.create(message.client.user.id, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => {});
+                message.guild.roles.cache.filter(r => r.permissions.has('Administrator')).forEach(role => { created.permissionOverwrites.create(role, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => { }); });
+                created.permissionOverwrites.create(message.client.user.id, { ViewChannel: true, SendMessages: true, ReadMessageHistory: true }).catch(() => { });
                 logChannelId = created.id;
             } catch (err) { message.reply('❌ Failed to create log channel.'); return; }
         } else {
@@ -1327,9 +1353,17 @@ commandHandlers['!munga-ticketsystem'] = async (message) => {
 };
 
 function handleCommand(message) {
-    const handler = commandHandlers[message.content.toLowerCase()];
+    if (!message || !message.content) return false;
+    const parts = message.content.split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return false;
+    const cmd = parts[0].toLowerCase();
+    const handler = commandHandlers[cmd];
     if (handler) {
-        handler(message);
+        try {
+            handler(message);
+        } catch (e) {
+            console.error('Error in command handler', cmd, e);
+        }
         return true;
     }
     return false;

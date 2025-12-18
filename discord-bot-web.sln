@@ -1,0 +1,35 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.2.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bothbots", "Bothbots", "{B2E1C408-DC83-5CD3-CEE6-EFBCD5A0D040}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Mainbot", "Mainbot", "{19BB1347-55E3-6A03-A97E-01AD847F9289}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CSharp", "CSharp", "{CEA880A5-85BA-6BAE-B0EE-6CE87C406E29}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Mainbot", "Bothbots\Mainbot\CSharp\Mainbot.csproj", "{6F90876A-6895-4DB5-6210-C40C9163AAB4}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{6F90876A-6895-4DB5-6210-C40C9163AAB4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6F90876A-6895-4DB5-6210-C40C9163AAB4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6F90876A-6895-4DB5-6210-C40C9163AAB4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6F90876A-6895-4DB5-6210-C40C9163AAB4}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{19BB1347-55E3-6A03-A97E-01AD847F9289} = {B2E1C408-DC83-5CD3-CEE6-EFBCD5A0D040}
+		{CEA880A5-85BA-6BAE-B0EE-6CE87C406E29} = {19BB1347-55E3-6A03-A97E-01AD847F9289}
+		{6F90876A-6895-4DB5-6210-C40C9163AAB4} = {CEA880A5-85BA-6BAE-B0EE-6CE87C406E29}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {63994F02-FC75-4CF3-8CC3-5F98A34E9E92}
+	EndGlobalSection
+EndGlobal

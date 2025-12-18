@@ -38,7 +38,7 @@ client.on('interactionCreate', async (interaction) => {
         const selectionLabel = selectionMap[choice] || choice;
         const guild = interaction.guild;
         const user = interaction.user;
-        const chanName = `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g,'')}-${Date.now()%10000}`;
+        const chanName = `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now() % 10000}`;
         const overwrites = [{ id: guild.id, deny: ['ViewChannel'] }, { id: user.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] }];
         guild.roles.cache.filter(r => r.permissions.has('Administrator')).forEach(role => {
             overwrites.push({ id: role.id, allow: ['ViewChannel', 'SendMessages', 'ReadMessageHistory'] });
@@ -90,21 +90,21 @@ client.on('interactionCreate', async (interaction) => {
         const cfg = loadTicketsConfig();
         const logChannelId = cfg[guild.id]?.logChannelId;
 
-        if (id === 'ticket_close') { await interaction.reply({ content: 'Closing ticket...', ephemeral: true }); setTimeout(() => { channel.delete().catch(() => {}); if (global.ticketMeta) global.ticketMeta.delete(channel.id); }, 1000); return; }
+        if (id === 'ticket_close') { await interaction.reply({ content: 'Closing ticket...', ephemeral: true }); setTimeout(() => { channel.delete().catch(() => { }); if (global.ticketMeta) global.ticketMeta.delete(channel.id); }, 1000); return; }
         if (!logChannelId) { await interaction.reply({ content: 'No log channel configured. Ask an admin to run !munga-ticketsystem.', ephemeral: true }); return; }
         const filename = `pirate_ticket_${guild.id}_${channel.id}_${Date.now()}.txt`;
         fs.writeFileSync(filename, transcript);
         const logChan = guild.channels.cache.get(logChannelId);
         if (logChan) { await logChan.send({ content: `Ticket transcript from ${channel.name} (created by <@${meta.userId}>):`, files: [filename] }); }
-        try { fs.unlinkSync(filename); } catch (e) {}
+        try { fs.unlinkSync(filename); } catch (e) { }
         await interaction.reply({ content: '✅ Ticket transcript saved to log channel.', ephemeral: true });
-    } catch (err) { console.error('PirateBot ticket button handler error:', err); try { await interaction.reply({ content: 'An error occurred while handling the ticket action.', ephemeral: true }); } catch (e) {} }
+    } catch (err) { console.error('PirateBot ticket button handler error:', err); try { await interaction.reply({ content: 'An error occurred while handling the ticket action.', ephemeral: true }); } catch (e) { } }
 });
 
-client.once('clientReady', () => {
+client.once('ready', () => {
     console.log(`${BOT_INFO.name} v${BOT_INFO.version} is online!`);
     console.log(`Logged in as ${client.user.tag}`);
-    
+
     client.user.setPresence({
         activities: [{
             name: 'Sea of Thieves ⚓',
@@ -114,18 +114,18 @@ client.once('clientReady', () => {
         }],
         status: 'online'
     });
-    
+
     console.log('🏴‍☠️ PirateBot ready to sail!');
 });
 
 client.on('messageCreate', (message) => {
-        handleSecurityModeration(message);
+    handleSecurityModeration(message);
     if (message.author.bot) return;
-    
+
     if (message.content.startsWith('!')) {
         handleCommand(message, BOT_INFO);
     }
-    
+
     const lowerContent = message.content.toLowerCase();
     if (lowerContent.includes('ahoy') && !message.content.startsWith('!')) {
         message.reply('Ahoy there, matey! 🏴‍☠️');
