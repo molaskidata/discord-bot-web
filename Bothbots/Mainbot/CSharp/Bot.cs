@@ -5,6 +5,7 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using MainbotCSharp.Services;
 
 namespace MainbotCSharp
 {

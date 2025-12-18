@@ -199,7 +199,7 @@ namespace MainbotCSharp.Services
                     if (categoryId.HasValue) prop.CategoryId = categoryId.Value;
                     prop.UserLimit = template.Limit;
                     prop.PermissionOverwrites = new[] {
-                        new Overwrite(member.Id, PermissionTarget.User, new OverwritePermissions(manageChannels: PermValue.Allow, moveMembers: PermValue.Allow))
+                        new Overwrite(member.Id, PermissionTarget.User, new OverwritePermissions(viewChannel: PermValue.Allow, connect: PermValue.Allow, speak: PermValue.Allow))
                     };
                 });
 
@@ -312,7 +312,7 @@ namespace MainbotCSharp.Services
                     if (!messages.Any()) break;
                     foreach (var msg in messages)
                     {
-                        try { if (!msg.Pinned) { await msg.DeleteAsync(); deleted++; } } catch { }
+                        try { await msg.DeleteAsync(); deleted++; } catch { }
                     }
                     if (messages.Count() < 100) break;
                 }

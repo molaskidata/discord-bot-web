@@ -27,12 +27,12 @@ namespace MainbotCSharp.Modules
                 .WithCustomId("support_select")
                 .WithMinValues(1)
                 .WithMaxValues(1)
-                .AddOption("Technical Issue", "support_technical", "Bot or server technical problem", "🛠️")
-                .AddOption("Spam / Scam", "support_spam", "Report spam, phishing or scams", "⚠️")
-                .AddOption("Abuse / Harassment", "support_abuse", "Report abuse or threatening behavior", "🚨")
-                .AddOption("Advertising / Recruitment", "support_ad", "Unwanted promotions or invites", "📣")
-                .AddOption("Bug / Feature", "support_bug", "Report a bug or request a feature", "🐛")
-                .AddOption("Other", "support_other", "Other support inquiries", "❓");
+                .AddOption("Technical Issue", "support_technical", "Bot or server technical problem", new Emoji("🛠️"))
+                .AddOption("Spam / Scam", "support_spam", "Report spam, phishing or scams", new Emoji("⚠️"))
+                .AddOption("Abuse / Harassment", "support_abuse", "Report abuse or threatening behavior", new Emoji("🚨"))
+                .AddOption("Advertising / Recruitment", "support_ad", "Unwanted promotions or invites", new Emoji("📣"))
+                .AddOption("Bug / Feature", "support_bug", "Report a bug or request a feature", new Emoji("🐛"))
+                .AddOption("Other", "support_other", "Other support inquiries", new Emoji("❓"));
 
             var comp = new ComponentBuilder().WithSelectMenu(select);
             var sent = await Context.Channel.SendMessageAsync(embed: embed.Build(), components: comp.Build());
@@ -74,12 +74,11 @@ namespace MainbotCSharp.Modules
         private async Task<SocketMessage> NextMessageAsync(Func<SocketMessage, bool> filter, TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<SocketMessage?>();
-            Task Handler(SocketMessage msg)
+            Task OnMsg(SocketMessage msg)
             {
                 try { if (filter(msg)) tcs.TrySetResult(msg); } catch { }
                 return Task.CompletedTask;
             }
-            void OnMsg(SocketMessage m) => Handler(m);
             Context.Client.MessageReceived += OnMsg;
             var task = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
             Context.Client.MessageReceived -= OnMsg;

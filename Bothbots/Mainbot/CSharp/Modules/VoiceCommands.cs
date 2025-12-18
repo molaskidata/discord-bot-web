@@ -14,7 +14,6 @@ namespace MainbotCSharp.Modules
             var svc = MainbotCSharp.Services.VoiceService.GetConfig();
             var ownerInfo = MainbotCSharp.Services.VoiceService.GetActiveChannelByOwner(Context.User.Id);
             if (ownerInfo == null) { await ReplyAsync("You don't own an active voice channel."); return; }
-            var ch = Context.Guild.GetVoiceChannel(Context.Guild.VoiceChannels.FirstOrDefault(c => c.Id == ownerInfo.GetType().GetProperty("OwnerId")?.GetValue(ownerInfo) as ulong? ?? 0) != null ? ownerInfo.GetType().GetProperty("OwnerId")?.GetValue(ownerInfo) as ulong? ?? 0 : 0);
             // fallback: try find by owner mapping
             ulong channelId = 0;
             foreach (var kv in svc.ActiveChannels) if (kv.Value.OwnerId == Context.User.Id) { channelId = kv.Key; break; }
