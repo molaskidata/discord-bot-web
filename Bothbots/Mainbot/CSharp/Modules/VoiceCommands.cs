@@ -169,8 +169,10 @@ namespace MainbotCSharp.Modules
             int deleted = 0;
             try
             {
+                var pinned = await logChan.GetPinnedMessagesAsync();
+                var pinnedSet = pinned.Select(m => m.Id).ToHashSet();
                 var messages = await logChan.GetMessagesAsync(100).FlattenAsync();
-                foreach (var msg in messages) { try { if (!msg.Pinned) { await msg.DeleteAsync(); deleted++; } } catch { } }
+                foreach (var msg in messages) { try { if (!pinnedSet.Contains(msg.Id)) { await msg.DeleteAsync(); deleted++; } } catch { } }
                 await ReplyAsync($"✅ Voice log channel cleaned! Deleted {deleted} messages.");
             }
             catch { await ReplyAsync("❌ Error cleaning voice log channel."); }

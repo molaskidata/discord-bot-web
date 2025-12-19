@@ -186,15 +186,14 @@ namespace MainbotCSharp.Modules
         private async Task<SocketMessage> NextMessageAsync(Func<SocketMessage, bool> filter, TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<SocketMessage?>();
-            Task Handler(SocketMessage msg)
+            Func<SocketMessage, Task> handler = (SocketMessage msg) =>
             {
                 try { if (filter(msg)) tcs.TrySetResult(msg); } catch { }
                 return Task.CompletedTask;
-            }
-            void OnMsg(SocketMessage m) => Handler(m);
-            Context.Client.MessageReceived += OnMsg;
+            };
+            Context.Client.MessageReceived += handler;
             var task = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
-            Context.Client.MessageReceived -= OnMsg;
+            Context.Client.MessageReceived -= handler;
             if (task == tcs.Task) return tcs.Task.Result!;
             return null;
         }

@@ -1,6 +1,7 @@
 using System.Threading.Tasks;
 using Discord.Commands;
 using Discord;
+using Discord.WebSocket;
 
 namespace MainbotCSharp.Modules
 {
@@ -30,7 +31,8 @@ namespace MainbotCSharp.Modules
         [Summary("Run a quick security check on the message content (admin only)")]
         public async Task DebugSecurityAsync([Remainder] string text = null)
         {
-            if (!Context.User.IsBot && Context.Guild != null && Context.Message.Member != null && !Context.Message.Member.Roles.Any())
+            var guser = Context.User as SocketGuildUser;
+            if (!Context.User.IsBot && Context.Guild != null && guser != null && !guser.Roles.Any(r => !r.IsEveryone))
             {
                 // implement security checks when porting
             }

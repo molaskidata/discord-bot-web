@@ -66,7 +66,7 @@ namespace MainbotCSharp.Modules
                 var ch = Context.Guild.GetTextChannel(logChannelId);
                 if (ch == null) { await ReplyAsync("❌ Channel not found."); return; }
             }
-            TicketService.SetConfig(Context.Guild.Id, new TicketService.TicketConfigEntry { LogChannelId = logChannelId });
+            TicketService.SetConfig(Context.Guild.Id, new TicketConfigEntry { LogChannelId = logChannelId });
             await ReplyAsync($"✅ Ticket system configured. Log channel: <#{logChannelId}>");
         }
 
@@ -74,14 +74,14 @@ namespace MainbotCSharp.Modules
         private async Task<SocketMessage> NextMessageAsync(Func<SocketMessage, bool> filter, TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<SocketMessage?>();
-            Task OnMsg(SocketMessage msg)
+            Func<SocketMessage, Task> handler = (SocketMessage msg) =>
             {
                 try { if (filter(msg)) tcs.TrySetResult(msg); } catch { }
                 return Task.CompletedTask;
-            }
-            Context.Client.MessageReceived += OnMsg;
+            };
+            Context.Client.MessageReceived += handler;
             var task = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
-            Context.Client.MessageReceived -= OnMsg;
+            Context.Client.MessageReceived -= handler;
             if (task == tcs.Task) return tcs.Task.Result!;
             return null;
         }

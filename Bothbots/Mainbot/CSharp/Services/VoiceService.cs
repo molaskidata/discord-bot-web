@@ -134,11 +134,8 @@ namespace MainbotCSharp.Services
                     return;
                 }
 
-                // mute/deaf changed -> update afk
-                if (newState.VoiceChannel != null && (oldState.IsSelfMuted != newState.IsSelfMuted || oldState.IsSelfDeafened != newState.IsSelfDeafened))
-                {
-                    UpdateAfkTracker(newState.VoiceChannel.Id, user.Id);
-                }
+                // NOTE: skip relying on library-specific IsSelfMuted/IsSelfDeafened properties
+                // Keep AFK tracking on join/move/leave instead of reacting to mute/deaf toggles
             }
             catch (Exception ex) { Console.WriteLine("Voice state handler error: " + ex); }
         }
@@ -224,13 +221,38 @@ namespace MainbotCSharp.Services
             _afkTracker[channelId][userId] = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         }
 
+        private static string StripLeadingEmojiPrefixes(string text)
+        {
+            if (string.IsNullOrEmpty(text)) return text;
+            // remove a few common prefix emojis used as markers
+            var prefixes = new[] { "✅", "❌", "🎤", "🗑️", "⏰", "🧹", "🎙️", "🔒", "🔓", "🎮", "📚", "💤", "⚠️", "🚨", "📣", "🐛", "❓" };
+            var t = text.TrimStart();
+            foreach (var p in prefixes)
+            {
+                if (t.StartsWith(p + " ") || t.StartsWith(p))
+                {
+                    t = t.Substring(p.Length).TrimStart();
+                }
+            }
+            return t;
+        }
+
         private static async Task SendToLogChannel(SocketGuild guild, VoiceConfig cfg, string message)
         {
             if (cfg == null || !cfg.VoiceLogChannel.HasValue) return;
             try
             {
                 var logChan = guild.GetTextChannel(cfg.VoiceLogChannel.Value);
-                if (logChan != null) await logChan.SendMessageAsync(message);
+                if (logChan == null) return;
+
+                // sanitize message: remove leading marker emojis and keep channel name intact (so any emoji in channel names remains)
+                var sanitized = StripLeadingEmojiPrefixes(message);
+
+                var eb = new EmbedBuilder()
+                    .WithDescription(sanitized)
+                    .WithColor(new Color(0, 128, 128)); // dark-turquoise side color
+
+                await logChan.SendMessageAsync(embed: eb.Build());
             }
             catch (Exception ex) { Console.WriteLine("Error sending to log channel: " + ex); }
         }
@@ -278,15 +300,13 @@ namespace MainbotCSharp.Services
                         var userId = u.Key; var last = u.Value;
                         var member = channel.GetUser(userId);
                         if (member == null) { users.Remove(userId); continue; }
-                        if (member.VoiceState.IsSelfMuted || member.VoiceState.IsSelfDeafened)
+                        // Consider user AFK based solely on inactivity time rather than voice mute/deaf flags
+                        var timeSince = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - last;
+                        if (timeSince >= AFK_TIMEOUT)
                         {
-                            var timeSince = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() - last;
-                            if (timeSince >= AFK_TIMEOUT)
-                            {
-                                try { await member.ModifyAsync(x => x.ChannelId = null); } catch { }
-                                users.Remove(userId);
-                                await SendToLogChannel(channel.Guild, cfg, $"⏰ **{member.Username}** was kicked from **{channel.Name}** (AFK)");
-                            }
+                            try { await member.ModifyAsync(x => x.ChannelId = null); } catch { }
+                            users.Remove(userId);
+                            await SendToLogChannel(channel.Guild, cfg, $"**{member.Username}** was kicked from **{channel.Name}** (AFK)");
                         }
                     }
                 }

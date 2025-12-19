@@ -138,7 +138,7 @@ namespace MainbotCSharp
                             .WithButton("Close Ticket", "ticket_close", ButtonStyle.Danger)
                             .WithButton("Log Ticket", "ticket_log", ButtonStyle.Secondary)
                             .WithButton("Save Transcript", "ticket_save", ButtonStyle.Primary);
-                        await ticketChan.SendMessageAsync(content: $"<@{user.Id}>", embed: embed.Build(), components: row.Build());
+                        await ticketChan.SendMessageAsync($"<@{user.Id}>", embed: embed.Build(), components: row.Build());
                         TicketService.TicketMetas.TryAdd(ticketChan.Id, new TicketService.TicketMeta { GuildId = guild.Id, UserId = user.Id, Category = label });
                         await comp.RespondAsync($"✅ Ticket created: {ticketChan.Mention}", ephemeral: true);
                         return;
