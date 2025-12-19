@@ -1,7 +1,2 @@
-function getRandomResponse(responseArray) {
-    return responseArray[Math.floor(Math.random() * responseArray.length)];
-}
-
-module.exports = {
-    getRandomResponse
-};
+// ARCHIVED: Original file moved to archive/js-originals/Bothbots/Mainbot/utils.js
+// To restore, copy the archived file from archive/js-originals/Bothbots/Mainbot/utils.js back to this location.

@@ -1,5 +1,5 @@
-// Attach security moderation handler
-const { handleSecurityModeration } = require('./commands');
+// ARCHIVED: Original file moved to archive/js-originals/Bothbots/Mainbot/infobot.js
+// To restore, copy the archived file from archive/js-originals/Bothbots/Mainbot/infobot.js back to this location.
 const PING_GUILD_ID = '1415044198792691858';
 const PING_CHANNEL_ID = '1448640396359106672';
 function sendPingToPingBot() {
@@ -119,7 +119,7 @@ app.get('/', (req, res) => {
     if (!isLocalhost(req)) {
         return res.status(200).json({ status: 'OK' });
     }
-    
+
     res.json({
         status: 'Bot Online',
         uptime: process.uptime(),
@@ -176,7 +176,7 @@ const { handleVoiceStateUpdate, checkAfkUsers, autoCleanupVoiceLogs } = require(
 client.once('ready', () => {
     console.log(`${BOT_INFO.name} v${BOT_INFO.version} is online!`);
     console.log(`Logged in as ${client.user.tag}`);
-    
+
     restoreBumpReminders(client);
     console.log('✅ Bump reminders restored from file');
 
@@ -223,7 +223,7 @@ function updateGameStatus() {
     if (gameTimer > MAX_HOURS) {
         gameTimer = 2;
     }
-    
+
     client.user.setPresence({
         activities: [{
             name: 'Dead by Daylight 💀',
@@ -299,7 +299,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 client.on('interactionCreate', async (interaction) => {
     if (!interaction.isStringSelectMenu()) return;
     const customId = interaction.customId;
-    if (!['helpdesk_select','support_select'].includes(customId)) return;
+    if (!['helpdesk_select', 'support_select'].includes(customId)) return;
 
     const choice = interaction.values[0];
     // Basic replies for each category — adjust text as needed
@@ -348,7 +348,7 @@ client.on('interactionCreate', async (interaction) => {
             };
             const selectionLabel = selectionMap[choice] || choice;
 
-            const chanName = `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g,'')}-${Date.now()%10000}`;
+            const chanName = `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}-${Date.now() % 10000}`;
             const overwrites = [];
             // deny everyone
             overwrites.push({ id: guild.id, deny: ['ViewChannel'] });
@@ -427,7 +427,7 @@ client.on('interactionCreate', async (interaction) => {
         if (id === 'ticket_close') {
             await interaction.reply({ content: 'Closing ticket...', ephemeral: true });
             // delete channel after short delay to allow reply
-            setTimeout(() => { channel.delete().catch(() => {}); if (global.ticketMeta) global.ticketMeta.delete(channel.id); }, 1000);
+            setTimeout(() => { channel.delete().catch(() => { }); if (global.ticketMeta) global.ticketMeta.delete(channel.id); }, 1000);
             return;
         }
 

@@ -1,5 +1,5 @@
-const fs = require('fs');
-const path = require('path');
+// ARCHIVED: Original file moved to archive/js-originals/Bothbots/Mainbot/persistence.js
+// To restore, copy the archived file from archive/js-originals/Bothbots/Mainbot/persistence.js back to this location.
 
 function resolvePath(fileName) {
     return path.resolve(process.cwd(), fileName);
