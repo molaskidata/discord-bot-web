@@ -71,4 +71,6 @@ npm-debug.log
 # --- end BOTS/.gitignore ---
 
 # Optional: ignore local archive folder if you don't want it tracked
-# archive/
+archive/
+# Ignore archived originals folder specifically
+archive/js-originals/

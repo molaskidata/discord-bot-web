@@ -1,43 +1,6 @@
 // ARCHIVED: Original file moved to archive/js-originals/Bothbots/Mainbot/commands.js
-// To restore, copy the archived file from archive/js-originals/Bothbots/Mainbot/commands.js back to this location.
-// Füge die Help-Handler INSIDE des commandHandlers-Objekts ein:
-// (Suche nach const commandHandlers = { ... und füge sie dort ein)
-// --- Security System Word Lists (multi-language, extend as needed) ---
-const securityWordLists = [
-    // German (provided)
-    'anal', 'anus', 'arsch', 'boobs', 'cl1t', 'clit', 'dick', 'dickpic', 'fick', 'ficki', 'ficks', 'fuck', 'fucking', 'hure', 'huren', 'hurens', 'kitzler', 'milf', 'nackt', 'nacktbilder', 'nippel', 'nud3', 'nude', 'nudes', 'nutt', 'p0rn', 'p0rno', 'p3nis', 'penis', 'porn', 'porno', 'puss', 'pussy', 's3x', 'scheide', 'schlampe', 'sex', 'sexual', 'slut', 'slutti', 't1tt', 'titt', 'titten', 'vag1na', 'vagina',
-    'arschloch', 'asozial', 'bastard', 'behindert', 'depp', 'dödel', 'dumm', 'dummi', 'hund', 'hundesohn', 'idiot', 'lappen', 'lappi', 'opfa', 'opfer', 'sohnedings', 'sohnemann', 'sohns', 'spast', 'spasti', 'wichser', 'wix', 'wixx', 'wixxer',
-    'geh sterben', 'gehsterben', 'go die', 'ich bring dich um', 'ich töte dich', 'kill yourself', 'killyourself', 'kys', 'self harm', 'selfharm', 'sterb', 'suizid', 'töd dich', 'töt dich', 'verreck', 'verreckt', 'cl1ck', 'click here', 'discordgift', 'free nitro', 'freenitro', 'gift you nitro', 'steamgift', 'abschlacht', 'abschlachten', 'abst3chen', 'abstechen', 'abstich', 'angreifen', 'att4ck', 'attack', 'attackieren', 'aufhaengen', 'aufhängen', 'ausloeschen', 'auslöschen', 'ausradieren', 'bedroh', 'bedrohe', 'bedrohen', 'blut', 'brechdirdieknochen', 'bring dich um', 'bringdichum', 'bringmichum', 'erdrücken', 'erdruecken', 'erhaengen', 'erhängen', 'ermorden', 'erschies', 'erschießen', 'erstech', 'erstechen', 'erwuergen', 'erwürg', 'erwürgen', 'gefährd', 'gefährlich', 'k1ll', 'kill', 'kille', 'killer', 'knochenbrechen', 'm0rd', 'm4ssaker', 'massaker', 'mord', 'morden', 'pruegeln', 'prügeln', 'schiess', 'schieß', 'schlagdich', 'schlagmich', 'shoot', 'stech', 'stich', 'toeten', 'töten', 'umbr1ng', 'umbracht', 'umbringen',
-    // English (partial, extend as needed)
-    'anal', 'anus', 'ass', 'boobs', 'clit', 'dick', 'dickpic', 'fuck', 'fucking', 'whore', 'milf', 'nude', 'nudes', 'nipple', 'porn', 'porno', 'pussy', 'sex', 'slut', 'tits', 'vagina', 'bastard', 'idiot', 'dumb', 'stupid', 'retard', 'spastic', 'wanker', 'go die', 'kill yourself', 'kys', 'suicide', 'self harm', 'selfharm', 'die', 'murder', 'kill', 'attack', 'blood', 'shoot', 'stab', 'hang', 'dangerous', 'massacre', 'threat', 'gift nitro', 'free nitro', 'discordgift', 'click here', 'steamgift',
-    // Add more: Danish, Serbisch, Kroatisch, Russisch, Finnisch, Italienisch, Spanisch
-];
-
-// --- Security Moderation Handler ---
-async function handleSecurityModeration(message) {
-    if (!message.guild) return;
-    const guildId = message.guild.id;
-    if (!isSecurityEnabledMain(guildId) && !securitySystemEnabled[guildId]) return;
-    if (isOwnerOrAdmin(message.member)) return; // Don't moderate admins/owners
-
-    const content = (message.content || '').toLowerCase();
-    async function report(reason, matched) {
-        await sendSecurityLogMain(message, reason, matched);
-        await timeoutAndWarn(message, reason);
-    }
-
-    const inviteRegex = /(discord\.gg\/|discordapp\.com\/invite\/|discord\.com\/invite\/)/i;
-    if (inviteRegex.test(content)) { await report('Invite links are not allowed!', 'invite link'); return; }
-    if (/([a-zA-Z0-9])\1{6,}/.test(content) || /(.)\s*\1{6,}/.test(content)) { await report('Spam detected!', 'spam'); return; }
-    for (const word of securityWordLists) {
-        if (content.includes(word)) { await report(`Inappropriate language detected: "${word}"`, word); return; }
-    }
-    if (message.attachments && message.attachments.size > 0) {
-        for (const [, attachment] of message.attachments) {
-            const name = (attachment.name || '').toLowerCase();
-            if (name.match(/(nude|nudes|porn|dick|boobs|sex|fuck|pussy|tits|vagina|penis|clit|anal|ass|nsfw|xxx|18\+|dickpic|nacktbilder|nackt|milf|slut|cum|cumshot|hure|huren|arsch|fick|titten|t1tt|nud3|p0rn|p0rno|p3nis|kitzler|scheide|schlampe|nutt|nippel)/)) { await report('NSFW/explicit image detected!', 'attachment: ' + name); return; }
-        }
-    }
+console.log('ARCHIVED: This file has been moved to archive/js-originals/Bothbots/Mainbot/commands.js and replaced with a stub.');
+module.exports = {};
 }
 
 const axios = require('axios');
