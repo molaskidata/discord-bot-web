@@ -53,11 +53,18 @@ const client = new Client({
 
 global.client = client;
 
-// Attach security moderation handler after client is initialized (guarded)
+// Ensure a stub exists so we can safely attach the listener even if original was archived
+if (typeof handleSecurityModeration === 'undefined') {
+    global.handleSecurityModeration = function (message) {
+        // ARCHIVED: original security moderation logic was moved to archive/js-originals
+        // This stub prevents crashes and logs a single-line notice when invoked.
+        try { console.warn('handleSecurityModeration stub invoked (archived original)'); } catch (e) { }
+    };
+}
+
+// Attach security moderation handler after client is initialized
 if (typeof handleSecurityModeration === 'function') {
     client.on('messageCreate', handleSecurityModeration);
-} else {
-    console.warn('handleSecurityModeration not defined — skipping messageCreate listener');
 }
 
 let gameTimer = 0;
