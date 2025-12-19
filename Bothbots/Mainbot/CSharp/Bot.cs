@@ -115,7 +115,15 @@ namespace MainbotCSharp
                             { "support_bug", "Bug / Feature Request" },
                             { "support_other", "Other" }
                         };
-                        var label = selectionMap.ContainsKey(value) ? selectionMap[value] : value;
+                        string label;
+                        if (value != null && selectionMap.TryGetValue(value, out var mappedLabel))
+                        {
+                            label = mappedLabel;
+                        }
+                        else
+                        {
+                            label = value ?? "Unbekannt";
+                        }
                         // create ticket channel
                         var guild = (comp.Channel as SocketGuildChannel)?.Guild;
                         if (guild == null) { await comp.RespondAsync("Cannot create ticket: guild not found", ephemeral: true); return; }
