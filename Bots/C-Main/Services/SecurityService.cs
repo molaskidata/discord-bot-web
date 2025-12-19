@@ -1,19 +1,19 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using Discord.WebSocket;
 using Discord;
+using Discord.WebSocket;
 
-namespace PiratBotCSharp.Services
+namespace MainbotCSharp.Services
 {
     public class SecurityConfigEntry { public bool Enabled { get; set; } = false; public ulong? LogChannelId { get; set; } = null; }
-
     public static class SecurityService
     {
-        private const string SECURITY_FILE = "pirate_security_config.json";
+        private const string SECURITY_FILE = "security_config.json";
         private static Dictionary<ulong, SecurityConfigEntry> _config = LoadSecurityConfig();
 
         private static readonly string[] WordLists = new[] {
@@ -56,6 +56,7 @@ namespace PiratBotCSharp.Services
             if (_config.TryGetValue(guildId, out var e)) return e; return new SecurityConfigEntry();
         }
 
+        // Public handler invoked from Bot when a message arrives
         public static async Task HandleMessageAsync(SocketMessage rawMessage)
         {
             try
@@ -70,27 +71,33 @@ namespace PiratBotCSharp.Services
                 if (!cfg.Enabled) return;
 
                 var content = (message.Content ?? string.Empty).ToLowerInvariant();
+                // ignore admins
                 var guildUser = message.Author as SocketGuildUser;
-                if (guildUser != null && guildUser.GuildPermissions.Administrator) return;
+                if (guildUser != null && (guildUser.GuildPermissions.Administrator)) return;
 
-                var inviteRegex = new Regex("(discord\\.gg/|discordapp\\.com/\\invite/|discord\\.com/\\invite/)", RegexOptions.IgnoreCase);
+                // invite link
+                var inviteRegex = new Regex(@"(discord\.gg\/|discordapp\.com\/invite\/|discord\.com\/invite\/)", RegexOptions.IgnoreCase);
                 if (inviteRegex.IsMatch(content)) { await ReportAndDelete(message, guild, "Invite link", "invite link"); return; }
 
-                if (Regex.IsMatch(content, "([a-zA-Z0-9])\\1{6,}") || Regex.IsMatch(content, "(.)\\s*\\1{6,}")) { await ReportAndDelete(message, guild, "Spam detected", "spam"); return; }
+                // spam (repeated char)
+                if (Regex.IsMatch(content, @"([a-zA-Z0-9])\1{6,}") || Regex.IsMatch(content, @"(.)\s*\1{6,}")) { await ReportAndDelete(message, guild, "Spam detected", "spam"); return; }
 
+                // blacklisted words
                 foreach (var w in WordLists)
                 {
                     if (content.Contains(w)) { await ReportAndDelete(message, guild, $"Inappropriate language: {w}", w); return; }
                 }
 
+                // attachments: check filename
                 if (message.Attachments != null && message.Attachments.Count > 0)
                 {
                     foreach (var att in message.Attachments)
                     {
-                        var name = (att.Filename ?? string.Empty).ToLowerInvariant();
+                        var name = (att.Filename ?? "").ToLowerInvariant();
                         if (Regex.IsMatch(name, "(nude|nudes|porn|dick|boobs|sex|pussy|tits|vagina|penis|clit|anal|nsfw|xxx|18\\+)"))
                         {
-                            await ReportAndDelete(message, guild, "NSFW attachment", name); return;
+                            await ReportAndDelete(message, guild, "NSFW attachment", name);
+                            return;
                         }
                     }
                 }
@@ -106,9 +113,11 @@ namespace PiratBotCSharp.Services
             try
             {
                 var cfg = GetConfig(guild.Id);
+                // log to channel if set
                 if (cfg.LogChannelId.HasValue)
                 {
-                    var ch = guild.GetTextChannel(cfg.LogChannelId.Value);
+                    var chId = cfg.LogChannelId.Value;
+                    var ch = guild.GetTextChannel(chId);
                     if (ch != null)
                     {
                         var eb = new EmbedBuilder().WithTitle("Security Alert").WithColor(Color.Orange)
@@ -120,13 +129,27 @@ namespace PiratBotCSharp.Services
                     }
                 }
 
+                // delete message
                 try { await message.DeleteAsync(); } catch { }
+
+                // DM user
                 try { await message.Author.SendMessageAsync($"You have been flagged for: {reason}. If you think this is a mistake, contact the server staff."); } catch { }
 
+                // append to log file
                 try
                 {
-                    var logEntry = new { time = DateTimeOffset.UtcNow, guildId = guild.Id, guildName = guild.Name, userId = message.Author.Id, userTag = message.Author.Username, action = reason, matched = matched, content = message.Content };
-                    File.AppendAllText("security_logs_pirate.jsonl", JsonSerializer.Serialize(logEntry) + "\n");
+                    var log = new
+                    {
+                        time = DateTimeOffset.UtcNow,
+                        guildId = guild.Id,
+                        guildName = guild.Name,
+                        userId = message.Author.Id,
+                        userTag = message.Author.Username,
+                        action = reason,
+                        matched = matched,
+                        content = message.Content
+                    };
+                    File.AppendAllText("security_logs_main.jsonl", JsonSerializer.Serialize(log) + "\n");
                 }
                 catch { }
             }

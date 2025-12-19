@@ -6,7 +6,7 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace PiratBotCSharp
+namespace PingbotCSharp
 {
     public class Bot
     {
@@ -26,20 +26,30 @@ namespace PiratBotCSharp
             _services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
+                .AddSingleton<PingbotCSharp.Services.PingService>()
                 .BuildServiceProvider();
 
             _client.Log += Client_Log;
             _commands.Log += Commands_Log;
             _client.Ready += Client_Ready;
             _client.MessageReceived += HandleMessageAsync;
+            _client.Ready += async () =>
+            {
+                try
+                {
+                    var svc = _services.GetService(typeof(PingbotCSharp.Services.PingService)) as PingbotCSharp.Services.PingService;
+                    if (svc != null) await svc.StartAsync(_client);
+                }
+                catch (Exception ex) { Console.WriteLine("PingService start error: " + ex); }
+            };
         }
 
         public async Task InitializeAsync()
         {
-            var token = Environment.GetEnvironmentVariable("PIRATBOT_TOKEN");
+            var token = Environment.GetEnvironmentVariable("PINGBOT_TOKEN");
             if (string.IsNullOrWhiteSpace(token))
             {
-                Console.WriteLine("ERROR: Please set environment variable PIRATBOT_TOKEN with your bot token.");
+                Console.WriteLine("ERROR: Please set environment variable PINGBOT_TOKEN with your bot token.");
                 return;
             }
 
@@ -50,7 +60,7 @@ namespace PiratBotCSharp
 
         private Task Client_Ready()
         {
-            Console.WriteLine($"PiratBot ready. Logged in as {_client.CurrentUser}");
+            Console.WriteLine($"Pingbot ready. Logged in as {_client.CurrentUser}");
             return Task.CompletedTask;
         }
 

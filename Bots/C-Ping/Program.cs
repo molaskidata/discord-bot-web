@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace PiratBotCSharp
+namespace PingbotCSharp
 {
     internal class Program
     {
