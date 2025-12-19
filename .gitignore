@@ -75,3 +75,16 @@ archive/
 archived_bot_js/
 # Ignore archived originals folder specifically
 archive/js-originals/
+
+# Ignore Visual Studio & runtime files
+.vs/
+*.user
+*.suo
+
+# Ignore C# website build outputs specifically
+Website/WebsiteServer/bin/
+Website/WebsiteServer/obj/
+
+# Ignore any other compiled artifacts
+**/bin/
+**/obj/
