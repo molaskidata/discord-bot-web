@@ -53,8 +53,12 @@ const client = new Client({
 
 global.client = client;
 
-// Attach security moderation handler after client is initialized
-client.on('messageCreate', handleSecurityModeration);
+// Attach security moderation handler after client is initialized (guarded)
+if (typeof handleSecurityModeration === 'function') {
+    client.on('messageCreate', handleSecurityModeration);
+} else {
+    console.warn('handleSecurityModeration not defined — skipping messageCreate listener');
+}
 
 let gameTimer = 0;
 const MAX_HOURS = 20;
