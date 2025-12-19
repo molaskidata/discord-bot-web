@@ -1,0 +1,11 @@
+[core]
+	repositoryformatversion = 0
+	filemode = false
+	bare = true
+	symlinks = false
+	ignorecase = true
+[remote "origin"]
+	url = https://gitlab.skidata.net/gitlab/MOLA/discord-bot-web
+	tagOpt = --no-tags
+	fetch = +refs/*:refs/*
+	mirror = true
