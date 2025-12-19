@@ -72,5 +72,6 @@ npm-debug.log
 
 # Optional: ignore local archive folder if you don't want it tracked
 archive/
+archived_bot_js/
 # Ignore archived originals folder specifically
 archive/js-originals/
