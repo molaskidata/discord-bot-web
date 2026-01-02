@@ -396,15 +396,16 @@ namespace MainbotCSharp.Modules
                 .AddField("Developer", "mungabee / ozzygirl", true)
                 .AddField("Platform", "Discord.NET 3.11.0", true)
                 .AddField("Language", "C# (.NET 8.0)", true)
-                .AddField("Top.gg", "[Vote for us here!](https://top.gg/bot/your-bot-id)", false)
+                .AddField("Top.gg", "[Invite me to your Server ^^](https://top.gg/bot/1435244593301159978?s=06f6dae4811fd)", false)
                 .AddField("Server Count", Context.Client.Guilds.Count.ToString(), true)
                 .AddField("User Count", Context.Client.Guilds.Sum(g => g.MemberCount).ToString(), true)
                 .AddField("Latency", $"{Context.Client.Latency}ms", true)
                 .AddField("Features",
-                    "• Advanced Security System\n" +
+                    "• Automated Security System\n" +
                     "• Voice Channel Management\n" +
-                    "• Birthday Reminders\n" +
-                    "• Ticket System\n" +
+                    "• Birthday Reminder\n" +
+                    "• Cleanup channels (no limit)\n" +
+                    "• Ticket System ez to use\n" +
                     "• Twitch Integration\n" +
                     "• GitHub Integration\n" +
                     "• Bump Reminders", false)
