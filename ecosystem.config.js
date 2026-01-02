@@ -4,8 +4,7 @@ module.exports = {
             name: "cmain",
             cwd: "./Bots/C-Main",
             script: "/bin/bash",
-            args: ["-c", "dotnet run"],
-            env_file: "./.env",
+            args: ["-c", "source .env && dotnet run"],
             env: {
                 ASPNETCORE_ENVIRONMENT: "Production"
             }
@@ -14,8 +13,7 @@ module.exports = {
             name: "cping",
             cwd: "./Bots/C-Ping",
             script: "/bin/bash",
-            args: ["-c", "dotnet run"],
-            env_file: "./.env",
+            args: ["-c", "source .env && dotnet run"],
             env: {
                 ASPNETCORE_ENVIRONMENT: "Production"
             }
@@ -24,8 +22,7 @@ module.exports = {
             name: "cpirat",
             cwd: "./Bots/C-Pirat",
             script: "/bin/bash",
-            args: ["-c", "dotnet run"],
-            env_file: "./.env",
+            args: ["-c", "source .env && dotnet run"],
             env: {
                 ASPNETCORE_ENVIRONMENT: "Production"
             }
