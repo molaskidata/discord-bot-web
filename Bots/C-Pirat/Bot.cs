@@ -6,6 +6,7 @@ using Discord.Commands;
 using Discord.WebSocket;
 using Microsoft.Extensions.DependencyInjection;
 using PiratBotCSharp.Modules;
+using System.Threading;
 
 namespace PiratBotCSharp
 {

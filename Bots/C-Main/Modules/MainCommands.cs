@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Text.Json;
+using System.Threading;
 
 namespace MainbotCSharp.Modules
 {
@@ -85,7 +86,7 @@ namespace MainbotCSharp.Modules
                     {
                         var msgId = ulong.Parse(mid);
                         var msg = await channel.GetMessageAsync(msgId) as IUserMessage;
-                        if (msg != null && msg.Editable) await msg.ModifyAsync(m => m.Embed = embed.Build());
+                        if (msg != null) await msg.ModifyAsync(m => m.Embed = embed.Build());
                         else
                         {
                             var sent = await channel.SendMessageAsync(embed: embed.Build());

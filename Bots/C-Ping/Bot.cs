@@ -5,6 +5,8 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
+using PingbotCSharp.Modules;
+using System.Threading;
 
 namespace PingbotCSharp
 {
