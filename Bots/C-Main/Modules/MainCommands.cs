@@ -150,15 +150,81 @@ namespace MainbotCSharp.Modules
         [Summary("Show help information")]
         public async Task HelpAsync()
         {
-            var eb = new EmbedBuilder()
-                .WithTitle("🤖 Mainbot Help")
-                .WithDescription("Available commands:")
-                .AddField("Basic", "`!ping` - Check bot latency\n`!help` - Show this help", false)
-                .AddField("Birthday System", "`!birthdaychannel` - Set birthday notification channel (Admin)\n`!birthdayset` - Set your birthday (dd/mm/yyyy)\n`!birthdayremove` - Remove your birthday\n`!birthdaylist` - Show all birthdays", false)
-                .AddField("Voice System", "`!voicename` - Rename your voice channel\n`!voicelimit` - Set user limit\n`!voiceprivate/public` - Change privacy\n`!voicehelp` - Voice commands help", false)
-                .WithColor(Color.DarkBlue)
-                .WithFooter("More commands available via other modules (Security, Tickets, Verify)");
-            await ReplyAsync(embed: eb.Build());
+            var embed = new EmbedBuilder()
+                .WithTitle("🤖 !Code.Mater()")
+                .WithDescription("★ **Bot Command Help**\n\nHere are all available commands:")
+                .WithColor(0x2F4F4F)
+                .AddField("★ **General**",
+                    "`!info` - Bot info\n" +
+                    "`!ping` - Testing the pingspeed of the bot\n" +
+                    "`!gm` - Get motivated for the day\n" +
+                    "`!gn` - Good night messages for you and your mates\n" +
+                    "`!hi` - Say hello and get a hello from me\n" +
+                    "`!coffee` - Tell your friends it's coffee time!\n" +
+                    "`!devmeme` - Get a programming meme", false)
+                .AddField("★ **Security Features** *Admin only, Premium*",
+                    "`!setsecuritymod` - Enable the AI Security System for this server.\n" +
+                    "→ The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n" +
+                    "→ If a violation is detected, the user will be timed out for 2 hours and warned via DM.\n" +
+                    "→ You can customize the word list and settings soon.\n" +
+                    "`!ban @user` - Manually ban a user\n" +
+                    "`!kick @user` - Manually kick a user\n" +
+                    "`!timeout @user [minutes]` - Manually timeout a user\n" +
+                    "`!timeoutdel @user` - Remove timeout from a user", false)
+                .AddField("★ **Voice Features** *Admin only, Premium*",
+                    "`!setupvoice` - Create Join-to-Create channel *(3 channels free)*\n" +
+                    "`!setupvoicelog` - Create voice log channel *(free)*\n" +
+                    "`!cleanupvoice` - Clean voice log channel\n" +
+                    "`!deletevoice` - Delete entire voice system *(free)*\n" +
+                    "`!voicename [name]` - Rename your voice channel\n" +
+                    "`!voicelimit [0-99]` - Set user limit (0=unlimited)\n" +
+                    "`!voicetemplate [gaming/study/chill]` - Apply template\n" +
+                    "`!voicelock`/`!voiceunlock` - Lock/unlock your voice channel\n" +
+                    "`!voicekick @user` - Kick user from your channel\n" +
+                    "`!voicestats` - View voice activity stats\n" +
+                    "`!voiceprivate` - Make channel private\n" +
+                    "`!voicepermit @user` - Allow user to join\n" +
+                    "`!voicedeny @user` - Block user from joining", false)
+                .AddField("★ **Utilities** *Admin only, Premium*",
+                    "`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n" +
+                    "`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour. Run this command in the channel you want to clean up.\n" +
+                    "`!cleanupdel` - Stop the hourly auto-cleanup for this channel. Run this command in the channel where cleanup is active.\n" +
+                    "`!setupflirtlang [language]` - Set AI flirt language for this server\n" +
+                    "`!removeflirtlang` - Remove AI flirt language setting for this server\n" +
+                    "`!flirt [text]` - Flirt with AI-generated responses", false)
+                .AddField("★ **Twitch** *Admin only*",
+                    "`!settwitch` - Link Twitch account and configure clip notifications\n" +
+                    "`!setchannel` - Create a new thread-only channel for clips *(use during `!settwitch` setup)*\n" +
+                    "`!testtwitch` - Test clip posting by fetching latest clip\n" +
+                    "`!deletetwitch` - Delete your Twitch account data", false)
+                .AddField("★ **GitHub** ❌ *out of order right now!*",
+                    "`!github` - Bot owner's GitHub and Repos\n" +
+                    "`!congithubacc` - Connect your GitHub account with the bot\n" +
+                    "`!discongithubacc` - Disconnect your GitHub account\n" +
+                    "`!gitrank` - Show your GitHub commit level\n" +
+                    "`!gitleader` - Show the top 10 committers", false)
+                .AddField("★ **Bump Reminders** *Admin only*",
+                    "`!setbumpreminder` - Setze einen 2-Stunden-Bump-Reminder\n" +
+                    "`!getbumpreminder` - Lösche den aktiven Bump-Reminder\n" +
+                    "`!bumpreminder` - Aktiviere den Bump-Reminder (Alias)\n" +
+                    "`!bumpreminderdet` - Deaktiviere den Bump-Reminder (Alias)\n" +
+                    "`!bumpstatus` - Zeigt den Status des Bump-Reminders\n" +
+                    "`!bumphelp` - Zeigt Hilfe zum Bump-System", false)
+                .AddField("★ **Birthday**",
+                    "`!birthdaychannel` - Set the birthday channel *Admin only*\n" +
+                    "`!birthdayset` - Save your birthday", false)
+                .AddField("★ **Help Categories**",
+                    "`!mungahelpdesk` - Shows all big help categories\n" +
+                    "`!helpvoice` - Voice help\n" +
+                    "`!helpsecure` - Security help\n" +
+                    "`!helptwitch` - Twitch help\n" +
+                    "`!helpgithub` - GitHub help\n" +
+                    "`!helpbump` - Bump/Disboard help\n" +
+                    "`!helpbirth` - Birthday help", false)
+                .WithFooter("Powered by mungabee /aka azzygirl")
+                .WithThumbnailUrl("https://imgur.com/aYh8OAq.png");
+
+            await ReplyAsync(embed: embed.Build());
         }
 
         // Placeholder for security moderation trigger - this mimics the JS handler invocation
