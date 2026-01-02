@@ -33,7 +33,11 @@ namespace PiratBotCSharp
                     return;
                 }
 
-                _client = new DiscordSocketClient();
+                var config = new DiscordSocketConfig
+                {
+                    GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent | GatewayIntents.GuildVoiceStates
+                };
+                _client = new DiscordSocketClient(config);
                 _commands = new CommandService();
 
                 _services = new ServiceCollection()
