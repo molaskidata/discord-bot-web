@@ -381,5 +381,37 @@ namespace MainbotCSharp.Modules
                 await ReplyAsync("❌ Error listing birthdays: " + ex.Message);
             }
         }
+
+        [Command("info")]
+        [Summary("Show bot information")]
+        public async Task InfoAsync()
+        {
+            var embed = new EmbedBuilder()
+                .WithAuthor("!Code.Master() Bot Info", "https://imgur.com/aYh8OAq.png")
+                .WithDescription("**Bot Information & Details**")
+                .WithColor(0x40E0D0)
+                .AddField("Bot Name", "!Code.Master()", true)
+                .AddField("Version", "v2.0.0 (C# Edition)", true)
+                .AddField("Created", "Oktober 2024", true)
+                .AddField("Developer", "mungabee / azzygirl", true)
+                .AddField("Platform", "Discord.NET 3.11.0", true)
+                .AddField("Language", "C# (.NET 8.0)", true)
+                .AddField("Top.gg", "[Vote for us here!](https://top.gg/bot/your-bot-id)", false)
+                .AddField("Server Count", Context.Client.Guilds.Count.ToString(), true)
+                .AddField("User Count", Context.Client.Guilds.Sum(g => g.MemberCount).ToString(), true)
+                .AddField("Latency", $"{Context.Client.Latency}ms", true)
+                .AddField("Features",
+                    "• Advanced Security System\n" +
+                    "• Voice Channel Management\n" +
+                    "• Birthday Reminders\n" +
+                    "• Ticket System\n" +
+                    "• Twitch Integration\n" +
+                    "• GitHub Integration\n" +
+                    "• Bump Reminders", false)
+                .WithFooter("Powered by mungabee /aka azzygirl", "https://imgur.com/LjKtaGB.png")
+                .WithTimestamp(DateTimeOffset.Now);
+
+            await ReplyAsync(embed: embed.Build());
+        }
     }
 }
