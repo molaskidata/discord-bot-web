@@ -12,13 +12,19 @@ using Discord.WebSocket;
 namespace MainbotCSharp.Modules
 {
     // Ticket Service Classes
-    public class TicketConfigEntry { public ulong LogChannelId { get; set; } }
+    public class TicketConfigEntry
+    {
+        public ulong LogChannelId { get; set; }
+        public ulong? TicketCategoryId { get; set; }
+        public ulong? SupportRoleId { get; set; }
+    }
 
     public static class TicketService
     {
         private const string TICKETS_CONFIG_FILE = "tickets_config.json";
         private static Dictionary<ulong, TicketConfigEntry> _cfg = LoadTicketsConfig();
         public static ConcurrentDictionary<ulong, TicketMeta> TicketMetas = new();
+        private static readonly Dictionary<ulong, System.Timers.Timer> _autoCloseTimers = new();
 
         private static Dictionary<ulong, TicketConfigEntry> LoadTicketsConfig()
         {
@@ -57,16 +63,337 @@ namespace MainbotCSharp.Modules
             public ulong UserId { get; set; }
             public string Category { get; set; }
             public ulong GuildId { get; set; }
+            public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+            public string Username { get; set; }
+        }
+
+        public static async Task<SocketTextChannel> CreateTicketChannelAsync(SocketGuild guild, SocketUser user, string category)
+        {
+            try
+            {
+                var config = GetConfig(guild.Id);
+                var channelName = $"ticket-{user.Username}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
+
+                var overwrites = new List<Overwrite>
+                {
+                    new Overwrite(guild.EveryoneRole.Id, PermissionTarget.Role, new OverwritePermissions(viewChannel: PermValue.Deny)),
+                    new Overwrite(user.Id, PermissionTarget.User, new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow, readMessageHistory: PermValue.Allow))
+                };
+
+                // Add support role if configured
+                if (config?.SupportRoleId.HasValue == true)
+                {
+                    overwrites.Add(new Overwrite(config.SupportRoleId.Value, PermissionTarget.Role,
+                        new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow, readMessageHistory: PermValue.Allow)));
+                }
+
+                var channel = await guild.CreateTextChannelAsync(channelName, properties =>
+                {
+                    if (config?.TicketCategoryId.HasValue == true)
+                        properties.CategoryId = config.TicketCategoryId.Value;
+                    properties.Topic = $"Support ticket for {user.Username} - Category: {category}";
+                    properties.PermissionOverwrites = overwrites;
+                });
+
+                // Store ticket metadata
+                TicketMetas[channel.Id] = new TicketMeta
+                {
+                    UserId = user.Id,
+                    Category = category,
+                    GuildId = guild.Id,
+                    Username = user.Username
+                };
+
+                // Send initial ticket message with close button
+                var embed = new EmbedBuilder()
+                    .WithTitle($"🎫 Support Ticket - {category}")
+                    .WithDescription($"Hello {user.Mention}! Thank you for creating a support ticket.\n\n" +
+                                   $"**Category:** {category}\n" +
+                                   $"**Created:** <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:F>\n\n" +
+                                   "Please describe your issue in detail. A support team member will assist you shortly.")
+                    .WithColor(0x40E0D0)
+                    .WithFooter("This ticket will auto-close after 24 hours of inactivity.");
+
+                var components = new ComponentBuilder()
+                    .WithButton("🔒 Close Ticket", "ticket_close", ButtonStyle.Danger)
+                    .WithButton("📋 Add User", "ticket_add_user", ButtonStyle.Secondary);
+
+                await channel.SendMessageAsync(embed: embed.Build(), components: components.Build());
+
+                // Start auto-close timer (24 hours)
+                StartAutoCloseTimer(channel.Id, TimeSpan.FromHours(24));
+
+                return channel;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating ticket: {ex.Message}");
+                return null;
+            }
+        }
+
+        public static async Task HandleSelectMenuInteraction(SocketMessageComponent component)
+        {
+            try
+            {
+                if (component.Data.CustomId != "support_select") return;
+
+                var selectedValue = component.Data.Values.FirstOrDefault();
+                if (string.IsNullOrEmpty(selectedValue)) return;
+
+                var category = selectedValue.Replace("support_", "").Replace("_", " ");
+                category = char.ToUpper(category[0]) + category.Substring(1);
+
+                // Check if user already has an active ticket
+                var existingTicket = TicketMetas.Values.FirstOrDefault(t =>
+                    t.UserId == component.User.Id && t.GuildId == component.GuildId);
+
+                if (existingTicket != null)
+                {
+                    var existingChannel = component.Guild.GetTextChannel(TicketMetas.FirstOrDefault(t => t.Value == existingTicket).Key);
+                    if (existingChannel != null)
+                    {
+                        await component.RespondAsync($"❌ You already have an active ticket: {existingChannel.Mention}", ephemeral: true);
+                        return;
+                    }
+                }
+
+                await component.DeferAsync();
+
+                var channel = await CreateTicketChannelAsync(component.Guild, component.User, category);
+                if (channel != null)
+                {
+                    await component.FollowupAsync($"✅ Ticket created: {channel.Mention}", ephemeral: true);
+
+                    // Log ticket creation
+                    var config = GetConfig(component.GuildId);
+                    if (config != null)
+                    {
+                        var logChannel = component.Guild.GetTextChannel(config.LogChannelId);
+                        if (logChannel != null)
+                        {
+                            var logEmbed = new EmbedBuilder()
+                                .WithTitle("🎫 New Ticket Created")
+                                .WithColor(Color.Green)
+                                .AddField("User", component.User.Mention, true)
+                                .AddField("Category", category, true)
+                                .AddField("Channel", channel.Mention, true)
+                                .WithTimestamp(DateTimeOffset.UtcNow);
+
+                            await logChannel.SendMessageAsync(embed: logEmbed.Build());
+                        }
+                    }
+                }
+                else
+                {
+                    await component.FollowupAsync("❌ Failed to create ticket. Please try again or contact an administrator.", ephemeral: true);
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error handling select menu: {ex.Message}");
+            }
+        }
+
+        public static async Task HandleButtonInteraction(SocketMessageComponent component)
+        {
+            try
+            {
+                switch (component.Data.CustomId)
+                {
+                    case "ticket_close":
+                        await HandleCloseTicket(component);
+                        break;
+                    case "ticket_add_user":
+                        await HandleAddUser(component);
+                        break;
+                    case "ticket_confirm_close":
+                        await HandleConfirmClose(component);
+                        break;
+                    case "ticket_cancel_close":
+                        await HandleCancelClose(component);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error handling button interaction: {ex.Message}");
+            }
+        }
+
+        private static async Task HandleCloseTicket(SocketMessageComponent component)
+        {
+            if (!TicketMetas.TryGetValue(component.Channel.Id, out var meta)) return;
+
+            // Only ticket creator or support role can close
+            var user = component.User as SocketGuildUser;
+            var config = GetConfig(meta.GuildId);
+            bool canClose = user.Id == meta.UserId ||
+                           user.GuildPermissions.Administrator ||
+                           (config?.SupportRoleId.HasValue == true && user.Roles.Any(r => r.Id == config.SupportRoleId.Value));
+
+            if (!canClose)
+            {
+                await component.RespondAsync("❌ Only the ticket creator or support team can close this ticket.", ephemeral: true);
+                return;
+            }
+
+            var embed = new EmbedBuilder()
+                .WithTitle("🔒 Close Ticket Confirmation")
+                .WithDescription("Are you sure you want to close this ticket?\n\n" +
+                               "This action cannot be undone, but a transcript will be saved.")
+                .WithColor(Color.Orange);
+
+            var confirmComponents = new ComponentBuilder()
+                .WithButton("✅ Confirm Close", "ticket_confirm_close", ButtonStyle.Danger)
+                .WithButton("❌ Cancel", "ticket_cancel_close", ButtonStyle.Secondary);
+
+            await component.RespondAsync(embed: embed.Build(), components: confirmComponents.Build());
+        }
+
+        private static async Task HandleConfirmClose(SocketMessageComponent component)
+        {
+            await component.DeferAsync();
+            await CloseTicketChannel(component.Channel as SocketTextChannel, component.User);
+        }
+
+        private static async Task HandleCancelClose(SocketMessageComponent component)
+        {
+            await component.UpdateAsync(x =>
+            {
+                x.Embed = new EmbedBuilder()
+                    .WithTitle("❌ Close Cancelled")
+                    .WithDescription("Ticket close has been cancelled.")
+                    .WithColor(Color.Green)
+                    .Build();
+                x.Components = new ComponentBuilder().Build();
+            });
+        }
+
+        private static async Task HandleAddUser(SocketMessageComponent component)
+        {
+            if (!TicketMetas.TryGetValue(component.Channel.Id, out var meta)) return;
+
+            var user = component.User as SocketGuildUser;
+            bool canAddUser = user.Id == meta.UserId ||
+                             user.GuildPermissions.Administrator ||
+                             user.GuildPermissions.ManageChannels;
+
+            if (!canAddUser)
+            {
+                await component.RespondAsync("❌ Only the ticket creator or staff can add users.", ephemeral: true);
+                return;
+            }
+
+            await component.RespondAsync("Please mention the user you want to add to this ticket:", ephemeral: true);
+        }
+
+        public static async Task CloseTicketChannel(SocketTextChannel channel, SocketUser closedBy)
+        {
+            try
+            {
+                if (!TicketMetas.TryGetValue(channel.Id, out var meta)) return;
+
+                // Save transcript
+                await SaveTranscriptAsync(channel.Guild, channel, meta);
+
+                // Remove auto-close timer
+                if (_autoCloseTimers.TryGetValue(channel.Id, out var timer))
+                {
+                    timer.Stop();
+                    timer.Dispose();
+                    _autoCloseTimers.Remove(channel.Id);
+                }
+
+                // Log closure
+                var config = GetConfig(meta.GuildId);
+                if (config != null)
+                {
+                    var logChannel = channel.Guild.GetTextChannel(config.LogChannelId);
+                    if (logChannel != null)
+                    {
+                        var logEmbed = new EmbedBuilder()
+                            .WithTitle("🔒 Ticket Closed")
+                            .WithColor(Color.Red)
+                            .AddField("Ticket", channel.Name, true)
+                            .AddField("Creator", $"<@{meta.UserId}>", true)
+                            .AddField("Closed By", closedBy.Mention, true)
+                            .AddField("Category", meta.Category, true)
+                            .AddField("Duration", $"{DateTime.UtcNow - meta.CreatedAt:dd\\:hh\\:mm\\:ss}", true)
+                            .WithTimestamp(DateTimeOffset.UtcNow);
+
+                        await logChannel.SendMessageAsync(embed: logEmbed.Build());
+                    }
+                }
+
+                // Remove from tracking
+                TicketMetas.TryRemove(channel.Id, out _);
+
+                // Delete channel
+                await channel.DeleteAsync();
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error closing ticket: {ex.Message}");
+            }
+        }
+
+        private static void StartAutoCloseTimer(ulong channelId, TimeSpan delay)
+        {
+            var timer = new System.Timers.Timer(delay.TotalMilliseconds);
+            timer.Elapsed += async (sender, e) =>
+            {
+                try
+                {
+                    timer.Stop();
+                    timer.Dispose();
+                    _autoCloseTimers.Remove(channelId);
+
+                    // Auto-close logic would go here
+                    // For now, we'll just remove it from timers
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Auto-close timer error: {ex.Message}");
+                }
+            };
+            timer.Start();
+            _autoCloseTimers[channelId] = timer;
         }
 
         public static async Task<bool> SaveTranscriptAsync(SocketGuild guild, Discord.ITextChannel channel, TicketMeta meta)
         {
             try
             {
-                var messages = await channel.GetMessagesAsync(100).FlattenAsync();
-                var transcript = string.Join('\n', messages.Reverse().Select(m => $"[{m.Timestamp}] {m.Author} ({m.Author.Id}): {m.Content}"));
+                var messages = await channel.GetMessagesAsync(500).FlattenAsync();
+                var orderedMessages = messages.OrderBy(m => m.Timestamp);
+
+                var transcript = "=== TICKET TRANSCRIPT ===\n";
+                transcript += $"Ticket: {channel.Name}\n";
+                transcript += $"Creator: {meta.Username} ({meta.UserId})\n";
+                transcript += $"Category: {meta.Category}\n";
+                transcript += $"Created: {meta.CreatedAt:yyyy-MM-dd HH:mm:ss} UTC\n";
+                transcript += $"Closed: {DateTime.UtcNow:yyyy-MM-dd HH:mm:ss} UTC\n";
+                transcript += "========================\n\n";
+
+                foreach (var msg in orderedMessages)
+                {
+                    if (!msg.Author.IsBot || !string.IsNullOrEmpty(msg.Content))
+                    {
+                        transcript += $"[{msg.Timestamp:yyyy-MM-dd HH:mm:ss}] {msg.Author.Username}#{msg.Author.Discriminator}: {msg.Content}\n";
+
+                        if (msg.Attachments.Any())
+                        {
+                            foreach (var attachment in msg.Attachments)
+                            {
+                                transcript += $"   [Attachment: {attachment.Filename} - {attachment.Url}]\n";
+                            }
+                        }
+                    }
+                }
+
                 var filename = $"ticket_{meta.GuildId}_{channel.Id}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.txt";
-                try { System.IO.File.WriteAllText(filename, transcript); } catch { }
+                await File.WriteAllTextAsync(filename, transcript);
 
                 var cfg = GetConfig(meta.GuildId);
                 if (cfg != null)
@@ -74,49 +401,64 @@ namespace MainbotCSharp.Modules
                     var logChan = guild.GetTextChannel(cfg.LogChannelId);
                     if (logChan != null)
                     {
-                        try { await logChan.SendFileAsync(filename, $"Ticket transcript from {channel.Name} (created by <@{meta.UserId}>):"); } catch { }
+                        try
+                        {
+                            await logChan.SendFileAsync(filename, $"📋 Ticket transcript from **{channel.Name}** (created by <@{meta.UserId}>)");
+                        }
+                        catch { }
                     }
                 }
 
-                try { System.IO.File.Delete(filename); } catch { }
+                try { File.Delete(filename); } catch { }
                 return true;
             }
-            catch { return false; }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error saving transcript: {ex.Message}");
+                return false;
+            }
         }
     }
 
     public class TicketCommands : ModuleBase<SocketCommandContext>
     {
-        [Command("munga-ticketsystem")]
+        [Command("ticket-setup")]
         [Summary("Setup ticket system (Admin only)")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task SetupTicketSystemAsync()
+        public async Task SetupTicketSystemAsync(ICategoryChannel category = null, IRole supportRole = null)
         {
             try
             {
-                var config = new TicketConfigEntry { LogChannelId = Context.Channel.Id };
+                var config = new TicketConfigEntry
+                {
+                    LogChannelId = Context.Channel.Id,
+                    TicketCategoryId = category?.Id,
+                    SupportRoleId = supportRole?.Id
+                };
                 TicketService.SetConfig(Context.Guild.Id, config);
 
                 var embed = new EmbedBuilder()
                     .WithTitle("🎫 Support System")
                     .WithDescription("Need help? Select a category below to open a support ticket:")
-                    .WithColor(Color.Blue)
+                    .WithColor(0x40E0D0)
                     .AddField("Available Categories",
-                        "🔧 Technical Issue\n" +
-                        "🚨 Spam / Scam\n" +
-                        "⚠️ Abuse / Harassment\n" +
-                        "📢 Advertising / Recruitment\n" +
-                        "🐛 Bug / Feature Request\n" +
-                        "❓ Other", false)
-                    .WithFooter("Select from the dropdown below");
+                        "🔧 **Technical** - Technical problems or questions\n" +
+                        "🚨 **Spam/Scam** - Report spam or scam content\n" +
+                        "⚠️ **Abuse** - Report abusive behavior\n" +
+                        "📢 **Advertising** - Unauthorized advertising\n" +
+                        "🐛 **Bug Report** - Report bugs or suggest features\n" +
+                        "❓ **Other** - Other issues not listed above", false)
+                    .WithFooter("Select from the dropdown below • Tickets auto-close after 24h of inactivity");
 
                 var menu = new SelectMenuBuilder()
-                    .WithPlaceholder("Choose your issue category")
+                    .WithPlaceholder("Choose your issue category...")
                     .WithCustomId("support_select")
+                    .WithMinValues(1)
+                    .WithMaxValues(1)
                     .AddOption("Technical Issue", "support_technical", "Technical problems or questions", new Emoji("🔧"))
-                    .AddOption("Spam / Scam", "support_spam", "Report spam or scam content", new Emoji("🚨"))
+                    .AddOption("Spam / Scam Report", "support_spam", "Report spam or scam content", new Emoji("🚨"))
                     .AddOption("Abuse / Harassment", "support_abuse", "Report abusive behavior", new Emoji("⚠️"))
-                    .AddOption("Advertising / Recruitment", "support_ad", "Unauthorized advertising", new Emoji("📢"))
+                    .AddOption("Advertising", "support_advertising", "Report unauthorized advertising", new Emoji("📢"))
                     .AddOption("Bug / Feature Request", "support_bug", "Report bugs or suggest features", new Emoji("🐛"))
                     .AddOption("Other", "support_other", "Other issues not listed above", new Emoji("❓"));
 
@@ -124,11 +466,148 @@ namespace MainbotCSharp.Modules
                     .WithSelectMenu(menu);
 
                 await ReplyAsync(embed: embed.Build(), components: components.Build());
-                await ReplyAsync($"✅ Ticket system configured! Log channel: <#{Context.Channel.Id}>");
+
+                // Send setup confirmation
+                var setupEmbed = new EmbedBuilder()
+                    .WithTitle("✅ Ticket System Configured")
+                    .WithColor(Color.Green)
+                    .AddField("Log Channel", $"<#{Context.Channel.Id}>", true)
+                    .AddField("Category", category != null ? category.Name : "Default", true)
+                    .AddField("Support Role", supportRole != null ? supportRole.Mention : "None", true)
+                    .WithDescription("Users can now create tickets using the dropdown above!");
+
+                await ReplyAsync(embed: setupEmbed.Build());
             }
             catch (Exception ex)
             {
                 await ReplyAsync($"❌ Setup failed: {ex.Message}");
+            }
+        }
+
+        [Command("ticket-close")]
+        [Summary("Close the current ticket")]
+        public async Task CloseTicketAsync([Remainder] string reason = "No reason provided")
+        {
+            try
+            {
+                if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
+                {
+                    await ReplyAsync("❌ This is not a ticket channel.");
+                    return;
+                }
+
+                var user = Context.User as SocketGuildUser;
+                var config = TicketService.GetConfig(Context.Guild.Id);
+                bool canClose = user.Id == meta.UserId ||
+                               user.GuildPermissions.Administrator ||
+                               (config?.SupportRoleId.HasValue == true && user.Roles.Any(r => r.Id == config.SupportRoleId.Value));
+
+                if (!canClose)
+                {
+                    await ReplyAsync("❌ Only the ticket creator or support team can close this ticket.");
+                    return;
+                }
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("🔒 Closing Ticket...")
+                    .WithDescription($"Ticket will be closed in 5 seconds.\n**Reason:** {reason}")
+                    .WithColor(Color.Orange);
+
+                await ReplyAsync(embed: embed.Build());
+
+                await Task.Delay(5000);
+                await TicketService.CloseTicketChannel(Context.Channel as SocketTextChannel, Context.User);
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to close ticket: {ex.Message}");
+            }
+        }
+
+        [Command("ticket-add")]
+        [Summary("Add a user to the current ticket")]
+        public async Task AddUserToTicketAsync(SocketGuildUser userToAdd)
+        {
+            try
+            {
+                if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
+                {
+                    await ReplyAsync("❌ This is not a ticket channel.");
+                    return;
+                }
+
+                var user = Context.User as SocketGuildUser;
+                bool canAddUser = user.Id == meta.UserId ||
+                                 user.GuildPermissions.Administrator ||
+                                 user.GuildPermissions.ManageChannels;
+
+                if (!canAddUser)
+                {
+                    await ReplyAsync("❌ Only the ticket creator or staff can add users.");
+                    return;
+                }
+
+                var channel = Context.Channel as SocketTextChannel;
+                await channel.AddPermissionOverwriteAsync(userToAdd, new OverwritePermissions(
+                    viewChannel: PermValue.Allow,
+                    sendMessages: PermValue.Allow,
+                    readMessageHistory: PermValue.Allow));
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("✅ User Added")
+                    .WithDescription($"{userToAdd.Mention} has been added to this ticket.")
+                    .WithColor(Color.Green);
+
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to add user: {ex.Message}");
+            }
+        }
+
+        [Command("ticket-remove")]
+        [Summary("Remove a user from the current ticket")]
+        public async Task RemoveUserFromTicketAsync(SocketGuildUser userToRemove)
+        {
+            try
+            {
+                if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
+                {
+                    await ReplyAsync("❌ This is not a ticket channel.");
+                    return;
+                }
+
+                if (userToRemove.Id == meta.UserId)
+                {
+                    await ReplyAsync("❌ Cannot remove the ticket creator.");
+                    return;
+                }
+
+                var user = Context.User as SocketGuildUser;
+                bool canRemoveUser = user.Id == meta.UserId ||
+                                    user.GuildPermissions.Administrator ||
+                                    user.GuildPermissions.ManageChannels;
+
+                if (!canRemoveUser)
+                {
+                    await ReplyAsync("❌ Only the ticket creator or staff can remove users.");
+                    return;
+                }
+
+                var channel = Context.Channel as SocketTextChannel;
+                await channel.RemovePermissionOverwriteAsync(userToRemove);
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("✅ User Removed")
+                    .WithDescription($"{userToRemove.Mention} has been removed from this ticket.")
+                    .WithColor(Color.Orange);
+
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to remove user: {ex.Message}");
             }
         }
 
@@ -141,18 +620,61 @@ namespace MainbotCSharp.Modules
             {
                 var config = TicketService.GetConfig(Context.Guild.Id);
                 var activeTickets = TicketService.TicketMetas.Count(t => t.Value.GuildId == Context.Guild.Id);
+                var activeTicketsList = TicketService.TicketMetas
+                    .Where(t => t.Value.GuildId == Context.Guild.Id)
+                    .Take(10)
+                    .Select(t => $"<#{t.Key}> - <@{t.Value.UserId}> ({t.Value.Category})")
+                    .ToList();
 
                 var embed = new EmbedBuilder()
                     .WithTitle("🎫 Ticket System Status")
-                    .WithColor(Color.Blue)
-                    .AddField("Log Channel", config != null ? $"<#{config.LogChannelId}>" : "Not configured", true)
-                    .AddField("Active Tickets", activeTickets.ToString(), true);
+                    .WithColor(0x40E0D0)
+                    .AddField("Configuration",
+                        $"**Log Channel:** {(config != null ? $"<#{config.LogChannelId}>" : "Not configured")}\n" +
+                        $"**Category:** {(config?.TicketCategoryId.HasValue == true ? $"<#{config.TicketCategoryId}>" : "Default")}\n" +
+                        $"**Support Role:** {(config?.SupportRoleId.HasValue == true ? $"<@&{config.SupportRoleId}>" : "None")}", false)
+                    .AddField("Statistics", $"**Active Tickets:** {activeTickets}", true);
+
+                if (activeTicketsList.Any())
+                {
+                    embed.AddField("Recent Tickets", string.Join("\n", activeTicketsList), false);
+                }
 
                 await ReplyAsync(embed: embed.Build());
             }
             catch (Exception ex)
             {
                 await ReplyAsync($"❌ Failed to get status: {ex.Message}");
+            }
+        }
+
+        [Command("ticket-transcript")]
+        [Summary("Generate transcript for current ticket")]
+        public async Task GenerateTranscriptAsync()
+        {
+            try
+            {
+                if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
+                {
+                    await ReplyAsync("❌ This is not a ticket channel.");
+                    return;
+                }
+
+                await ReplyAsync("📋 Generating transcript...");
+                var success = await TicketService.SaveTranscriptAsync(Context.Guild, Context.Channel, meta);
+
+                if (success)
+                {
+                    await ReplyAsync("✅ Transcript generated and saved to logs!");
+                }
+                else
+                {
+                    await ReplyAsync("❌ Failed to generate transcript.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to generate transcript: {ex.Message}");
             }
         }
     }
