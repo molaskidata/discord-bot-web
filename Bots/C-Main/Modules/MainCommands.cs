@@ -393,7 +393,7 @@ namespace MainbotCSharp.Modules
                 .AddField("Bot Name", "!Code.Master()", true)
                 .AddField("Version", "v2.0.0 (C# Edition)", true)
                 .AddField("Created", "Oktober 2024", true)
-                .AddField("Developer", "mungabee / azzygirl", true)
+                .AddField("Developer", "mungabee / ozzygirl", true)
                 .AddField("Platform", "Discord.NET 3.11.0", true)
                 .AddField("Language", "C# (.NET 8.0)", true)
                 .AddField("Top.gg", "[Vote for us here!](https://top.gg/bot/your-bot-id)", false)
@@ -408,7 +408,7 @@ namespace MainbotCSharp.Modules
                     "• Twitch Integration\n" +
                     "• GitHub Integration\n" +
                     "• Bump Reminders", false)
-                .WithFooter("Powered by mungabee /aka azzygirl", "https://imgur.com/LjKtaGB.png")
+                .WithFooter("Powered by mungabee /aka ozzygirl", "https://imgur.com/LjKtaGB.png")
                 .WithTimestamp(DateTimeOffset.Now);
 
             await ReplyAsync(embed: embed.Build());
