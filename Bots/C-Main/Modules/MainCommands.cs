@@ -221,7 +221,7 @@ namespace MainbotCSharp.Modules
                     "`!helpgithub` - GitHub help\n" +
                     "`!helpbump` - Bump/Disboard help\n" +
                     "`!helpbirth` - Birthday help", false)
-                .WithFooter("Powered by mungabee /aka azzygirl")
+                .WithFooter("Powered by mungabee /aka ozzygirl", "https://imgur.com/LjKtaGB.png")
                 .WithImageUrl("https://imgur.com/aYh8OAq.png");
 
             await ReplyAsync(embed: embed.Build());
