@@ -171,7 +171,7 @@ namespace MainbotCSharp.Modules
                     .WithTitle("🛡️ Security System Enabled")
                     .WithColor(Color.Green)
                     .WithDescription("Security monitoring is now active!")
-                    .AddField("Log Channel", Context.Channel.Mention, true)
+                    .AddField("Log Channel", $"<#{Context.Channel.Id}>", true)
                     .AddField("Features", "• Invite link detection\n• Spam detection\n• NSFW content filter\n• Inappropriate language filter", false);
 
                 await ReplyAsync(embed: embed.Build());
