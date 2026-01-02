@@ -58,7 +58,7 @@ namespace MainbotCSharp
         private async Task Client_Ready()
         {
             Console.WriteLine($"Mainbot ready. Logged in as {_client.CurrentUser}");
-            await _client.SetActivityAsync(new Game("Sailing the seven seas"));
+            await _client.SetActivityAsync(new Game("Managing the server"));
             try { await MainbotCSharp.Modules.VoiceService.StartBackgroundTasks(_client); } catch (Exception ex) { Console.WriteLine("VoiceService start error: " + ex); }
             try
             {
