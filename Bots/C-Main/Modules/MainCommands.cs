@@ -208,8 +208,8 @@ namespace MainbotCSharp.Modules
                     var response = await Context.Channel.GetMessagesAsync(1).FlattenAsync();
 
                     // Simple timeout approach - wait for next message from user
-                    var userMessages = Context.Channel.GetMessagesAsync(50).FlattenAsync();
-                    await foreach (var userMsg in userMessages)
+                    var userMessages = await Context.Channel.GetMessagesAsync(50).FlattenAsync();
+                    foreach (var userMsg in userMessages)
                     {
                         if (userMsg.Author.Id == Context.User.Id && userMsg.Id != Context.Message.Id)
                         {
