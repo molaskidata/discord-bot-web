@@ -3,8 +3,8 @@ module.exports = {
         {
             name: "cmain",
             cwd: "./Bots/C-Main",
-            script: "/usr/bin/dotnet",
-            args: "run",
+            script: "/bin/bash",
+            args: ["-c", "dotnet run"],
             env: {
                 ASPNETCORE_ENVIRONMENT: "Production"
             }
@@ -12,8 +12,8 @@ module.exports = {
         {
             name: "cping",
             cwd: "./Bots/C-Ping",
-            script: "/usr/bin/dotnet",
-            args: "run",
+            script: "/bin/bash",
+            args: ["-c", "dotnet run"],
             env: {
                 ASPNETCORE_ENVIRONMENT: "Production"
             }
@@ -21,8 +21,8 @@ module.exports = {
         {
             name: "cpirat",
             cwd: "./Bots/C-Pirat",
-            script: "/usr/bin/dotnet",
-            args: "run",
+            script: "/bin/bash",
+            args: ["-c", "dotnet run"],
             env: {
                 ASPNETCORE_ENVIRONMENT: "Production"
             }
@@ -30,8 +30,8 @@ module.exports = {
         {
             name: "cweb",
             cwd: "./Website/WebsiteServer",
-            script: "/usr/bin/dotnet",
-            args: "run",
+            script: "/bin/bash",
+            args: ["-c", "dotnet run"],
             env: {
                 ASPNETCORE_ENVIRONMENT: "Production",
                 ASPNETCORE_URLS: "http://localhost:5000"
