@@ -387,11 +387,11 @@ namespace MainbotCSharp.Modules
         public async Task InfoAsync()
         {
             var embed = new EmbedBuilder()
-                .WithAuthor("!Code.Master() Bot Info", "https://imgur.com/aYh8OAq.png")
+                .WithAuthor("CoderMaster Bot Info", "https://imgur.com/aYh8OAq.png")
                 .WithDescription("**Bot Information & Details**")
                 .WithColor(0x40E0D0)
-                .AddField("Bot Name", "!Code.Master()", true)
-                .AddField("Version", "v2.0.0 (C# Edition)", true)
+                .AddField("Bot Name", "CoderMaster", true)
+                .AddField("Version", "v1.0.0", true)
                 .AddField("Created", "Oktober 2024", true)
                 .AddField("Developer", "mungabee / ozzygirl", true)
                 .AddField("Platform", "Discord.NET 3.11.0", true)
@@ -410,6 +410,117 @@ namespace MainbotCSharp.Modules
                     "• GitHub Integration\n" +
                     "• Bump Reminders", false)
                 .WithFooter("Powered by mungabee /aka ozzygirl", "https://imgur.com/LjKtaGB.png")
+                .WithTimestamp(DateTimeOffset.Now);
+
+            await ReplyAsync(embed: embed.Build());
+        }
+
+        [SlashCommand("gn", "Say good night with random messages")]
+        public async Task GoodNight()
+        {
+            var responses = new[]
+            {
+                "Good night! 🌙",
+                "Sweet dreams! ✨",
+                "Sleep well! 😴",
+                "Nighty night! 🌟",
+                "Rest well! 💤",
+                "Dream sweetly! 🌙✨"
+            };
+
+            var random = new Random();
+            var response = responses[random.Next(responses.Length)];
+
+            await ReplyAsync(response);
+        }
+
+        [SlashCommand("gm", "Say good morning with random messages")]
+        public async Task GoodMorning()
+        {
+            var responses = new[]
+            {
+                "Good morning! ☀️",
+                "Rise and shine! ✨",
+                "Morning! ☕",
+                "Wake up sunshine! 🌅",
+                "Have a great day! 🌞",
+                "Time to code! ☀️💻"
+            };
+
+            var random = new Random();
+            var response = responses[random.Next(responses.Length)];
+
+            await ReplyAsync(response);
+        }
+
+        [SlashCommand("hi", "Say hello with random messages")]
+        public async Task Hello()
+        {
+            var responses = new[]
+            {
+                "Hello! 👋",
+                "Hi there! 😊",
+                "Hey! 🎉",
+                "Howdy! 🤠",
+                "Greetings! ✨",
+                "What's up! 🚀"
+            };
+
+            var random = new Random();
+            var response = responses[random.Next(responses.Length)];
+
+            await ReplyAsync(response);
+        }
+
+        [SlashCommand("ping", "Check bot latency and response time")]
+        public async Task Ping()
+        {
+            var latency = Context.Client.Latency;
+            await ReplyAsync($"🏓 Pong! Latency: {latency}ms");
+        }
+
+        [SlashCommand("coffee", "Get your virtual coffee fix")]
+        public async Task Coffee()
+        {
+            var coffeeEmojis = new[] { "☕", "🍵", "🥤", "🧋", "☕", "🍺" };
+            var coffeeMessages = new[]
+            {
+                "Here's your coffee! Enjoy!",
+                "Fresh brew coming up!",
+                "Caffeine incoming!",
+                "Time for a coffee break!",
+                "Your daily dose of energy!",
+                "Fuel for coding!"
+            };
+
+            var random = new Random();
+            var emoji = coffeeEmojis[random.Next(coffeeEmojis.Length)];
+            var message = coffeeMessages[random.Next(coffeeMessages.Length)];
+
+            await ReplyAsync($"{emoji} {message}");
+        }
+
+        [SlashCommand("devmeme", "Get a random developer meme")]
+        public async Task DevMeme()
+        {
+            var memes = new[]
+            {
+                "https://i.imgur.com/dVDJiez.jpg",
+                "https://i.imgur.com/9nVMRqa.jpg",
+                "https://i.imgur.com/5K4n8Qz.png",
+                "https://i.imgur.com/XqQXjch.jpg",
+                "https://i.imgur.com/yQraNOx.png",
+                "https://i.imgur.com/KqGHF7e.jpg"
+            };
+
+            var random = new Random();
+            var meme = memes[random.Next(memes.Length)];
+
+            var embed = new EmbedBuilder()
+                .WithTitle("😂 Developer Meme")
+                .WithImageUrl(meme)
+                .WithColor(0x40E0D0)
+                .WithFooter("Keep coding! 💻", "https://imgur.com/LjKtaGB.png")
                 .WithTimestamp(DateTimeOffset.Now);
 
             await ReplyAsync(embed: embed.Build());
