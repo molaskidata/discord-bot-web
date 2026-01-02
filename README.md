@@ -123,7 +123,6 @@ If you get an error like `Cannot find module 'discord.js'` when starting the bot
   ```
   DISCORD_TOKEN=your_token_here
   ```
-
 ### Running Bots on Hetzner Server
 - Upload your bot files to the server.
 - Install Node.js and dependencies:
