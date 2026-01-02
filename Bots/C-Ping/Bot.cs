@@ -26,7 +26,7 @@ namespace PingbotCSharp
             _services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
-                .AddSingleton<PingbotCSharp.Services.PingService>()
+                .AddSingleton<PingbotCSharp.Modules.PingService>()
                 .BuildServiceProvider();
 
             _client.Log += Client_Log;
@@ -37,7 +37,7 @@ namespace PingbotCSharp
             {
                 try
                 {
-                    var svc = _services.GetService(typeof(PingbotCSharp.Services.PingService)) as PingbotCSharp.Services.PingService;
+                    var svc = _services.GetService(typeof(PingbotCSharp.Modules.PingService)) as PingbotCSharp.Modules.PingService;
                     if (svc != null) await svc.StartAsync(_client);
                 }
                 catch (Exception ex) { Console.WriteLine("PingService start error: " + ex); }

@@ -5,7 +5,9 @@ using Discord;
 using Discord.WebSocket;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
-using MainbotCSharp.Services;
+using MainbotCSharp.Modules;
+using MainbotCSharp.Modules;
+using static MainbotCSharp.Modules.TicketService;
 
 namespace MainbotCSharp
 {
@@ -27,7 +29,7 @@ namespace MainbotCSharp
             _services = new ServiceCollection()
                 .AddSingleton(_client)
                 .AddSingleton(_commands)
-                .AddSingleton<MainbotCSharp.Services.MonitorService>()
+                .AddSingleton<MainbotCSharp.Modules.MonitorService>()
                 .BuildServiceProvider();
 
             _client.Log += Client_Log;
@@ -35,7 +37,7 @@ namespace MainbotCSharp
             _client.Ready += Client_Ready;
             _client.MessageReceived += HandleMessageAsync;
             _client.InteractionCreated += InteractionCreatedAsync;
-            _client.UserVoiceStateUpdated += MainbotCSharp.Services.VoiceService.HandleVoiceStateUpdatedAsync;
+            _client.UserVoiceStateUpdated += MainbotCSharp.Modules.VoiceService.HandleVoiceStateUpdatedAsync;
         }
 
         public async Task InitializeAsync()
@@ -57,10 +59,10 @@ namespace MainbotCSharp
         {
             Console.WriteLine($"Mainbot ready. Logged in as {_client.CurrentUser}");
             await _client.SetActivityAsync(new Game("Sailing the seven seas"));
-            try { await MainbotCSharp.Services.VoiceService.StartBackgroundTasks(_client); } catch (Exception ex) { Console.WriteLine("VoiceService start error: " + ex); }
+            try { await MainbotCSharp.Modules.VoiceService.StartBackgroundTasks(_client); } catch (Exception ex) { Console.WriteLine("VoiceService start error: " + ex); }
             try
             {
-                var mon = _services.GetService(typeof(MainbotCSharp.Services.MonitorService)) as MainbotCSharp.Services.MonitorService;
+                var mon = _services.GetService(typeof(MainbotCSharp.Modules.MonitorService)) as MainbotCSharp.Modules.MonitorService;
                 if (mon != null) await mon.StartAsync(_client);
             }
             catch (Exception ex) { Console.WriteLine("MonitorService start error: " + ex); }
@@ -68,11 +70,12 @@ namespace MainbotCSharp
             // Initialize Birthday Service
             try
             {
-                MainbotCSharp.Services.BirthdayService.Initialize(_client);
+                MainbotCSharp.Modules.BirthdayService.Initialize(_client);
             }
-            catch (Exception ex) { Console.WriteLine("BirthdayService start error: " + ex); }
-
-            return;
+            catch (Exception ex)
+            {
+                Console.WriteLine("BirthdayService initialization error: " + ex);
+            }
         }
 
         private Task Client_Log(LogMessage msg)
@@ -92,7 +95,7 @@ namespace MainbotCSharp
             // run security checks first
             try
             {
-                await MainbotCSharp.Services.SecurityService.HandleMessageAsync(rawMessage);
+                await MainbotCSharp.Modules.SecurityService.HandleMessageAsync(rawMessage);
             }
             catch { }
 
@@ -162,7 +165,7 @@ namespace MainbotCSharp
                             .WithButton("Log Ticket", "ticket_log", ButtonStyle.Secondary)
                             .WithButton("Save Transcript", "ticket_save", ButtonStyle.Primary);
                         await ticketChan.SendMessageAsync($"<@{user.Id}>", embed: embed.Build(), components: row.Build());
-                        TicketService.TicketMetas.TryAdd(ticketChan.Id, new TicketService.TicketMeta { GuildId = guild.Id, UserId = user.Id, Category = label });
+                        MainbotCSharp.Modules.TicketService.TicketMetas.TryAdd(ticketChan.Id, new MainbotCSharp.Modules.TicketService.TicketMeta { GuildId = guild.Id, UserId = user.Id, Category = label });
                         await comp.RespondAsync($"✅ Ticket created: {ticketChan.Mention}", ephemeral: true);
                         return;
                     }
@@ -172,16 +175,16 @@ namespace MainbotCSharp
                     {
                         var channel = (comp.Channel as SocketGuildChannel)?.Guild?.GetTextChannel(comp.Channel.Id);
                         if (channel == null) { await comp.RespondAsync("This button can only be used inside a ticket channel.", ephemeral: true); return; }
-                        if (!TicketService.TicketMetas.TryGetValue(channel.Id, out var meta)) { await comp.RespondAsync("This button is only available inside a ticket channel.", ephemeral: true); return; }
+                        if (!MainbotCSharp.Modules.TicketService.TicketMetas.TryGetValue(channel.Id, out var meta)) { await comp.RespondAsync("This button is only available inside a ticket channel.", ephemeral: true); return; }
 
                         if (customId == "ticket_close")
                         {
                             await comp.RespondAsync("Closing ticket...", ephemeral: true);
-                            _ = Task.Run(async () => { await Task.Delay(1000); try { await channel.DeleteAsync(); } catch { } TicketService.TicketMetas.TryRemove(channel.Id, out _); });
+                            _ = Task.Run(async () => { await Task.Delay(1000); try { await channel.DeleteAsync(); } catch { } MainbotCSharp.Modules.TicketService.TicketMetas.TryRemove(channel.Id, out _); });
                             return;
                         }
 
-                        var cfg = TicketService.GetConfig(meta.GuildId);
+                        var cfg = MainbotCSharp.Modules.TicketService.GetConfig(meta.GuildId);
                         if (cfg == null) { await comp.RespondAsync("No log channel configured. Ask an admin to run !munga-ticketsystem.", ephemeral: true); return; }
 
                         // build transcript

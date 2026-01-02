@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.WebSocket;
 
-namespace MainbotCSharp.Services
+namespace MainbotCSharp.Modules
 {
     public class BirthdayData
     {
