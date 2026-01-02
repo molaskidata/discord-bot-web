@@ -125,7 +125,7 @@ namespace MainbotCSharp.Modules
                 string lastSeen = null;
                 if (found != null)
                 {
-                    var pres = found.Activity != null || found.Status != UserStatus.Offline ? "online" : "offline";
+                    var pres = found.Activities?.Any() == true || found.Status != UserStatus.Offline ? "online" : "offline";
                     var now = DateTimeOffset.UtcNow;
                     if (pres != "offline") { statusLabel = pres == "online" ? "ONLINE" : "STANDBY"; lastSeen = now.ToString("o"); _state.lastSeen[hints[0]] = lastSeen; SaveState(); return (statusLabel, lastSeen); }
                     if (_state.lastSeen.TryGetValue(hints[0], out var ls) && (DateTimeOffset.UtcNow - DateTimeOffset.Parse(ls)).TotalMinutes < 5) statusLabel = "CRASHED";
@@ -182,7 +182,7 @@ namespace MainbotCSharp.Modules
             try
             {
                 BirthdayService.SetBirthdayChannel(Context.Guild.Id, Context.Channel.Id);
-                await ReplyAsync($"✅ Birthday notifications will now be sent to {Context.Channel.Mention}");
+                await ReplyAsync($"✅ Birthday notifications will now be sent to <#{Context.Channel.Id}>");
             }
             catch (Exception ex)
             {
@@ -203,8 +203,7 @@ namespace MainbotCSharp.Modules
                 {
                     var msg = await ReplyAsync("Please provide your birthday in format: dd/mm/yyyy (e.g., 25/12/1995)");
 
-                    // Wait for user response using message collector pattern
-                    var filter = Discord.Addons.Interactive.Criteria.EnsureSourceUserCriteria();
+                    // Wait for user response using simple message collection
                     var response = await Context.Channel.GetMessagesAsync(1).FlattenAsync();
 
                     // Simple timeout approach - wait for next message from user
