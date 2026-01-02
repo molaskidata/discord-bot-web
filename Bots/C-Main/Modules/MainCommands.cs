@@ -3,6 +3,7 @@ using Discord.Commands;
 using Discord;
 using Discord.WebSocket;
 using MainbotCSharp.Modules;
+using MainbotCSharp.Services;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System;
@@ -197,7 +198,7 @@ namespace MainbotCSharp.Modules
                     "`!setchannel` - Create a new thread-only channel for clips *(use during `!settwitch` setup)*\n" +
                     "`!testtwitch` - Test clip posting by fetching latest clip\n" +
                     "`!deletetwitch` - Delete your Twitch account data", false)
-                .AddField("★ **GitHub** ❌ *out of order right now!*",
+                .AddField("★ **GitHub** ✅ *OAuth Integration*",
                     "`!github` - Bot owner's GitHub and Repos\n" +
                     "`!congithubacc` - Connect your GitHub account with the bot\n" +
                     "`!discongithubacc` - Disconnect your GitHub account\n" +
@@ -522,6 +523,302 @@ namespace MainbotCSharp.Modules
                 .WithColor(0x40E0D0)
                 .WithFooter("Keep coding! 💻", "https://imgur.com/LjKtaGB.png")
                 .WithTimestamp(DateTimeOffset.Now);
+
+            await ReplyAsync(embed: embed.Build());
+        }
+
+        // GitHub Commands
+        [Command("github")]
+        [Summary("Show bot owner's GitHub and repositories")]
+        public async Task GitHubAsync()
+        {
+            var embed = new EmbedBuilder()
+                .WithTitle("🐙 **Bot Owner GitHub**")
+                .WithDescription("**OZZYGIRL/mungabee** - Discord Bot Developer")
+                .WithColor(0x24292e)
+                .AddField("📊 **GitHub Profile**", "[github.com/mungabee](https://github.com/mungabee)", false)
+                .AddField("🤖 **Main Repository**", "[discord-bot-web](https://github.com/mungabee/discord-bot-web)", false)
+                .AddField("💻 **Featured Projects**",
+                    "• **CoderMaster Bot** - Multi-featured Discord bot\n" +
+                    "• **Voice Management** - Advanced voice channel system\n" +
+                    "• **Security System** - Auto-moderation features\n" +
+                    "• **GitHub Integration** - OAuth & commit tracking", false)
+                .WithThumbnail("https://github.com/mungabee.png")
+                .WithFooter("Connect your own GitHub with !congithubacc")
+                .WithTimestamp(DateTimeOffset.UtcNow);
+
+            await ReplyAsync(embed: embed.Build());
+        }
+
+        [Command("congithubacc")]
+        [Summary("Connect your GitHub account with the bot")]
+        public async Task ConnectGitHubAsync()
+        {
+            try
+            {
+                // Check if user already has GitHub linked
+                var existingData = GitHubService.GetGitHubData(Context.User.Id);
+                if (existingData != null)
+                {
+                    await ReplyAsync($"✅ You already have GitHub connected: **{existingData.GitHubUsername}**\nUse `!discongithubacc` to disconnect first.");
+                    return;
+                }
+
+                // Generate OAuth URL (credentials read from environment internally)
+                var redirectUri = "http://localhost:3000/github/callback";
+                var oauthUrl = GitHubService.GenerateOAuthUrl(Context.User.Id, redirectUri);
+
+                if (string.IsNullOrEmpty(oauthUrl))
+                {
+                    await ReplyAsync("❌ GitHub OAuth is not configured. Please contact the bot owner.");
+                    return;
+                }
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("🔗 **Connect GitHub Account**")
+                    .WithDescription("Click the link below to connect your GitHub account with the bot:")
+                    .WithColor(0x24292e)
+                    .AddField("🌐 **OAuth Link**", $"[Click here to connect GitHub]({oauthUrl})", false)
+                    .AddField("📋 **What happens next?**",
+                        "1. You'll be redirected to GitHub to authorize\n" +
+                        "2. After authorization, you'll get the 'GitHub-Coder' role\n" +
+                        "3. Your commits will be tracked for leaderboards\n" +
+                        "4. You can use `!gitrank` and other GitHub commands", false)
+                    .WithFooter("Your data is secure and only public repository info is accessed");
+
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("❌ Error generating GitHub OAuth link: " + ex.Message);
+            }
+        }
+
+        [Command("discongithubacc")]
+        [Summary("Disconnect your GitHub account")]
+        public async Task DisconnectGitHubAsync()
+        {
+            try
+            {
+                if (GitHubService.DisconnectGitHub(Context.User.Id))
+                {
+                    await ReplyAsync("✅ GitHub account disconnected and GitHub-Coder role removed.");
+                }
+                else
+                {
+                    await ReplyAsync("❌ No GitHub account found to disconnect.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("❌ Error disconnecting GitHub: " + ex.Message);
+            }
+        }
+
+        [Command("gitrank")]
+        [Summary("Show your GitHub commit level")]
+        public async Task GitRankAsync()
+        {
+            try
+            {
+                var userData = GitHubService.GetGitHubData(Context.User.Id);
+                if (userData == null)
+                {
+                    await ReplyAsync("❌ You don't have a GitHub account connected. Use `!congithubacc` to connect.");
+                    return;
+                }
+
+                var commitCount = await GitHubService.GetUserCommitCountAsync(Context.User.Id);
+                if (commitCount == -1)
+                {
+                    await ReplyAsync("❌ Error fetching your GitHub commit data.");
+                    return;
+                }
+
+                string rankEmoji, rankName;
+                if (commitCount >= 1000) { rankEmoji = "🏆"; rankName = "Git Master"; }
+                else if (commitCount >= 500) { rankEmoji = "⭐"; rankName = "Git Expert"; }
+                else if (commitCount >= 200) { rankEmoji = "🥇"; rankName = "Senior Developer"; }
+                else if (commitCount >= 100) { rankEmoji = "🥈"; rankName = "Developer"; }
+                else if (commitCount >= 50) { rankEmoji = "🥉"; rankName = "Junior Developer"; }
+                else if (commitCount >= 10) { rankEmoji = "📝"; rankName = "Contributor"; }
+                else { rankEmoji = "🌱"; rankName = "Beginner"; }
+
+                var embed = new EmbedBuilder()
+                    .WithTitle($"{rankEmoji} **Your GitHub Rank**")
+                    .WithDescription($"**{Context.User.Username}** connected as **{userData.GitHubUsername}**")
+                    .WithColor(0x28a745)
+                    .AddField("📊 **Commit Count**", commitCount.ToString(), true)
+                    .AddField("🏅 **Rank**", $"{rankEmoji} {rankName}", true)
+                    .AddField("📈 **Progress**",
+                        commitCount < 10 ? $"{10 - commitCount} commits to Contributor" :
+                        commitCount < 50 ? $"{50 - commitCount} commits to Junior Developer" :
+                        commitCount < 100 ? $"{100 - commitCount} commits to Developer" :
+                        commitCount < 200 ? $"{200 - commitCount} commits to Senior Developer" :
+                        commitCount < 500 ? $"{500 - commitCount} commits to Git Expert" :
+                        commitCount < 1000 ? $"{1000 - commitCount} commits to Git Master" :
+                        "🎯 Max rank achieved!", false)
+                    .WithThumbnail($"https://github.com/{userData.GitHubUsername}.png")
+                    .WithFooter("Commits are counted from all your public repositories");
+
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("❌ Error getting GitHub rank: " + ex.Message);
+            }
+        }
+
+        [Command("gitleader")]
+        [Summary("Show the top 10 committers")]
+        public async Task GitLeaderAsync()
+        {
+            try
+            {
+                var topCommitters = await GitHubService.GetTopCommittersAsync();
+                if (!topCommitters.Any())
+                {
+                    await ReplyAsync("📊 No GitHub accounts connected yet. Use `!congithubacc` to be the first!");
+                    return;
+                }
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("🏆 **GitHub Leaderboard**")
+                    .WithDescription("Top committers in this server:")
+                    .WithColor(0xffd700);
+
+                for (int i = 0; i < Math.Min(topCommitters.Count, 10); i++)
+                {
+                    var (username, commits) = topCommitters[i];
+                    string rankEmoji = i switch
+                    {
+                        0 => "🥇",
+                        1 => "🥈",
+                        2 => "🥉",
+                        _ => $"{i + 1}."
+                    };
+
+                    embed.AddField($"{rankEmoji} **{username}**", $"{commits} commits", true);
+                }
+
+                embed.WithFooter($"Showing top {Math.Min(topCommitters.Count, 10)} contributors • Use !gitrank to see your rank");
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("❌ Error getting GitHub leaderboard: " + ex.Message);
+            }
+        }
+
+        // Bump Reminder Commands
+        [Command("setbumpreminder")]
+        [Alias("bumpreminder")]
+        [Summary("Set a 2-hour bump reminder (Admin only)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task SetBumpReminderAsync()
+        {
+            try
+            {
+                if (BumpReminderService.SetBumpReminder(Context.Guild.Id, Context.Channel.Id))
+                {
+                    await ReplyAsync("✅ **2-Stunden Bump-Reminder aktiviert!**\nDer Bot wird Sie in 2 Stunden daran erinnern zu bumpen.");
+                }
+                else
+                {
+                    await ReplyAsync("❌ Fehler beim Setzen des Bump-Reminders.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("❌ Error setting bump reminder: " + ex.Message);
+            }
+        }
+
+        [Command("getbumpreminder")]
+        [Alias("bumpreminderdet")]
+        [Summary("Remove the active bump reminder (Admin only)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task RemoveBumpReminderAsync()
+        {
+            try
+            {
+                if (BumpReminderService.RemoveBumpReminder(Context.Guild.Id))
+                {
+                    await ReplyAsync("✅ **Bump-Reminder deaktiviert!**\nKeine weiteren Bump-Erinnerungen werden gesendet.");
+                }
+                else
+                {
+                    await ReplyAsync("❌ Kein aktiver Bump-Reminder gefunden.");
+                }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("❌ Error removing bump reminder: " + ex.Message);
+            }
+        }
+
+        [Command("bumpstatus")]
+        [Summary("Show bump reminder status")]
+        public async Task BumpStatusAsync()
+        {
+            try
+            {
+                var status = BumpReminderService.GetBumpReminderStatus(Context.Guild.Id);
+                if (status == null)
+                {
+                    await ReplyAsync("📊 **Bump-Reminder Status: Inaktiv**\nKein Bump-Reminder für diesen Server gesetzt.");
+                    return;
+                }
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("🔔 **Bump-Reminder Status**")
+                    .WithColor(status.IsActive ? 0x00ff00 : 0xff0000)
+                    .AddField("📊 **Status**", status.IsActive ? "✅ Aktiv" : "❌ Inaktiv", true)
+                    .AddField("📍 **Kanal**", $"<#{status.ChannelId}>", true)
+                    .AddField("⏰ **Nächster Bump**",
+                        status.IsActive ? status.NextBumpTime.ToString("dd.MM.yyyy HH:mm") + " Uhr" : "Nicht gesetzt", false)
+                    .AddField("🌍 **Sprache**", status.Language, true)
+                    .WithFooter("Bump-Reminders werden automatisch nach Disboard-Bumps gesetzt");
+
+                if (status.IsActive)
+                {
+                    var timeLeft = status.NextBumpTime - DateTime.Now;
+                    if (timeLeft.TotalMinutes > 0)
+                    {
+                        embed.AddField("⏳ **Zeit verbleibend**",
+                            $"{timeLeft.Hours}h {timeLeft.Minutes}m", true);
+                    }
+                }
+
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync("❌ Error getting bump status: " + ex.Message);
+            }
+        }
+
+        [Command("bumphelp")]
+        [Summary("Show bump system help")]
+        public async Task BumpHelpAsync()
+        {
+            var embed = new EmbedBuilder()
+                .WithTitle("🔔 **Bump-System Hilfe**")
+                .WithDescription("Das automatische Disboard Bump-Erinnerungs-System:")
+                .WithColor(0x7289DA)
+                .AddField("📋 **Befehle** *(Admin only)*",
+                    "`!setbumpreminder` - 2-Stunden Reminder aktivieren\n" +
+                    "`!getbumpreminder` - Aktiven Reminder löschen\n" +
+                    "`!bumpstatus` - Status des Bump-Reminders anzeigen\n" +
+                    "`!bumphelp` - Diese Hilfe anzeigen", false)
+                .AddField("🤖 **Automatische Erkennung**",
+                    "• Bot erkennt automatisch Disboard `/bump` Befehle\n" +
+                    "• Setzt automatisch 2-Stunden Timer\n" +
+                    "• Sendet Erinnerung wenn Cooldown vorbei ist\n" +
+                    "• Unterstützt mehrere Sprachen", false)
+                .AddField("🌍 **Unterstützte Sprachen**",
+                    "🇩🇪 Deutsch • 🇺🇸 English • 🇫🇷 Français • 🇪🇸 Español • 🇮🇹 Italiano • 🇵🇹 Português", false)
+                .WithFooter("Bump-Reminders helfen dabei, Server-Sichtbarkeit auf Disboard zu erhalten");
 
             await ReplyAsync(embed: embed.Build());
         }

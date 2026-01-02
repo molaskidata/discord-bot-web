@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -6,7 +7,7 @@ using Discord.WebSocket;
 using Discord.Commands;
 using Microsoft.Extensions.DependencyInjection;
 using MainbotCSharp.Modules;
-using MainbotCSharp.Modules;
+using MainbotCSharp.Services;
 using static MainbotCSharp.Modules.TicketService;
 
 namespace MainbotCSharp
@@ -76,6 +77,36 @@ namespace MainbotCSharp
             {
                 Console.WriteLine("BirthdayService initialization error: " + ex);
             }
+
+            // Initialize GitHub Service
+            try
+            {
+                GitHubService.Initialize(_client);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("GitHubService initialization error: " + ex);
+            }
+
+            // Initialize Bump Reminder Service
+            try
+            {
+                BumpReminderService.Initialize(_client);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("BumpReminderService initialization error: " + ex);
+            }
+
+            // Initialize Ping Service (Bot-to-Bot communication)
+            try
+            {
+                PingService.Initialize(_client);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("PingService initialization error: " + ex);
+            }
         }
 
         private Task Client_Log(LogMessage msg)
@@ -92,6 +123,26 @@ namespace MainbotCSharp
 
         private async Task HandleMessageAsync(SocketMessage rawMessage)
         {
+            // Handle Disboard bump detection for bump reminders
+            try
+            {
+                BumpReminderService.HandleDisboardMessage(rawMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("BumpReminderService HandleDisboardMessage error: " + ex);
+            }
+
+            // Handle ping system messages
+            try
+            {
+                await PingService.HandlePingResponseAsync(rawMessage);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine("PingService HandlePingResponseAsync error: " + ex);
+            }
+
             // run security checks first
             try
             {
