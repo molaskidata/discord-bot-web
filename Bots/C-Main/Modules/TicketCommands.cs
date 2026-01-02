@@ -59,7 +59,7 @@ namespace MainbotCSharp.Modules
             public ulong GuildId { get; set; }
         }
 
-        public static async Task<bool> SaveTranscriptAsync(DiscordSocketGuild guild, Discord.ITextChannel channel, TicketMeta meta)
+        public static async Task<bool> SaveTranscriptAsync(SocketGuild guild, Discord.ITextChannel channel, TicketMeta meta)
         {
             try
             {
