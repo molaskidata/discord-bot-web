@@ -124,7 +124,7 @@ namespace MainbotCSharp.Modules
                     .WithSelectMenu(menu);
 
                 await ReplyAsync(embed: embed.Build(), components: components.Build());
-                await ReplyAsync($"✅ Ticket system configured! Log channel: {Context.Channel.Mention}");
+                await ReplyAsync($"✅ Ticket system configured! Log channel: <#{Context.Channel.Id}>");
             }
             catch (Exception ex)
             {
