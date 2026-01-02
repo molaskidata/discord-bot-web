@@ -222,7 +222,7 @@ namespace MainbotCSharp.Modules
                     "`!helpbump` - Bump/Disboard help\n" +
                     "`!helpbirth` - Birthday help", false)
                 .WithFooter("Powered by mungabee /aka azzygirl")
-                .WithThumbnailUrl("https://imgur.com/aYh8OAq.png");
+                .WithImageUrl("https://imgur.com/aYh8OAq.png");
 
             await ReplyAsync(embed: embed.Build());
         }
