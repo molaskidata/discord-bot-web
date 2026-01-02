@@ -151,9 +151,9 @@ namespace MainbotCSharp.Modules
         public async Task HelpAsync()
         {
             var embed = new EmbedBuilder()
-                .WithTitle("🤖 !Code.Mater()")
-                .WithDescription("★ **Bot Command Help**\n\nHere are all available commands:")
-                .WithColor(0x2F4F4F)
+                .WithAuthor("!Code.Master()", "https://imgur.com/aYh8OAq.png")
+                .WithDescription("★ **Bot-command !help**\n\nHere are all available commands:")
+                .WithColor(#009999)
                 .AddField("★ **General**",
                     "`!info` - Bot info\n" +
                     "`!ping` - Testing the pingspeed of the bot\n" +
