@@ -64,6 +64,14 @@ namespace MainbotCSharp
                 if (mon != null) await mon.StartAsync(_client);
             }
             catch (Exception ex) { Console.WriteLine("MonitorService start error: " + ex); }
+
+            // Initialize Birthday Service
+            try
+            {
+                MainbotCSharp.Services.BirthdayService.Initialize(_client);
+            }
+            catch (Exception ex) { Console.WriteLine("BirthdayService start error: " + ex); }
+
             return;
         }
 
