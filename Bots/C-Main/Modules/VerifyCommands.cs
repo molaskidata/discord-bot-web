@@ -26,7 +26,7 @@ namespace MainbotCSharp.Modules
     public class VerifyAttempt
     {
         public ulong UserId { get; set; }
-        public string CaptchaCode { get; set; }
+        public string? CaptchaCode { get; set; }
         public DateTime CreatedAt { get; set; }
         public int AttemptCount { get; set; } = 0;
     }
@@ -63,7 +63,7 @@ namespace MainbotCSharp.Modules
             catch { }
         }
 
-        public static VerifyConfigEntry GetConfig(ulong guildId)
+        public static VerifyConfigEntry? GetConfig(ulong guildId)
         {
             if (_cfg.TryGetValue(guildId, out var e)) return e; return null;
         }
@@ -91,15 +91,28 @@ namespace MainbotCSharp.Modules
             {
                 if (component.Data.CustomId != "verify_button") return;
 
-                var config = GetConfig(component.GuildId);
+                if (!component.GuildId.HasValue)
+                {
+                    await component.RespondAsync("❌ Server not found.", ephemeral: true);
+                    return;
+                }
+
+                var config = GetConfig(component.GuildId.Value);
                 if (config == null)
                 {
                     await component.RespondAsync("❌ Verification system not configured.", ephemeral: true);
                     return;
                 }
 
-                var guild = component.Guild;
+                var guild = (component.User as SocketGuildUser)?.Guild;
                 var user = component.User as SocketGuildUser;
+
+                if (guild == null || user == null)
+                {
+                    await component.RespondAsync("❌ Unable to access server information.", ephemeral: true);
+                    return;
+                }
+
                 var role = guild.GetRole(config.RoleId);
 
                 if (role == null)
@@ -162,7 +175,7 @@ namespace MainbotCSharp.Modules
             // Clean up expired captcha after 5 minutes
             _ = Task.Delay(TimeSpan.FromMinutes(5)).ContinueWith(_ =>
             {
-                _pendingCaptchas.TryRemove(component.User.Id, out _);
+                _pendingCaptchas.TryRemove(component.User.Id, out var _);
             });
         }
 
@@ -195,7 +208,8 @@ namespace MainbotCSharp.Modules
                         config.Snapshot[user.Id] = true;
                         SaveVerifyConfig();
 
-                        await message.ReplyAsync($"✅ **Verification successful!** You now have access to {guild.Name}!");
+                        if (message is IUserMessage userMessage)
+                            await userMessage.ReplyAsync($"✅ **Verification successful!** You now have access to {guild.Name}!");
                         await LogVerificationAttempt(guild, user, "Captcha verification", true);
                     }
                 }
@@ -205,12 +219,14 @@ namespace MainbotCSharp.Modules
                     if (attempt.AttemptCount >= 3)
                     {
                         _pendingCaptchas.TryRemove(message.Author.Id, out _);
-                        await message.ReplyAsync("❌ **Too many failed attempts.** Please try the verification process again.");
+                        if (message is IUserMessage userMessage2)
+                            await userMessage2.ReplyAsync("❌ **Too many failed attempts.** Please try the verification process again.");
                         await LogVerificationAttempt(guild, message.Author, "Failed captcha (3 attempts)", false);
                     }
                     else
                     {
-                        await message.ReplyAsync($"❌ **Incorrect code.** Try again. ({attempt.AttemptCount}/3 attempts)");
+                        if (message is IUserMessage userMessage3)
+                            await userMessage3.ReplyAsync($"❌ **Incorrect code.** Try again. ({attempt.AttemptCount}/3 attempts)");
                     }
                 }
 
@@ -227,8 +243,11 @@ namespace MainbotCSharp.Modules
         {
             try
             {
-                var guild = component.Guild;
+                var guild = (component.User as SocketGuildUser)?.Guild;
                 var user = component.User as SocketGuildUser;
+
+                if (guild == null || user == null) return;
+
                 var role = guild.GetRole(config.RoleId);
 
                 await user.AddRoleAsync(role);
@@ -331,7 +350,7 @@ namespace MainbotCSharp.Modules
         [Command("verify-setup")]
         [Summary("Setup verification system (Admin only)")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task SetupVerifyAsync(IRole role, ITextChannel logChannel = null, bool requireCaptcha = false)
+        public async Task SetupVerifyAsync(IRole role, ITextChannel? logChannel = null, bool requireCaptcha = false)
         {
             try
             {

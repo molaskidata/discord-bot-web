@@ -782,7 +782,7 @@ namespace MainbotCSharp.Modules
                 }
 
                 var until = DateTimeOffset.UtcNow.AddMinutes(minutes);
-                await user.SetTimeOutAsync(until, new RequestOptions { AuditLogReason = reason });
+                await user.SetTimeOutAsync(TimeSpan.FromMinutes(minutes));
 
                 var embed = new EmbedBuilder()
                     .WithTitle("⏰ User Timed Out")
@@ -1064,6 +1064,32 @@ namespace MainbotCSharp.Modules
             {
                 await ReplyAsync($"❌ Failed to unban user: {ex.Message}");
             }
+        }
+
+        private async Task<SocketMessage> NextMessageAsync(TimeSpan timeout)
+        {
+            var tcs = new TaskCompletionSource<SocketMessage>();
+
+            Task Handler(SocketMessage message)
+            {
+                if (message.Channel.Id == Context.Channel.Id && message.Author.Id == Context.User.Id && !message.Author.IsBot)
+                {
+                    tcs.SetResult(message);
+                }
+                return Task.CompletedTask;
+            }
+
+            Context.Client.MessageReceived += Handler;
+
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
+            Context.Client.MessageReceived -= Handler;
+
+            if (completedTask == tcs.Task)
+            {
+                return await tcs.Task;
+            }
+
+            return null;
         }
     }
 }

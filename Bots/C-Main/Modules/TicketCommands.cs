@@ -48,7 +48,7 @@ namespace MainbotCSharp.Modules
             catch { }
         }
 
-        public static TicketConfigEntry GetConfig(ulong guildId)
+        public static TicketConfigEntry? GetConfig(ulong guildId)
         {
             if (_cfg.TryGetValue(guildId, out var e)) return e; return null;
         }
@@ -61,13 +61,13 @@ namespace MainbotCSharp.Modules
         public class TicketMeta
         {
             public ulong UserId { get; set; }
-            public string Category { get; set; }
+            public string? Category { get; set; }
             public ulong GuildId { get; set; }
             public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
-            public string Username { get; set; }
+            public string? Username { get; set; }
         }
 
-        public static async Task<SocketTextChannel> CreateTicketChannelAsync(SocketGuild guild, SocketUser user, string category)
+        public static async Task<SocketTextChannel?> CreateTicketChannelAsync(SocketGuild guild, SocketUser user, string category)
         {
             try
             {
@@ -87,13 +87,17 @@ namespace MainbotCSharp.Modules
                         new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow, readMessageHistory: PermValue.Allow)));
                 }
 
-                var channel = await guild.CreateTextChannelAsync(channelName, properties =>
+                var restChannel = await guild.CreateTextChannelAsync(channelName, properties =>
                 {
                     if (config?.TicketCategoryId.HasValue == true)
                         properties.CategoryId = config.TicketCategoryId.Value;
                     properties.Topic = $"Support ticket for {user.Username} - Category: {category}";
                     properties.PermissionOverwrites = overwrites;
                 });
+
+                // Convert RestTextChannel to SocketTextChannel
+                var channel = guild.GetTextChannel(restChannel.Id);
+                if (channel == null) return null;
 
                 // Store ticket metadata
                 TicketMetas[channel.Id] = new TicketMeta
@@ -145,12 +149,15 @@ namespace MainbotCSharp.Modules
                 category = char.ToUpper(category[0]) + category.Substring(1);
 
                 // Check if user already has an active ticket
+                var guild = (component.User as SocketGuildUser)?.Guild;
+                if (guild == null) return;
+
                 var existingTicket = TicketMetas.Values.FirstOrDefault(t =>
-                    t.UserId == component.User.Id && t.GuildId == component.GuildId);
+                    t.UserId == component.User.Id && t.GuildId == guild.Id);
 
                 if (existingTicket != null)
                 {
-                    var existingChannel = component.Guild.GetTextChannel(TicketMetas.FirstOrDefault(t => t.Value == existingTicket).Key);
+                    var existingChannel = guild.GetTextChannel(TicketMetas.FirstOrDefault(t => t.Value == existingTicket).Key);
                     if (existingChannel != null)
                     {
                         await component.RespondAsync($"❌ You already have an active ticket: {existingChannel.Mention}", ephemeral: true);
@@ -160,16 +167,16 @@ namespace MainbotCSharp.Modules
 
                 await component.DeferAsync();
 
-                var channel = await CreateTicketChannelAsync(component.Guild, component.User, category);
+                var channel = await CreateTicketChannelAsync(guild, component.User, category);
                 if (channel != null)
                 {
                     await component.FollowupAsync($"✅ Ticket created: {channel.Mention}", ephemeral: true);
 
                     // Log ticket creation
-                    var config = GetConfig(component.GuildId);
+                    var config = GetConfig(guild.Id);
                     if (config != null)
                     {
-                        var logChannel = component.Guild.GetTextChannel(config.LogChannelId);
+                        var logChannel = guild.GetTextChannel(config.LogChannelId);
                         if (logChannel != null)
                         {
                             var logEmbed = new EmbedBuilder()
@@ -425,7 +432,7 @@ namespace MainbotCSharp.Modules
         [Command("ticket-setup")]
         [Summary("Setup ticket system (Admin only)")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task SetupTicketSystemAsync(ICategoryChannel category = null, IRole supportRole = null)
+        public async Task SetupTicketSystemAsync(ICategoryChannel? category = null, IRole? supportRole = null)
         {
             try
             {
@@ -661,16 +668,8 @@ namespace MainbotCSharp.Modules
                 }
 
                 await ReplyAsync("📋 Generating transcript...");
-                var success = await TicketService.SaveTranscriptAsync(Context.Guild, Context.Channel, meta);
-
-                if (success)
-                {
-                    await ReplyAsync("✅ Transcript generated and saved to logs!");
-                }
-                else
-                {
-                    await ReplyAsync("❌ Failed to generate transcript.");
-                }
+                await TicketService.SaveTranscriptAsync(Context.Guild, Context.Channel as SocketTextChannel, meta);
+                await ReplyAsync("✅ Transcript generated and saved to logs!");
             }
             catch (Exception ex)
             {
