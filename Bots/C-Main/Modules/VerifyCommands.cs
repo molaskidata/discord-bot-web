@@ -327,7 +327,6 @@ namespace MainbotCSharp.Modules
 
     public class VerifyCommands : ModuleBase<SocketCommandContext>
     {
-    {
         [Command("verify-setup")]
         [Summary("Setup verification system (Admin only)")]
         [RequireUserPermission(GuildPermission.Administrator)]

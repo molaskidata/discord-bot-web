@@ -30,25 +30,25 @@ namespace MainbotCSharp.Modules
                 .WithTitle("🤖 Bot Commands")
                 .WithColor(Color.Blue)
                 .WithDescription("Alle verfügbaren Befehle:")
-                .AddField("📋 Allgemeine Befehle", 
+                .AddField("📋 Allgemeine Befehle",
                     "**!help** - Diese Hilfe anzeigen\n" +
                     "**!info** - Bot-Informationen\n" +
                     "**!ping** - Bot-Latenz prüfen\n" +
                     "**!gn** - Gute Nacht Nachricht\n" +
                     "**!gm** - Guten Morgen Nachricht", true)
-                .AddField("🔗 GitHub Integration", 
+                .AddField("🔗 GitHub Integration",
                     "**!connectgithub** - GitHub Account verbinden\n" +
                     "**!disconnectgithub** - GitHub Account trennen", true)
-                .AddField("🔔 Bump System", 
+                .AddField("🔔 Bump System",
                     "**!bumpreminder on/off** - Bump-Erinnerungen aktivieren/deaktivieren\n" +
                     "**!bumpstatus** - Status der Bump-Erinnerungen prüfen", true)
-                .AddField("🎫 Tickets", 
+                .AddField("🎫 Tickets",
                     "**!ticket create** - Neues Ticket erstellen\n" +
                     "**!ticket close** - Ticket schließen", true)
-                .AddField("🔒 Sicherheit", 
+                .AddField("🔒 Sicherheit",
                     "**!security** - Sicherheitsstatus anzeigen\n" +
                     "**!scan** - Server auf verdächtige Aktivitäten prüfen", true)
-                .AddField("✅ Verifizierung", 
+                .AddField("✅ Verifizierung",
                     "**!verify** - Verifizierungsprozess starten", true)
                 .WithFooter("Bot entwickelt mit Discord.NET")
                 .WithCurrentTimestamp();
@@ -91,7 +91,7 @@ namespace MainbotCSharp.Modules
 
             var random = new Random();
             var message = messages[random.Next(messages.Length)];
-            
+
             await ReplyAsync(message);
         }
 
@@ -110,7 +110,7 @@ namespace MainbotCSharp.Modules
 
             var random = new Random();
             var message = messages[random.Next(messages.Length)];
-            
+
             await ReplyAsync(message);
         }
 
@@ -120,12 +120,12 @@ namespace MainbotCSharp.Modules
         {
             var githubService = new GitHubService();
             var authUrl = githubService.GetAuthUrl(Context.User.Id.ToString());
-            
+
             var embed = new EmbedBuilder()
                 .WithTitle("🔗 GitHub Account verbinden")
                 .WithColor(Color.Purple)
                 .WithDescription($"Klicke [hier]({authUrl}) um deinen GitHub Account zu verbinden!")
-                .AddField("ℹ️ Information", 
+                .AddField("ℹ️ Information",
                     "Nach der Verbindung erhältst du automatisch die **GitHub-Coder** Rolle und " +
                     "Zugriff auf erweiterte Funktionen.", false)
                 .WithFooter("Der Link ist 10 Minuten gültig")
@@ -140,7 +140,7 @@ namespace MainbotCSharp.Modules
         {
             var githubService = new GitHubService();
             var success = await githubService.DisconnectUser(Context.User.Id.ToString(), Context.Guild, Context.User as SocketGuildUser);
-            
+
             if (success)
             {
                 await ReplyAsync("✅ GitHub Account erfolgreich getrennt! Die GitHub-Coder Rolle wurde entfernt.");
@@ -162,7 +162,7 @@ namespace MainbotCSharp.Modules
             }
 
             var bumpService = new BumpReminderService();
-            
+
             if (action.ToLower() == "on")
             {
                 bumpService.EnableReminders(Context.Channel.Id);
@@ -185,7 +185,7 @@ namespace MainbotCSharp.Modules
         {
             var bumpService = new BumpReminderService();
             var status = bumpService.GetReminderStatus(Context.Channel.Id);
-            
+
             var embed = new EmbedBuilder()
                 .WithTitle("📊 Bump Reminder Status")
                 .WithColor(status.enabled ? Color.Green : Color.Red)
@@ -197,7 +197,7 @@ namespace MainbotCSharp.Modules
                 var timeRemaining = status.nextBumpTime.Value - DateTime.UtcNow;
                 if (timeRemaining.TotalSeconds > 0)
                 {
-                    embed.AddField("Nächster Bump möglich in", 
+                    embed.AddField("Nächster Bump möglich in",
                         $"{timeRemaining.Hours}h {timeRemaining.Minutes}m {timeRemaining.Seconds}s", false);
                 }
                 else
