@@ -35,9 +35,7 @@ namespace MainbotCSharp.Modules
                     "**!ping** - Bot-Latenz prüfen\n" +
                     "**!gn** - Gute Nacht Nachricht\n" +
                     "**!gm** - Guten Morgen Nachricht", true)
-                .AddField("🔗 GitHub Integration",
-                    "**!connectgithub** - GitHub Account verbinden\n" +
-                    "**!disconnectgithub** - GitHub Account trennen", true)
+
                 .AddField("🔔 Bump System",
                     "**!bumpreminder on/off** - Bump-Erinnerungen aktivieren/deaktivieren\n" +
                     "**!bumpstatus** - Status der Bump-Erinnerungen prüfen", true)
@@ -111,41 +109,6 @@ namespace MainbotCSharp.Modules
             var message = messages[random.Next(messages.Length)];
 
             await ReplyAsync(message);
-        }
-
-        [Command("connectgithub")]
-        [Summary("Connect your GitHub account")]
-        public async Task ConnectGitHubAsync()
-        {
-            var authUrl = GitHubService.GetAuthUrl(Context.User.Id.ToString());
-
-            var embed = new EmbedBuilder()
-                .WithTitle("🔗 GitHub Account verbinden")
-                .WithColor(Color.Purple)
-                .WithDescription($"Klicke [hier]({authUrl}) um deinen GitHub Account zu verbinden!")
-                .AddField("ℹ️ Information",
-                    "Nach der Verbindung erhältst du automatisch die **GitHub-Coder** Rolle und " +
-                    "Zugriff auf erweiterte Funktionen.", false)
-                .WithFooter("Der Link ist 10 Minuten gültig")
-                .WithCurrentTimestamp();
-
-            await ReplyAsync(embed: embed.Build());
-        }
-
-        [Command("disconnectgithub")]
-        [Summary("Disconnect your GitHub account")]
-        public async Task DisconnectGitHubAsync()
-        {
-            var success = await GitHubService.DisconnectUser(Context.User.Id.ToString(), Context.Guild, Context.User as SocketGuildUser);
-
-            if (success)
-            {
-                await ReplyAsync("✅ GitHub Account erfolgreich getrennt! Die GitHub-Coder Rolle wurde entfernt.");
-            }
-            else
-            {
-                await ReplyAsync("❌ Du hast keinen verbundenen GitHub Account.");
-            }
         }
 
         [Command("bumpreminder")]

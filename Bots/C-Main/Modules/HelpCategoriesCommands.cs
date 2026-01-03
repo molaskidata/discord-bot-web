@@ -23,7 +23,6 @@ namespace MainbotCSharp.Modules
                     "• **Voice** - Voice channel management\n" +
                     "• **Security** - Moderation & security features\n" +
                     "• **Twitch** - Twitch integration commands\n" +
-                    "• **GitHub** - GitHub account linking\n" +
                     "• **Bump** - Disboard bump reminders\n" +
                     "• **Birthday** - Birthday notification system", false)
                 .WithFooter("Made by OZZYGIRL/mungabee", "https://github.com/mungabee.png")
@@ -38,7 +37,6 @@ namespace MainbotCSharp.Modules
                 .AddOption("Voice Features", "help_voice", "Voice channel management", new Emoji("🎤"))
                 .AddOption("Security Features", "help_secure", "Moderation & security", new Emoji("🛡️"))
                 .AddOption("Twitch Integration", "help_twitch", "Twitch commands", new Emoji("🎮"))
-                .AddOption("GitHub Integration", "help_github", "GitHub account linking", new Emoji("🐙"))
                 .AddOption("Bump Reminders", "help_bump", "Disboard bump system", new Emoji("🔔"))
                 .AddOption("Birthday System", "help_birth", "Birthday notifications", new Emoji("🎂"));
 
@@ -182,40 +180,6 @@ namespace MainbotCSharp.Modules
                     "• **Stream Notifications** - Alerts when you go live\n" +
                     "• **Statistics Tracking** - View count, clip performance", false)
                 .WithFooter("Twitch integration requires admin setup and valid Twitch account");
-
-            await ReplyAsync(embed: embed.Build());
-        }
-
-        [Command("helpgithub")]
-        [Alias("helpygithub")]
-        [Summary("Show detailed GitHub integration help")]
-        public async Task HelpGitHubAsync()
-        {
-            var embed = new EmbedBuilder()
-                .WithTitle("🐙 **GitHub Integration Help**")
-                .WithColor(0x24292e)
-                .AddField("**Account Management**",
-                    "`!github` - Bot owner's GitHub and repositories\n" +
-                    "`!congithubacc` - Connect your GitHub account with the bot\n" +
-                    "`!discongithubacc` - Disconnect your GitHub account", false)
-                .AddField("**Statistics & Leaderboards**",
-                    "`!gitrank` - Show your GitHub commit level\n" +
-                    "`!gitleader` - Show the top 10 committers\n" +
-                    "`!gitstats` - Show your detailed GitHub statistics", false)
-                .AddField("**How GitHub Integration Works**",
-                    "1. **Connect**: Use `!congithubacc` to get OAuth link\n" +
-                    "2. **Authorize**: Complete GitHub OAuth in browser\n" +
-                    "3. **Role**: Automatically get 'GitHub-Coder' role\n" +
-                    "4. **Track**: Your commits and repos are tracked for leaderboards", false)
-                .AddField("**Features**",
-                    "• **OAuth Integration** - Secure GitHub account linking\n" +
-                    "• **Commit Tracking** - Monitor your coding activity\n" +
-                    "• **Leaderboards** - Compete with other developers\n" +
-                    "• **Auto-Role** - Get special role when connected\n" +
-                    "• **Privacy** - Only public repository data is used", false)
-                .AddField("**Status**",
-                    "❌ **Currently out of order** - GitHub integration temporarily disabled", false)
-                .WithFooter("GitHub integration uses OAuth for secure account linking");
 
             await ReplyAsync(embed: embed.Build());
         }

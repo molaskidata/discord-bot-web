@@ -78,14 +78,6 @@ namespace MainbotCSharp
                 Console.WriteLine("BirthdayService initialization error: " + ex);
             }
 
-            // Initialize GitHub Service
-            try
-            {
-                GitHubService.Initialize(_client);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("GitHubService initialization error: " + ex);
             }
 
             // Initialize Bump Reminder Service
