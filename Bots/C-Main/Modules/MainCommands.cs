@@ -117,8 +117,7 @@ namespace MainbotCSharp.Modules
         [Summary("Connect your GitHub account")]
         public async Task ConnectGitHubAsync()
         {
-            var githubService = new GitHubService();
-            var authUrl = githubService.GetAuthUrl(Context.User.Id.ToString());
+            var authUrl = GitHubService.GetAuthUrl(Context.User.Id.ToString());
 
             var embed = new EmbedBuilder()
                 .WithTitle("🔗 GitHub Account verbinden")
@@ -137,8 +136,7 @@ namespace MainbotCSharp.Modules
         [Summary("Disconnect your GitHub account")]
         public async Task DisconnectGitHubAsync()
         {
-            var githubService = new GitHubService();
-            var success = await githubService.DisconnectUser(Context.User.Id.ToString(), Context.Guild, Context.User as SocketGuildUser);
+            var success = await GitHubService.DisconnectUser(Context.User.Id.ToString(), Context.Guild, Context.User as SocketGuildUser);
 
             if (success)
             {
@@ -160,16 +158,14 @@ namespace MainbotCSharp.Modules
                 return;
             }
 
-            var bumpService = new BumpReminderService();
-
             if (action.ToLower() == "on")
             {
-                bumpService.EnableReminders(Context.Channel.Id);
+                BumpReminderService.EnableReminders(Context.Channel.Id);
                 await ReplyAsync("✅ Bump-Erinnerungen wurden aktiviert! Du wirst benachrichtigt, wenn der Server wieder gebumpt werden kann.");
             }
             else if (action.ToLower() == "off")
             {
-                bumpService.DisableReminders(Context.Channel.Id);
+                BumpReminderService.DisableReminders(Context.Channel.Id);
                 await ReplyAsync("❌ Bump-Erinnerungen wurden deaktiviert.");
             }
             else
@@ -182,8 +178,7 @@ namespace MainbotCSharp.Modules
         [Summary("Check bump reminder status")]
         public async Task BumpStatusAsync()
         {
-            var bumpService = new BumpReminderService();
-            var status = bumpService.GetReminderStatus(Context.Channel.Id);
+            var status = BumpReminderService.GetReminderStatus(Context.Channel.Id);
 
             var embed = new EmbedBuilder()
                 .WithTitle("📊 Bump Reminder Status")

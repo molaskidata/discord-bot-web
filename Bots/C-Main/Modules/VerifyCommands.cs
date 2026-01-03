@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -34,7 +35,7 @@ namespace MainbotCSharp.Modules
     {
         private const string VERIFY_FILE = "main_verify_config.json";
         private static Dictionary<ulong, VerifyConfigEntry> _cfg = LoadVerifyConfig();
-        private static Dictionary<ulong, VerifyAttempt> _pendingCaptchas = new();
+        private static ConcurrentDictionary<ulong, VerifyAttempt> _pendingCaptchas = new();
         private static readonly Random _random = new Random();
 
         private static Dictionary<ulong, VerifyConfigEntry> LoadVerifyConfig()
