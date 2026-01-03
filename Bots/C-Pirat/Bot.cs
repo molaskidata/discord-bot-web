@@ -113,18 +113,18 @@ namespace PiratBotCSharp
             Console.WriteLine($"🏴‍☠️ {_client.CurrentUser} is ready and sailing!");
             Console.WriteLine($"⚓ Connected to {_client.Guilds.Count} servers");
 
-            await _client.SetGameAsync("the seven seas! | ?helpme", null, ActivityType.Playing);
+            await _client.SetGameAsync("Sail the seven seas! | ?helpme", null, ActivityType.Playing);
 
             // Start periodic presence update
             _ = Task.Run(async () =>
             {
                 var activities = new[]
                 {
-                    "the seven seas! | ?helpme",
-                    "with me cutlass! | ?games",
-                    "for buried treasure! | ?mine",
+                    "Sailing the seven seas! | ?helpme",
+                    "Fight with me cutlass! | ?games",
+                    "For buried treasure! | ?mine",
                     "Battleship! | ?bs_start",
-                    "with the crew! | ?crew"
+                    "With the crew! | ?crew"
                 };
 
                 int index = 0;

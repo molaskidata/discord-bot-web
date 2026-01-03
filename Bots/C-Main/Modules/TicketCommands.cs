@@ -58,6 +58,12 @@ namespace MainbotCSharp.Modules
             _cfg[guildId] = cfg; SaveTicketsConfig();
         }
 
+        public static void RemoveConfig(ulong guildId)
+        {
+            _cfg.Remove(guildId);
+            SaveTicketsConfig();
+        }
+
         public class TicketMeta
         {
             public ulong UserId { get; set; }

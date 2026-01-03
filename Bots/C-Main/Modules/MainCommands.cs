@@ -173,7 +173,7 @@ namespace MainbotCSharp.Modules
 
         [Command("bumpreminder")]
         [Summary("Toggle bump reminders")]
-        public async Task BumpReminderAsync(string action = null)
+        public async Task BumpReminderAsync(string? action = null)
         {
             if (action == null)
             {
