@@ -85,7 +85,6 @@ namespace PiratBotCSharp
         {
             if (_client == null || _commands == null || _services == null) return;
 
-            _client.MessageReceived += HandleCommandAsync;
             await _commands.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
         }
 
