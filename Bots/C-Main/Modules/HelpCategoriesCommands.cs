@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Discord;
-using Discord.Interactions;
+using Discord.Commands;
 using Discord.WebSocket;
 
 namespace MainbotCSharp.Modules

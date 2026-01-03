@@ -639,426 +639,426 @@ namespace MainbotCSharp.Modules
             }
         }
 
-[Command("status")]
-[Summary("Check security system status (Admin only)")]
-[RequireUserPermission(GuildPermission.Administrator)]
-public async Task SecurityStatusAsync()
-{
-    try
-    {
-        var config = SecurityService.GetConfig(Context.Guild.Id);
-        var embed = new EmbedBuilder()
-            .WithTitle("🛡️ Security Status")
-            .WithColor(config.Enabled ? Color.Green : Color.Red)
-            .AddField("Status", config.Enabled ? "✅ Enabled" : "❌ Disabled", true)
-            .AddField("Log Channel", config.LogChannelId.HasValue ? $"<#{config.LogChannelId}>" : "Not set", true);
-
-        await ReplyAsync(embed: embed.Build());
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to get status: {ex.Message}");
-    }
-}
-
-[Command("kick")]
-[Summary("Kick a user from the server")]
-[RequireUserPermission(GuildPermission.KickMembers)]
-[RequireBotPermission(GuildPermission.KickMembers)]
-public async Task KickAsync(SocketGuildUser user, [Remainder] string reason = "No reason provided")
-{
-    try
-    {
-        if (user.Id == Context.User.Id)
+        [Command("status")]
+        [Summary("Check security system status (Admin only)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task SecurityStatusAsync()
         {
-            await ReplyAsync("❌ You cannot kick yourself!");
-            return;
-        }
-
-        if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
-        {
-            await ReplyAsync("❌ You cannot kick users with equal or higher roles!");
-            return;
-        }
-
-        await user.KickAsync(reason);
-
-        var embed = new EmbedBuilder()
-            .WithTitle("👢 User Kicked")
-            .WithColor(0x40E0D0)
-            .AddField("User", $"{user.Username}#{user.Discriminator}", true)
-            .AddField("Moderator", Context.User.Username, true)
-            .AddField("Reason", reason, false)
-            .WithTimestamp(DateTimeOffset.UtcNow);
-
-        await ReplyAsync(embed: embed.Build());
-
-        try
-        {
-            await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name}. Reason: {reason}");
-        }
-        catch { /* User has DMs disabled */ }
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to kick user: {ex.Message}");
-    }
-}
-
-[Command("ban")]
-[Summary("Ban a user from the server")]
-[RequireUserPermission(GuildPermission.BanMembers)]
-[RequireBotPermission(GuildPermission.BanMembers)]
-public async Task BanAsync(SocketGuildUser user, int days = 0, [Remainder] string reason = "No reason provided")
-{
-    try
-    {
-        if (user.Id == Context.User.Id)
-        {
-            await ReplyAsync("❌ You cannot ban yourself!");
-            return;
-        }
-
-        if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
-        {
-            await ReplyAsync("❌ You cannot ban users with equal or higher roles!");
-            return;
-        }
-
-        await user.BanAsync(days, reason);
-
-        var embed = new EmbedBuilder()
-            .WithTitle("🔨 User Banned")
-            .WithColor(Color.Red)
-            .AddField("User", $"{user.Username}#{user.Discriminator}", true)
-            .AddField("Moderator", Context.User.Username, true)
-            .AddField("Reason", reason, false)
-            .AddField("Days Deleted", days.ToString(), true)
-            .WithTimestamp(DateTimeOffset.UtcNow);
-
-        await ReplyAsync(embed: embed.Build());
-
-        try
-        {
-            await user.SendMessageAsync($"You have been banned from {Context.Guild.Name}. Reason: {reason}");
-        }
-        catch { /* User has DMs disabled */ }
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to ban user: {ex.Message}");
-    }
-}
-
-[Command("timeout")]
-[Summary("Timeout a user for specified minutes")]
-[RequireUserPermission(GuildPermission.ModerateMembers)]
-[RequireBotPermission(GuildPermission.ModerateMembers)]
-public async Task TimeoutAsync(SocketGuildUser user, int minutes, [Remainder] string reason = "No reason provided")
-{
-    try
-    {
-        if (user.Id == Context.User.Id)
-        {
-            await ReplyAsync("❌ You cannot timeout yourself!");
-            return;
-        }
-
-        if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
-        {
-            await ReplyAsync("❌ You cannot timeout users with equal or higher roles!");
-            return;
-        }
-
-        if (minutes <= 0 || minutes > 40320) // Max 28 days
-        {
-            await ReplyAsync("❌ Timeout must be between 1 and 40320 minutes (28 days)!");
-            return;
-        }
-
-        var until = DateTimeOffset.UtcNow.AddMinutes(minutes);
-        await user.SetTimeOutAsync(until, new RequestOptions { AuditLogReason = reason });
-
-        var embed = new EmbedBuilder()
-            .WithTitle("⏰ User Timed Out")
-            .WithColor(Color.Orange)
-            .AddField("User", $"{user.Username}#{user.Discriminator}", true)
-            .AddField("Moderator", Context.User.Username, true)
-            .AddField("Duration", $"{minutes} minutes", true)
-            .AddField("Until", $"<t:{until.ToUnixTimeSeconds()}:F>", true)
-            .AddField("Reason", reason, false)
-            .WithTimestamp(DateTimeOffset.UtcNow);
-
-        await ReplyAsync(embed: embed.Build());
-
-        try
-        {
-            await user.SendMessageAsync($"You have been timed out in {Context.Guild.Name} for {minutes} minutes. Reason: {reason}");
-        }
-        catch { /* User has DMs disabled */ }
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to timeout user: {ex.Message}");
-    }
-}
-
-[Command("cleanup")]
-[Summary("Cleanup/delete messages in current channel")]
-[RequireUserPermission(GuildPermission.ManageMessages)]
-[RequireBotPermission(GuildPermission.ManageMessages)]
-public async Task CleanupAsync(int? amount = null)
-{
-    try
-    {
-        int totalDeleted = 0;
-
-        if (amount == null)
-        {
-            // No amount specified = clear ALL messages (except pinned)
-            var textChannel = Context.Channel as SocketTextChannel;
-            if (textChannel == null) return;
-
-            // Delete command message first
-            try { await Context.Message.DeleteAsync(); } catch { }
-
-            bool hasMore = true;
-            while (hasMore)
+            try
             {
-                var messages = await textChannel.GetMessagesAsync(100).FlattenAsync();
-                // Exclude pinned messages
-                var deleteableMessages = messages.Where(x =>
-                    DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14) &&
-                    !x.IsPinned).ToList();
+                var config = SecurityService.GetConfig(Context.Guild.Id);
+                var embed = new EmbedBuilder()
+                    .WithTitle("🛡️ Security Status")
+                    .WithColor(config.Enabled ? Color.Green : Color.Red)
+                    .AddField("Status", config.Enabled ? "✅ Enabled" : "❌ Disabled", true)
+                    .AddField("Log Channel", config.LogChannelId.HasValue ? $"<#{config.LogChannelId}>" : "Not set", true);
 
-                if (!deleteableMessages.Any())
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to get status: {ex.Message}");
+            }
+        }
+
+        [Command("kick")]
+        [Summary("Kick a user from the server")]
+        [RequireUserPermission(GuildPermission.KickMembers)]
+        [RequireBotPermission(GuildPermission.KickMembers)]
+        public async Task KickAsync(SocketGuildUser user, [Remainder] string reason = "No reason provided")
+        {
+            try
+            {
+                if (user.Id == Context.User.Id)
                 {
-                    hasMore = false;
-                    break;
+                    await ReplyAsync("❌ You cannot kick yourself!");
+                    return;
                 }
 
-                if (deleteableMessages.Count == 1)
+                if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
                 {
-                    await deleteableMessages.First().DeleteAsync();
-                    totalDeleted += 1;
-                    hasMore = false;
+                    await ReplyAsync("❌ You cannot kick users with equal or higher roles!");
+                    return;
+                }
+
+                await user.KickAsync(reason);
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("👢 User Kicked")
+                    .WithColor(0x40E0D0)
+                    .AddField("User", $"{user.Username}#{user.Discriminator}", true)
+                    .AddField("Moderator", Context.User.Username, true)
+                    .AddField("Reason", reason, false)
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: embed.Build());
+
+                try
+                {
+                    await user.SendMessageAsync($"You have been kicked from {Context.Guild.Name}. Reason: {reason}");
+                }
+                catch { /* User has DMs disabled */ }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to kick user: {ex.Message}");
+            }
+        }
+
+        [Command("ban")]
+        [Summary("Ban a user from the server")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        [RequireBotPermission(GuildPermission.BanMembers)]
+        public async Task BanAsync(SocketGuildUser user, int days = 0, [Remainder] string reason = "No reason provided")
+        {
+            try
+            {
+                if (user.Id == Context.User.Id)
+                {
+                    await ReplyAsync("❌ You cannot ban yourself!");
+                    return;
+                }
+
+                if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
+                {
+                    await ReplyAsync("❌ You cannot ban users with equal or higher roles!");
+                    return;
+                }
+
+                await user.BanAsync(days, reason);
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("🔨 User Banned")
+                    .WithColor(Color.Red)
+                    .AddField("User", $"{user.Username}#{user.Discriminator}", true)
+                    .AddField("Moderator", Context.User.Username, true)
+                    .AddField("Reason", reason, false)
+                    .AddField("Days Deleted", days.ToString(), true)
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: embed.Build());
+
+                try
+                {
+                    await user.SendMessageAsync($"You have been banned from {Context.Guild.Name}. Reason: {reason}");
+                }
+                catch { /* User has DMs disabled */ }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to ban user: {ex.Message}");
+            }
+        }
+
+        [Command("timeout")]
+        [Summary("Timeout a user for specified minutes")]
+        [RequireUserPermission(GuildPermission.ModerateMembers)]
+        [RequireBotPermission(GuildPermission.ModerateMembers)]
+        public async Task TimeoutAsync(SocketGuildUser user, int minutes, [Remainder] string reason = "No reason provided")
+        {
+            try
+            {
+                if (user.Id == Context.User.Id)
+                {
+                    await ReplyAsync("❌ You cannot timeout yourself!");
+                    return;
+                }
+
+                if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
+                {
+                    await ReplyAsync("❌ You cannot timeout users with equal or higher roles!");
+                    return;
+                }
+
+                if (minutes <= 0 || minutes > 40320) // Max 28 days
+                {
+                    await ReplyAsync("❌ Timeout must be between 1 and 40320 minutes (28 days)!");
+                    return;
+                }
+
+                var until = DateTimeOffset.UtcNow.AddMinutes(minutes);
+                await user.SetTimeOutAsync(until, new RequestOptions { AuditLogReason = reason });
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("⏰ User Timed Out")
+                    .WithColor(Color.Orange)
+                    .AddField("User", $"{user.Username}#{user.Discriminator}", true)
+                    .AddField("Moderator", Context.User.Username, true)
+                    .AddField("Duration", $"{minutes} minutes", true)
+                    .AddField("Until", $"<t:{until.ToUnixTimeSeconds()}:F>", true)
+                    .AddField("Reason", reason, false)
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: embed.Build());
+
+                try
+                {
+                    await user.SendMessageAsync($"You have been timed out in {Context.Guild.Name} for {minutes} minutes. Reason: {reason}");
+                }
+                catch { /* User has DMs disabled */ }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to timeout user: {ex.Message}");
+            }
+        }
+
+        [Command("cleanup")]
+        [Summary("Cleanup/delete messages in current channel")]
+        [RequireUserPermission(GuildPermission.ManageMessages)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task CleanupAsync(int? amount = null)
+        {
+            try
+            {
+                int totalDeleted = 0;
+
+                if (amount == null)
+                {
+                    // No amount specified = clear ALL messages (except pinned)
+                    var textChannel = Context.Channel as SocketTextChannel;
+                    if (textChannel == null) return;
+
+                    // Delete command message first
+                    try { await Context.Message.DeleteAsync(); } catch { }
+
+                    bool hasMore = true;
+                    while (hasMore)
+                    {
+                        var messages = await textChannel.GetMessagesAsync(100).FlattenAsync();
+                        // Exclude pinned messages
+                        var deleteableMessages = messages.Where(x =>
+                            DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14) &&
+                            !x.IsPinned).ToList();
+
+                        if (!deleteableMessages.Any())
+                        {
+                            hasMore = false;
+                            break;
+                        }
+
+                        if (deleteableMessages.Count == 1)
+                        {
+                            await deleteableMessages.First().DeleteAsync();
+                            totalDeleted += 1;
+                            hasMore = false;
+                        }
+                        else
+                        {
+                            await textChannel.DeleteMessagesAsync(deleteableMessages);
+                            totalDeleted += deleteableMessages.Count;
+                        }
+
+                        // Small delay to avoid rate limits
+                        await Task.Delay(1000);
+                    }
                 }
                 else
                 {
-                    await textChannel.DeleteMessagesAsync(deleteableMessages);
-                    totalDeleted += deleteableMessages.Count;
+                    // Specific amount specified
+                    if (amount <= 0)
+                    {
+                        await ReplyAsync("❌ Amount must be greater than 0!");
+                        return;
+                    }
+
+                    var messages = await Context.Channel.GetMessagesAsync(amount.Value + 1).FlattenAsync(); // +1 to include command
+                                                                                                            // Exclude pinned messages
+                    var deleteableMessages = messages.Where(x =>
+                        DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14) &&
+                        !x.IsPinned);
+
+                    if (Context.Channel is SocketTextChannel textChannel)
+                    {
+                        await textChannel.DeleteMessagesAsync(deleteableMessages);
+                        totalDeleted = deleteableMessages.Count() - 1; // -1 because command message is included
+                    }
                 }
 
-                // Small delay to avoid rate limits
-                await Task.Delay(1000);
-            }
-        }
-        else
-        {
-            // Specific amount specified
-            if (amount <= 0)
-            {
-                await ReplyAsync("❌ Amount must be greater than 0!");
-                return;
-            }
+                // Send funny cleanup message
+                var reply = await ReplyAsync($"{totalDeleted} messages were deleted :)) Thank you for using me as your cleaning lady!");
 
-            var messages = await Context.Channel.GetMessagesAsync(amount.Value + 1).FlattenAsync(); // +1 to include command
-                                                                                                    // Exclude pinned messages
-            var deleteableMessages = messages.Where(x =>
-                DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14) &&
-                !x.IsPinned);
-
-            if (Context.Channel is SocketTextChannel textChannel)
+                // Delete confirmation message after 45 seconds
+                _ = Task.Delay(45000).ContinueWith(async _ =>
+                {
+                    try { await reply.DeleteAsync(); } catch { }
+                });
+            }
+            catch (Exception ex)
             {
-                await textChannel.DeleteMessagesAsync(deleteableMessages);
-                totalDeleted = deleteableMessages.Count() - 1; // -1 because command message is included
+                await ReplyAsync($"❌ Failed to cleanup messages: {ex.Message}");
             }
         }
 
-        // Send funny cleanup message
-        var reply = await ReplyAsync($"{totalDeleted} messages were deleted :)) Thank you for using me as your cleaning lady!");
-
-        // Delete confirmation message after 45 seconds
-        _ = Task.Delay(45000).ContinueWith(async _ =>
+        [Command("setcleanupinterval")]
+        [Summary("Set automatic cleanup interval for a channel (1 hour)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task SetCleanupIntervalAsync()
         {
-            try { await reply.DeleteAsync(); } catch { }
-        });
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to cleanup messages: {ex.Message}");
-    }
-}
-
-[Command("setcleanupinterval")]
-[Summary("Set automatic cleanup interval for a channel (1 hour)")]
-[RequireUserPermission(GuildPermission.Administrator)]
-public async Task SetCleanupIntervalAsync()
-{
-    try
-    {
-        await ReplyAsync("In which channel should the interval be set? (provide the channel ID)");
-
-        var response = await NextMessageAsync(timeout: TimeSpan.FromMinutes(1));
-
-        if (response == null)
-        {
-            await ReplyAsync("❌ Timeout! Please try again.");
-            return;
-        }
-
-        if (!ulong.TryParse(response.Content.Trim(), out ulong channelId))
-        {
-            await ReplyAsync("❌ Invalid channel ID! Please provide a valid numeric ID.");
-            return;
-        }
-
-        var channel = Context.Guild.GetTextChannel(channelId);
-        if (channel == null)
-        {
-            await ReplyAsync("❌ Channel not found! Make sure the channel ID is correct and the bot has access to it.");
-            return;
-        }
-
-        // Set the cleanup interval
-        SecurityService.SetCleanupInterval(Context.Guild.Id, channelId, Context.Client as DiscordSocketClient);
-
-        var embed = new EmbedBuilder()
-            .WithTitle("⏰ Cleanup Interval Set!")
-            .WithColor(0x40E0D0)
-            .AddField("Channel", $"<#{channelId}>", true)
-            .AddField("Interval", "1 hour", true)
-            .AddField("Status", "✅ Active", true)
-            .WithDescription("The channel will be automatically cleaned every hour (excluding pinned messages)!")
-            .WithTimestamp(DateTimeOffset.UtcNow);
-
-        await ReplyAsync(embed: embed.Build());
-
-        // Delete user's channel ID message for privacy
-        try { await response.DeleteAsync(); } catch { }
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to set cleanup interval: {ex.Message}");
-    }
-}
-
-[Command("removecleanupinterval")]
-[Summary("Remove automatic cleanup interval")]
-[RequireUserPermission(GuildPermission.Administrator)]
-public async Task RemoveCleanupIntervalAsync()
-{
-    try
-    {
-        var currentInterval = SecurityService.GetCleanupInterval(Context.Guild.Id);
-        if (currentInterval == null)
-        {
-            await ReplyAsync("❌ No cleanup interval is currently set for this server.");
-            return;
-        }
-
-        SecurityService.RemoveCleanupInterval(Context.Guild.Id);
-
-        var embed = new EmbedBuilder()
-            .WithTitle("⏰ Cleanup Interval Removed!")
-            .WithColor(Color.Orange)
-            .AddField("Status", "❌ Disabled", true)
-            .WithDescription("Automatic cleanup has been disabled for this server.")
-            .WithTimestamp(DateTimeOffset.UtcNow);
-
-        await ReplyAsync(embed: embed.Build());
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to remove cleanup interval: {ex.Message}");
-    }
-}
-
-[Command("warn")]
-[Summary("Warn a user")]
-[RequireUserPermission(GuildPermission.ModerateMembers)]
-public async Task WarnAsync(SocketGuildUser user, [Remainder] string reason = "No reason provided")
-{
-    try
-    {
-        if (user.Id == Context.User.Id)
-        {
-            await ReplyAsync("❌ You cannot warn yourself!");
-            return;
-        }
-
-        var embed = new EmbedBuilder()
-            .WithTitle("⚠️ User Warned")
-            .WithColor(Color.Gold)
-            .AddField("User", $"{user.Username}#{user.Discriminator}", true)
-            .AddField("Moderator", Context.User.Username, true)
-            .AddField("Reason", reason, false)
-            .WithTimestamp(DateTimeOffset.UtcNow);
-
-        await ReplyAsync(embed: embed.Build());
-
-        try
-        {
-            await user.SendMessageAsync($"You have been warned in {Context.Guild.Name}. Reason: {reason}");
-        }
-        catch { /* User has DMs disabled */ }
-
-        // Log warning
-        try
-        {
-            var log = new
+            try
             {
-                time = DateTimeOffset.UtcNow,
-                type = "warning",
-                guildId = Context.Guild.Id,
-                guildName = Context.Guild.Name,
-                userId = user.Id,
-                userTag = $"{user.Username}#{user.Discriminator}",
-                moderatorId = Context.User.Id,
-                moderatorTag = Context.User.Username,
-                reason = reason
-            };
-            File.AppendAllText("warnings.jsonl", JsonSerializer.Serialize(log) + "\n");
-        }
-        catch { }
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to warn user: {ex.Message}");
-    }
-}
+                await ReplyAsync("In which channel should the interval be set? (provide the channel ID)");
 
-[Command("unban")]
-[Summary("Unban a user by ID")]
-[RequireUserPermission(GuildPermission.BanMembers)]
-[RequireBotPermission(GuildPermission.BanMembers)]
-public async Task UnbanAsync(ulong userId, [Remainder] string reason = "No reason provided")
-{
-    try
-    {
-        var ban = await Context.Guild.GetBanAsync(userId);
-        if (ban == null)
+                var response = await NextMessageAsync(timeout: TimeSpan.FromMinutes(1));
+
+                if (response == null)
+                {
+                    await ReplyAsync("❌ Timeout! Please try again.");
+                    return;
+                }
+
+                if (!ulong.TryParse(response.Content.Trim(), out ulong channelId))
+                {
+                    await ReplyAsync("❌ Invalid channel ID! Please provide a valid numeric ID.");
+                    return;
+                }
+
+                var channel = Context.Guild.GetTextChannel(channelId);
+                if (channel == null)
+                {
+                    await ReplyAsync("❌ Channel not found! Make sure the channel ID is correct and the bot has access to it.");
+                    return;
+                }
+
+                // Set the cleanup interval
+                SecurityService.SetCleanupInterval(Context.Guild.Id, channelId, Context.Client as DiscordSocketClient);
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("⏰ Cleanup Interval Set!")
+                    .WithColor(0x40E0D0)
+                    .AddField("Channel", $"<#{channelId}>", true)
+                    .AddField("Interval", "1 hour", true)
+                    .AddField("Status", "✅ Active", true)
+                    .WithDescription("The channel will be automatically cleaned every hour (excluding pinned messages)!")
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: embed.Build());
+
+                // Delete user's channel ID message for privacy
+                try { await response.DeleteAsync(); } catch { }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to set cleanup interval: {ex.Message}");
+            }
+        }
+
+        [Command("removecleanupinterval")]
+        [Summary("Remove automatic cleanup interval")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task RemoveCleanupIntervalAsync()
         {
-            await ReplyAsync("❌ User is not banned!");
-            return;
+            try
+            {
+                var currentInterval = SecurityService.GetCleanupInterval(Context.Guild.Id);
+                if (currentInterval == null)
+                {
+                    await ReplyAsync("❌ No cleanup interval is currently set for this server.");
+                    return;
+                }
+
+                SecurityService.RemoveCleanupInterval(Context.Guild.Id);
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("⏰ Cleanup Interval Removed!")
+                    .WithColor(Color.Orange)
+                    .AddField("Status", "❌ Disabled", true)
+                    .WithDescription("Automatic cleanup has been disabled for this server.")
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to remove cleanup interval: {ex.Message}");
+            }
         }
 
-        await Context.Guild.RemoveBanAsync(userId, new RequestOptions { AuditLogReason = reason });
+        [Command("warn")]
+        [Summary("Warn a user")]
+        [RequireUserPermission(GuildPermission.ModerateMembers)]
+        public async Task WarnAsync(SocketGuildUser user, [Remainder] string reason = "No reason provided")
+        {
+            try
+            {
+                if (user.Id == Context.User.Id)
+                {
+                    await ReplyAsync("❌ You cannot warn yourself!");
+                    return;
+                }
 
-        var embed = new EmbedBuilder()
-            .WithTitle("✅ User Unbanned")
-            .WithColor(Color.Green)
-            .AddField("User", $"{ban.User.Username}#{ban.User.Discriminator}", true)
-            .AddField("Moderator", Context.User.Username, true)
-            .AddField("Reason", reason, false)
-            .WithTimestamp(DateTimeOffset.UtcNow);
+                var embed = new EmbedBuilder()
+                    .WithTitle("⚠️ User Warned")
+                    .WithColor(Color.Gold)
+                    .AddField("User", $"{user.Username}#{user.Discriminator}", true)
+                    .AddField("Moderator", Context.User.Username, true)
+                    .AddField("Reason", reason, false)
+                    .WithTimestamp(DateTimeOffset.UtcNow);
 
-        await ReplyAsync(embed: embed.Build());
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to unban user: {ex.Message}");
-    }
-}
+                await ReplyAsync(embed: embed.Build());
+
+                try
+                {
+                    await user.SendMessageAsync($"You have been warned in {Context.Guild.Name}. Reason: {reason}");
+                }
+                catch { /* User has DMs disabled */ }
+
+                // Log warning
+                try
+                {
+                    var log = new
+                    {
+                        time = DateTimeOffset.UtcNow,
+                        type = "warning",
+                        guildId = Context.Guild.Id,
+                        guildName = Context.Guild.Name,
+                        userId = user.Id,
+                        userTag = $"{user.Username}#{user.Discriminator}",
+                        moderatorId = Context.User.Id,
+                        moderatorTag = Context.User.Username,
+                        reason = reason
+                    };
+                    File.AppendAllText("warnings.jsonl", JsonSerializer.Serialize(log) + "\n");
+                }
+                catch { }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to warn user: {ex.Message}");
+            }
+        }
+
+        [Command("unban")]
+        [Summary("Unban a user by ID")]
+        [RequireUserPermission(GuildPermission.BanMembers)]
+        [RequireBotPermission(GuildPermission.BanMembers)]
+        public async Task UnbanAsync(ulong userId, [Remainder] string reason = "No reason provided")
+        {
+            try
+            {
+                var ban = await Context.Guild.GetBanAsync(userId);
+                if (ban == null)
+                {
+                    await ReplyAsync("❌ User is not banned!");
+                    return;
+                }
+
+                await Context.Guild.RemoveBanAsync(userId, new RequestOptions { AuditLogReason = reason });
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("✅ User Unbanned")
+                    .WithColor(Color.Green)
+                    .AddField("User", $"{ban.User.Username}#{ban.User.Discriminator}", true)
+                    .AddField("Moderator", Context.User.Username, true)
+                    .AddField("Reason", reason, false)
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: embed.Build());
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to unban user: {ex.Message}");
+            }
+        }
     }
 }

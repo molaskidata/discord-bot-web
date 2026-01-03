@@ -8,7 +8,6 @@ using System.Text.RegularExpressions;
 using System;
 using System.Collections.Generic;
 using System.IO;
-using Discord.Interactions;
 
 namespace MainbotCSharp.Modules
 {
