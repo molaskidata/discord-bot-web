@@ -27,10 +27,8 @@ namespace MainbotCSharp.Modules
         {
             var embed = new EmbedBuilder()
                 .WithTitle("★ !Code.Master() ★")
-                .WithColor(0x2F3136)
-                .WithDescription("\n★ Bot-command help ★\n\n**Here are all available commands:**")
-                .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
-
+                .WithColor(0x40E0D0)
+                .WithDescription("\n★ Bot-command help ★\n\n*Here are all available commands:*")
                 .AddField("★ **General**",
                     "`!info` - Bot info\n" +
                     "`!ping` - Testing the pingspeed of the bot\n" +
@@ -108,7 +106,7 @@ namespace MainbotCSharp.Modules
                     "`!helpbump` - Bump/Disboard help\n" +
                     "`!helpbirth` - Birthday help", false)
 
-                .WithImageUrl("https://imgur.com/aYh8OAq")
+                .WithImageUrl("https://imgur.com/aYh8OAq.png")
                 .WithFooter("Powered by mungabee /aka ozzygirl", "https://i.imgur.com/7mkVUuO.png")
                 .WithCurrentTimestamp();
 
