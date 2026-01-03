@@ -621,29 +621,23 @@ namespace MainbotCSharp.Modules
                 await ReplyAsync($"❌ Failed to check user: {ex.Message}");
             }
         }
-    }
-            catch (Exception ex)
-            {
-                await ReplyAsync($"❌ Setup failed: {ex.Message}");
-}
-        }
 
         [Command("disable")]
-[Summary("Disable security system (Admin only)")]
-[RequireUserPermission(GuildPermission.Administrator)]
-public async Task SecurityDisableAsync()
-{
-    try
-    {
-        var config = new SecurityConfigEntry { Enabled = false };
-        SecurityService.SetConfig(Context.Guild.Id, config);
-        await ReplyAsync("🛡️ Security system disabled.");
-    }
-    catch (Exception ex)
-    {
-        await ReplyAsync($"❌ Failed to disable: {ex.Message}");
-    }
-}
+        [Summary("Disable security system (Admin only)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task SecurityDisableAsync()
+        {
+            try
+            {
+                var config = new SecurityConfigEntry { Enabled = false };
+                SecurityService.SetConfig(Context.Guild.Id, config);
+                await ReplyAsync("🛡️ Security system disabled.");
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to disable: {ex.Message}");
+            }
+        }
 
 [Command("status")]
 [Summary("Check security system status (Admin only)")]
