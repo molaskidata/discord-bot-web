@@ -245,7 +245,11 @@ namespace MainbotCSharp.Services
                 Console.WriteLine($"🔍 Bump detected in channel: {message.Channel.Name}");
 
                 // Set bump reminder for this guild/channel
-                SetBumpReminder(message.Guild.Id, message.Channel.Id);
+                var guild = (message.Channel as SocketGuildChannel)?.Guild;
+                if (guild != null)
+                {
+                    SetBumpReminder(guild.Id, message.Channel.Id);
+                }
                 return true;
             }
             catch (Exception ex)

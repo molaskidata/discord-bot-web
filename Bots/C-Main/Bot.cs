@@ -78,8 +78,6 @@ namespace MainbotCSharp
                 Console.WriteLine("BirthdayService initialization error: " + ex);
             }
 
-            }
-
             // Initialize Bump Reminder Service
             try
             {

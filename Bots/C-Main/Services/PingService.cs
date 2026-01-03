@@ -65,8 +65,9 @@ namespace MainbotCSharp.Services
             try
             {
                 // Handle response from Pingbot (!ponggg)
+                var guild = (message.Channel as SocketGuildChannel)?.Guild;
                 if (message.Content == "!ponggg" &&
-                    message.Guild?.Id == PING_GUILD_ID &&
+                    guild?.Id == PING_GUILD_ID &&
                     message.Channel.Id == PING_CHANNEL_ID)
                 {
                     Console.WriteLine("✅ Received pong from Pingbot - connection confirmed");
@@ -81,7 +82,7 @@ namespace MainbotCSharp.Services
 
                 // Handle incoming ping from Pingbot (!pingmeee)
                 else if (message.Content == "!pingmeee" &&
-                         message.Guild?.Id == PING_GUILD_ID &&
+                         guild?.Id == PING_GUILD_ID &&
                          message.Channel.Id == PING_CHANNEL_ID)
                 {
                     Console.WriteLine("✅ Received ping from Pingbot");
