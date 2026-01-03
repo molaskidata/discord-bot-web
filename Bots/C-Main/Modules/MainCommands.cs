@@ -98,8 +98,8 @@ namespace MainbotCSharp.Modules
                     "**!helpbump** - Bump/Disboard help\n" +
                     "**!helpbirth** - Birthday help", false)
 
-                .WithImageUrl("https://i.imgur.com/your-cyberpunk-image.png")
-                .WithFooter("Powered by mungabee /aka ozzygirl", Context.Client.CurrentUser.GetAvatarUrl())
+                .WithImageUrl("https://imgur.com/aYh8OAq")
+                .WithFooter("Powered by mungabee /aka ozzygirl", "https://i.imgur.com/7mkVUuO.png")
                 .WithCurrentTimestamp();
 
             await ReplyAsync(embed: embed.Build());
