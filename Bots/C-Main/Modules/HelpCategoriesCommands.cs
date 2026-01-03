@@ -15,16 +15,16 @@ namespace MainbotCSharp.Modules
         public async Task MungaHelpdeskAsync()
         {
             var embed = new EmbedBuilder()
-                .WithTitle("🎯 **CoderMaster Help Desk**")
+                .WithTitle("**Code.Master() Help Desk**")
                 .WithDescription("**Select a category from the menu below to get detailed help:**")
                 .WithColor(0x40E0D0) // Turquoise
-                .AddField("📋 **Available Categories**",
-                    "• **All Commands** - Complete command overview\n" +
-                    "• **Voice** - Voice channel management\n" +
-                    "• **Security** - Moderation & security features\n" +
-                    "• **Twitch** - Twitch integration commands\n" +
-                    "• **Bump** - Disboard bump reminders\n" +
-                    "• **Birthday** - Birthday notification system", false)
+                .AddField("📋 *Available Categories*",
+                    "• All Commands - Complete command overview\n" +
+                    "• Voice - Voice channel management\n" +
+                    "• Security - Moderation & security features\n" +
+                    "• Twitch - Twitch integration commands\n" +
+                    "• Bump - Disboard bump reminders\n" +
+                    "• Birthday - Birthday notification system", false)
                 .WithFooter("Made by OZZYGIRL/mungabee", "https://github.com/mungabee.png")
                 .WithTimestamp(DateTimeOffset.UtcNow);
 

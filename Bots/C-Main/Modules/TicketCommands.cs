@@ -444,37 +444,7 @@ namespace MainbotCSharp.Modules
                 };
                 TicketService.SetConfig(Context.Guild.Id, config);
 
-                var embed = new EmbedBuilder()
-                    .WithTitle("🎫 Support System")
-                    .WithDescription("Need help? Select a category below to open a support ticket:")
-                    .WithColor(0x40E0D0)
-                    .AddField("Available Categories",
-                        "🔧 **Technical** - Technical problems or questions\n" +
-                        "🚨 **Spam/Scam** - Report spam or scam content\n" +
-                        "⚠️ **Abuse** - Report abusive behavior\n" +
-                        "📢 **Advertising** - Unauthorized advertising\n" +
-                        "🐛 **Bug Report** - Report bugs or suggest features\n" +
-                        "❓ **Other** - Other issues not listed above", false)
-                    .WithFooter("Select from the dropdown below • Tickets auto-close after 24h of inactivity");
-
-                var menu = new SelectMenuBuilder()
-                    .WithPlaceholder("Choose your issue category...")
-                    .WithCustomId("support_select")
-                    .WithMinValues(1)
-                    .WithMaxValues(1)
-                    .AddOption("Technical Issue", "support_technical", "Technical problems or questions", new Emoji("🔧"))
-                    .AddOption("Spam / Scam Report", "support_spam", "Report spam or scam content", new Emoji("🚨"))
-                    .AddOption("Abuse / Harassment", "support_abuse", "Report abusive behavior", new Emoji("⚠️"))
-                    .AddOption("Advertising", "support_advertising", "Report unauthorized advertising", new Emoji("📢"))
-                    .AddOption("Bug / Feature Request", "support_bug", "Report bugs or suggest features", new Emoji("🐛"))
-                    .AddOption("Other", "support_other", "Other issues not listed above", new Emoji("❓"));
-
-                var components = new ComponentBuilder()
-                    .WithSelectMenu(menu);
-
-                await ReplyAsync(embed: embed.Build(), components: components.Build());
-
-                // Send setup confirmation
+                // Send setup confirmation only
                 var setupEmbed = new EmbedBuilder()
                     .WithTitle("✅ Ticket System Configured")
                     .WithColor(Color.Green)
@@ -674,6 +644,59 @@ namespace MainbotCSharp.Modules
             catch (Exception ex)
             {
                 await ReplyAsync($"❌ Failed to generate transcript: {ex.Message}");
+            }
+        }
+
+        [Command("del-ticket-system")]
+        [Summary("Remove ticket system log channel configuration (Admin only)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task DeleteTicketSystemAsync()
+        {
+            try
+            {
+                var config = TicketService.GetConfig(Context.Guild.Id);
+                if (config == null)
+                {
+                    await ReplyAsync("❌ No ticket system configured for this server.");
+                    return;
+                }
+
+                TicketService.RemoveConfig(Context.Guild.Id);
+                await ReplyAsync("✅ Ticket system log channel configuration removed. Ticket system is still active but won't log to a channel anymore.");
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to remove configuration: {ex.Message}");
+            }
+        }
+
+        [Command("de-munga-supportticket")]
+        [Summary("Completely deactivate ticket system (Admin only)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        public async Task DeactivateTicketSystemAsync()
+        {
+            try
+            {
+                var config = TicketService.GetConfig(Context.Guild.Id);
+                if (config == null)
+                {
+                    await ReplyAsync("❌ No ticket system configured for this server.");
+                    return;
+                }
+
+                // Remove config and clear all ticket metas for this guild
+                TicketService.RemoveConfig(Context.Guild.Id);
+                var ticketsToRemove = TicketService.TicketMetas.Where(t => t.Value.GuildId == Context.Guild.Id).Select(t => t.Key).ToList();
+                foreach (var ticketChannelId in ticketsToRemove)
+                {
+                    TicketService.TicketMetas.TryRemove(ticketChannelId, out _);
+                }
+
+                await ReplyAsync("✅ Ticket system completely deactivated. All ticket functions are now disabled. No channels were deleted.");
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to deactivate ticket system: {ex.Message}");
             }
         }
     }

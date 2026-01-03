@@ -28,7 +28,7 @@ namespace MainbotCSharp.Modules
             var embed = new EmbedBuilder()
                 .WithTitle("★ !Code.Master() ★")
                 .WithColor(0x2F3136)
-                .WithDescription("```\n★ Bot-command help ★\n```\n**Here are all available commands:**")
+                .WithDescription("\n★ Bot-command help ★\n\n**Here are all available commands:**")
                 .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
 
                 .AddField("★ **General**",
@@ -49,6 +49,16 @@ namespace MainbotCSharp.Modules
                     "`!kick @user` - Manually kick a user\n" +
                     "`!timeout @user [minutes]` - Manually timeout a user\n" +
                     "`!timeoutdel @user` - Remove timeout from a user", false)
+
+                .AddField("★ **Ticket System** *ez & quick*",
+                    "`!ticket-setup` - Configure ticket system with log channel\n" +
+                    "`!ticket-close` - Close the current ticket\n" +
+                    "`!ticket-add @user` - Add user to ticket\n" +
+                    "`!ticket-remove @user` - Remove user from ticket\n" +
+                    "`!ticket-status` - Show ticket system status\n" +
+                    "`!ticket-transcript` - Generate transcript for ticket\n" +
+                    "`!del-ticket-system` - Remove log channel configuration\n" +
+                    "`!de-munga-supportticket` - Completely deactivate ticket system", false)
 
                 .AddField("★ **Voice Features** *Admin only, Premium*",
                     "`!setupvoice` - Create Join-to-Create channel *(3 channels free)*\n" +

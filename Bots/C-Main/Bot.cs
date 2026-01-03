@@ -226,7 +226,7 @@ namespace MainbotCSharp
                         }
 
                         var cfg = MainbotCSharp.Modules.TicketService.GetConfig(meta.GuildId);
-                        if (cfg == null) { await comp.RespondAsync("No log channel configured. Ask an admin to run !munga-ticketsystem.", ephemeral: true); return; }
+                        if (cfg == null) { await comp.RespondAsync("No log channel configured. Ask an admin to run `!ticket-setup`.", ephemeral: true); return; }
 
                         // build transcript
                         var messages = await channel.GetMessagesAsync(100).FlattenAsync();
