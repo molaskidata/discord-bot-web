@@ -181,7 +181,7 @@ namespace MainbotCSharp
                         }
                         else
                         {
-                            label = value ?? "Unbekannt";
+                            label = value ?? "Unknown";
                         }
                         // create ticket channel
                         var guild = (comp.Channel as SocketGuildChannel)?.Guild;

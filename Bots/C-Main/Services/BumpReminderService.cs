@@ -102,7 +102,7 @@ namespace MainbotCSharp.Services
                     ChannelId = channelId,
                     NextBumpTime = nextBumpTime,
                     IsActive = true,
-                    Language = "de"
+                    Language = "en"
                 };
 
                 // Cancel existing timer for this guild
@@ -207,7 +207,7 @@ namespace MainbotCSharp.Services
                     }
                 };
 
-                var messages = reminderMessages.TryGetValue(data.Language, out var msgs) ? msgs : reminderMessages["de"];
+                var messages = reminderMessages.TryGetValue(data.Language, out var msgs) ? msgs : reminderMessages["en"];
                 var randomMessage = messages[new Random().Next(messages.Length)];
 
                 await channel.SendMessageAsync(randomMessage);
