@@ -18,7 +18,7 @@ namespace PingbotCSharp.Modules
         public async Task StartAsync(DiscordSocketClient client)
         {
             await Task.Yield();
-            RestoreBumpReminders(client);
+            // RestoreBumpReminders(client); // No bump reminders in Pingbot
             _ = Task.Run(async () =>
             {
                 try
@@ -64,12 +64,12 @@ namespace PingbotCSharp.Modules
         {
             await ReplyAsync("!ponggg");
         }
-            [Command("phelp")]
-            public async Task PHelp()
-            {
-                await ReplyAsync("PingBot — Help\n`!pingme` - Basic ping/pong check\nBump commands: `!setbumpreminder2`, `!delbumpreminder2`, `!bumpstatus`, `!bumphelp`");
-            }
+        [Command("phelp")]
+        public async Task PHelp()
+        {
+            await ReplyAsync("PingBot — Help\n`!pingme` - Basic ping/pong check\nBump commands: `!setbumpreminder2`, `!delbumpreminder2`, `!bumpstatus`, `!bumphelp`");
         }
     }
-    
+}
+
 
