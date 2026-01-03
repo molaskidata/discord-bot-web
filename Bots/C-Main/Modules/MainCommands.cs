@@ -123,12 +123,12 @@ namespace MainbotCSharp.Modules
 
             if (action.ToLower() == "on")
             {
-                BumpReminderService.EnableReminders(Context.Channel.Id);
+                BumpReminderService.SetBumpReminder(Context.Guild.Id, Context.Channel.Id);
                 await ReplyAsync("✅ Bump-Erinnerungen wurden aktiviert! Du wirst benachrichtigt, wenn der Server wieder gebumpt werden kann.");
             }
             else if (action.ToLower() == "off")
             {
-                BumpReminderService.DisableReminders(Context.Channel.Id);
+                BumpReminderService.RemoveBumpReminder(Context.Guild.Id);
                 await ReplyAsync("❌ Bump-Erinnerungen wurden deaktiviert.");
             }
             else
@@ -141,17 +141,17 @@ namespace MainbotCSharp.Modules
         [Summary("Check bump reminder status")]
         public async Task BumpStatusAsync()
         {
-            var status = BumpReminderService.GetReminderStatus(Context.Channel.Id);
+            var status = BumpReminderService.GetBumpReminderStatus(Context.Guild.Id);
 
             var embed = new EmbedBuilder()
                 .WithTitle("📊 Bump Reminder Status")
-                .WithColor(status.enabled ? Color.Green : Color.Red)
-                .AddField("Status", status.enabled ? "✅ Aktiviert" : "❌ Deaktiviert", true)
+                .WithColor(status?.IsActive == true ? Color.Green : Color.Red)
+                .AddField("Status", status?.IsActive == true ? "✅ Aktiviert" : "❌ Deaktiviert", true)
                 .AddField("Kanal", Context.Channel.Name, true);
 
-            if (status.enabled && status.nextBumpTime.HasValue)
+            if (status?.IsActive == true && status.NextBumpTime > DateTime.Now)
             {
-                var timeRemaining = status.nextBumpTime.Value - DateTime.UtcNow;
+                var timeRemaining = status.NextBumpTime - DateTime.Now;
                 if (timeRemaining.TotalSeconds > 0)
                 {
                     embed.AddField("Nächster Bump möglich in",
