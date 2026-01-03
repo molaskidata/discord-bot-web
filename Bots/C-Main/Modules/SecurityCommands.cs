@@ -349,7 +349,10 @@ namespace MainbotCSharp.Modules
                 var action = parts[1];
                 if (!ulong.TryParse(parts[2], out var userId)) return;
 
-                var user = component.Guild.GetUser(userId);
+                var guild = (component.User as SocketGuildUser)?.Guild;
+                if (guild == null) return;
+
+                var user = guild.GetUser(userId);
                 if (user == null)
                 {
                     await component.RespondAsync("❌ User not found or already left the server.", ephemeral: true);
@@ -357,6 +360,8 @@ namespace MainbotCSharp.Modules
                 }
 
                 var moderator = component.User as SocketGuildUser;
+                if (moderator == null) return;
+
                 switch (action)
                 {
                     case "ban":
@@ -401,8 +406,8 @@ namespace MainbotCSharp.Modules
                         .WithDescription(embed.Description)
                         .WithColor(action == "dismiss" ? Color.Green : Color.Red)
                         .WithThumbnailUrl(embed.Thumbnail?.Url)
-                        .WithFooter($"Action taken: {action.ToUpper()} by {moderator.Username} • {embed.Footer?.Text}")
-                        .WithTimestamp(embed.Timestamp);
+                        .WithFooter($"Action taken: {action.ToUpper()} by {moderator.Username} • {embed.Footer?.Text ?? ""}")
+                        .WithTimestamp(embed.Timestamp ?? DateTimeOffset.UtcNow);
 
                     foreach (var field in embed.Fields)
                     {
