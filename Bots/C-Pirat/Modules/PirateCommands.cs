@@ -55,16 +55,16 @@ namespace PiratBotCSharp.Modules
         };
     }
 
-    public class ActiveChannelInfo { public ulong OwnerId { get; set; } public long CreatedAt { get; set; } public string Template { get; set; } public bool IsPrivate { get; set; } }
-    public class VoiceTemplate { public string Name { get; set; } public int Limit { get; set; } }
+    public class ActiveChannelInfo { public ulong OwnerId { get; set; } public long CreatedAt { get; set; } public string Template { get; set; } = null!; public bool IsPrivate { get; set; } }
+    public class VoiceTemplate { public string Name { get; set; } = null!; public int Limit { get; set; } }
 
     public class VoiceLogs
     {
         public List<VoiceLogEntry> Logs { get; set; } = new();
         public Dictionary<string, VoiceStats> Stats { get; set; } = new();
     }
-    public class VoiceLogEntry { public string UserId; public string Username; public string Action; public string ChannelName; public string Timestamp; }
-    public class VoiceStats { public string Username; public int TotalJoins; public long TotalTime; public int ChannelsCreated; }
+    public class VoiceLogEntry { public string UserId = null!; public string Username = null!; public string Action = null!; public string ChannelName = null!; public string Timestamp = null!; }
+    public class VoiceStats { public string Username = null!; public int TotalJoins; public long TotalTime; public int ChannelsCreated; }
 
     public static class PirateService
     {
@@ -307,7 +307,7 @@ namespace PiratBotCSharp.Modules
         public class TicketMeta
         {
             public ulong UserId { get; set; }
-            public string Category { get; set; }
+            public string Category { get; set; } = null!;
             public ulong GuildId { get; set; }
         }
 
@@ -753,7 +753,7 @@ namespace PiratBotCSharp.Modules
 
             var embed = CreatePirateEmbed()
                 .WithTitle("🛡️ Security System Enabled")
-                .WithDescription($"Ahoy Captain! The security system be now active!\nWarn logs will be sent to {Context.Channel.Mention}\n\n*\"Keep a weather eye open, matey!\"*");
+                .WithDescription($"Ahoy Captain! The security system be now active!\nWarn logs will be sent to {(Context.Channel as SocketTextChannel)?.Mention ?? "#" + Context.Channel.Name}\n\n*\"Keep a weather eye open, matey!\"*");
 
             await ReplyAsync(embed: embed.Build());
         }
@@ -857,7 +857,7 @@ namespace PiratBotCSharp.Modules
             PirateService.SaveVoiceConfigData();
 
             var embed = CreatePirateEmbed()
-                .WithDescription($"🔊 Voice logs will now be sent to {Context.Channel.Mention}, Captain!");
+                .WithDescription($"🔊 Voice logs will now be sent to {(Context.Channel as SocketTextChannel)?.Mention ?? "#" + Context.Channel.Name}, Captain!");
 
             await ReplyAsync(embed: embed.Build());
         }
@@ -954,7 +954,7 @@ namespace PiratBotCSharp.Modules
 
             var embed = CreatePirateEmbed()
                 .WithTitle("🎫 Ticket System Configured")
-                .WithDescription($"Ahoy Captain! Ticket logs will be sent to {Context.Channel.Mention}!");
+                .WithDescription($"Ahoy Captain! Ticket logs will be sent to {(Context.Channel as SocketTextChannel)?.Mention ?? "#" + Context.Channel.Name}!");
 
             await ReplyAsync(embed: embed.Build());
         }

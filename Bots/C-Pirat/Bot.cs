@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Reflection;
 using System.Threading.Tasks;
 using Discord;
@@ -16,16 +17,31 @@ namespace PiratBotCSharp
         private CommandService? _commands;
         private IServiceProvider? _services;
 
-        public static async Task Main()
+        public async Task InitializeAsync()
         {
-            var bot = new Bot();
-            await bot.RunAsync();
+            await RunAsync();
         }
 
         public async Task RunAsync()
         {
             try
             {
+                // Load .env file if exists
+                var envFilePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, ".env");
+                if (File.Exists(envFilePath))
+                {
+                    foreach (var line in File.ReadAllLines(envFilePath))
+                    {
+                        if (string.IsNullOrWhiteSpace(line) || line.StartsWith('#')) continue;
+
+                        var parts = line.Split('=', 2);
+                        if (parts.Length == 2)
+                        {
+                            Environment.SetEnvironmentVariable(parts[0].Trim(), parts[1].Trim());
+                        }
+                    }
+                }
+
                 var token = Environment.GetEnvironmentVariable("PIRAT_TOKEN");
                 if (string.IsNullOrEmpty(token))
                 {

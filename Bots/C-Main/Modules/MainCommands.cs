@@ -29,16 +29,14 @@ namespace MainbotCSharp.Modules
                 .WithTitle("!Code.Master()")
                 .WithColor(0x40E0D0)
                 .WithDescription("★ **Bot-command help**\n\nHere are all available commands:")
-                .WithThumbnailUrl(Context.Client.CurrentUser.GetAvatarUrl())
-
                 .AddField("★ **General**",
-                    "**!info** - Bot info\n" +
-                    "**!ping** - Testing the pingspeed of the bot\n" +
-                    "**!gm** - Get motivated for the day\n" +
-                    "**!gn** - Good night messages for you and your mates\n" +
-                    "**!hi** - Say hello and get a hello from me\n" +
-                    "**!coffee** - Tell your friends it's coffee time!\n" +
-                    "**!devmeme** - Get a programming meme", false)
+                    "'!info' - Bot info\n" +
+                    "'!ping' - Testing the pingspeed of the bot\n" +
+                    "'!gm' - Get motivated for the day\n" +
+                    "'!gn' - Good night messages for you and your mates\n" +
+                    "'!hi' - Say hello and get a hello from me\n" +
+                    "'!coffee' - Tell your friends it's coffee time!\n" +
+                    "'!devmeme' - Get a programming meme", false)
 
                 .AddField("★ **Security Features** *Admin only, Premium*",
                     "**!setsecuritymod** - Enable the AI Security System for this server.\n" +
@@ -198,7 +196,7 @@ namespace MainbotCSharp.Modules
             var status = BumpReminderService.GetBumpReminderStatus(Context.Guild.Id);
 
             var embed = new EmbedBuilder()
-                .WithTitle("📊 Bump Reminder Status")
+                .WithTitle("Bump Reminder Status")
                 .WithColor(status?.IsActive == true ? Color.Green : Color.Red)
                 .AddField("Status", status?.IsActive == true ? "✅ Enabled" : "❌ Disabled", true)
                 .AddField("Channel", Context.Channel.Name, true);
