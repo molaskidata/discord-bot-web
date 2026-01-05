@@ -49,7 +49,8 @@ namespace MainbotCSharp.Modules
                     "`!timeout @user [minutes]` - Manually timeout a user\n" +
                     "`!timeoutdel @user` - Remove timeout from a user", false)
 
-                .AddField("★ **Ticket System** ✅ *FREE - ez & quick*",
+                .AddField("★ **Ticket System** 🔒 *Premium*",
+                    "**All ticket features require Premium subscription**\n\n" +
                     "`!ticket-setup` - Configure ticket system with log channel\n" +
                     "`!ticket-close` - Close the current ticket\n" +
                     "`!ticket-add @user` - Add user to ticket\n" +
