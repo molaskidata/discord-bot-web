@@ -51,133 +51,158 @@ namespace Mainbot.Modules
         [Summary("Link Twitch account")]
         public async Task SetTwitchAsync()
         {
-            var guildId = Context.Guild.Id.ToString();
-            var userId = Context.User.Id.ToString();
+            var loadingMsg = await Context.Channel.SendMessageAsync("⏳ **Lade Twitch Setup...**");
 
-            await Context.Channel.SendMessageAsync("Write your correct Twitch username in the Channel to synchronize and connect with Discord. Format: example");
-
-            // Wait for username (filter: no ! prefix)
-            var username = await WaitForMessageAsync(msg => !msg.Content.StartsWith("!"));
-            if (username == null)
+            try
             {
-                await ReplyAsync("⏰ Timeout!");
-                return;
-            }
+                var guildId = Context.Guild.Id.ToString();
+                var userId = Context.User.Id.ToString();
 
-            var twitchUsername = username.Trim();
-            var twitchLinks = LoadTwitchLinks();
+                await loadingMsg.ModifyAsync(m => m.Content = "Write your correct Twitch username in the Channel to synchronize and connect with Discord. Format: example");
 
-            if (!twitchLinks.ContainsKey(guildId))
-                twitchLinks[guildId] = new Dictionary<string, TwitchUserData>();
-
-            var existingData = twitchLinks[guildId].ContainsKey(userId) ? twitchLinks[guildId][userId] : null;
-
-            if (existingData != null)
-            {
-                // User already has Twitch - ask what to update
-                await Context.Channel.SendMessageAsync(
-                    $"Du hast bereits **{existingData.TwitchUsername}** verlinkt.\n" +
-                    $"Channel: <#{existingData.ClipChannelId}>\n\n" +
-                    "Was möchtest du ändern?\n" +
-                    "1️⃣ - Username ändern\n" +
-                    "2️⃣ - Channel ändern\n" +
-                    "3️⃣ - Abbrechen\n\n" +
-                    "Schreib 1, 2 oder 3");
-
-                var choiceMsg = await WaitForMessageAsync();
-                if (choiceMsg == null) return;
-
-                switch (choiceMsg.Trim())
+                // Wait for username (filter: no ! prefix)
+                var username = await WaitForMessageAsync(msg => !msg.Content.StartsWith("!"), timeoutSeconds: 60, loadingMsg);
+                if (username == null)
                 {
-                    case "1":
-                        await Context.Channel.SendMessageAsync("Schreib deinen neuen Twitch Username:");
-                        var newUsername = await WaitForMessageAsync();
-                        if (newUsername != null)
-                        {
-                            existingData.TwitchUsername = newUsername.Trim();
-                            SaveTwitchLinks(twitchLinks);
-                            await Context.Channel.SendMessageAsync($"✅ Username geändert zu **{newUsername.Trim()}**");
-                        }
-                        return;
-
-                    case "2":
-                        await Context.Channel.SendMessageAsync("Schreib die Channel ID wo Clips gepostet werden sollen:");
-                        var newChanId = await WaitForMessageAsync();
-                        if (newChanId != null && ulong.TryParse(newChanId.Trim(), out var chanId))
-                        {
-                            existingData.ClipChannelId = chanId.ToString();
-                            SaveTwitchLinks(twitchLinks);
-                            await Context.Channel.SendMessageAsync($"✅ Channel geändert zu <#{chanId}>");
-                        }
-                        else
-                        {
-                            await Context.Channel.SendMessageAsync("❌ Ungültige Channel ID!");
-                        }
-                        return;
-
-                    case "3":
-                        await Context.Channel.SendMessageAsync("Abgebrochen.");
-                        return;
-
-                    default:
-                        await Context.Channel.SendMessageAsync("Ungültige Auswahl. Abgebrochen.");
-                        return;
-                }
-            }
-
-            // NEW SETUP - Get channel
-            await Context.Channel.SendMessageAsync(
-                "Schreib die Channel ID wo Clips gepostet werden sollen\n" +
-                "ODER schreib **!setchannel** um einen neuen Thread-Channel zu erstellen:");
-
-            var channelInput = await WaitForMessageAsync();
-            if (channelInput == null) return;
-
-            ulong clipChannelId = 0;
-
-            if (channelInput.Trim().ToLower() == "!setchannel")
-            {
-                // Create thread-only channel
-                try
-                {
-                    var newChan = await Context.Guild.CreateTextChannelAsync($"clips-{twitchUsername.ToLower()}");
-                    clipChannelId = newChan.Id;
-                    await Context.Channel.SendMessageAsync($"✅ Channel erstellt: <#{clipChannelId}>");
-                }
-                catch (Exception ex)
-                {
-                    await Context.Channel.SendMessageAsync($"❌ Fehler beim Erstellen: {ex.Message}");
+                    await loadingMsg.ModifyAsync(m => m.Content = "⏰ **Timeout!** Du hast zu lange nicht geantwortet.");
                     return;
                 }
-            }
-            else if (ulong.TryParse(channelInput.Trim(), out clipChannelId))
-            {
-                var chan = Context.Guild.GetTextChannel(clipChannelId);
-                if (chan == null)
+
+                var twitchUsername = username.Trim();
+                await loadingMsg.ModifyAsync(m => m.Content = $"⏳ **Lade Twitch-Daten für {twitchUsername}...**");
+
+                var twitchLinks = LoadTwitchLinks();
+
+                if (!twitchLinks.ContainsKey(guildId))
+                    twitchLinks[guildId] = new Dictionary<string, TwitchUserData>();
+
+                var existingData = twitchLinks[guildId].ContainsKey(userId) ? twitchLinks[guildId][userId] : null;
+
+                if (existingData != null)
                 {
-                    await Context.Channel.SendMessageAsync("❌ Channel nicht gefunden!");
+                    // User already has Twitch - ask what to update
+                    await loadingMsg.ModifyAsync(m => m.Content =
+                        $"Du hast bereits **{existingData.TwitchUsername}** verlinkt.\n" +
+                        $"Channel: <#{existingData.ClipChannelId}>\n\n" +
+                        "Was möchtest du ändern?\n" +
+                        "1️⃣ - Username ändern\n" +
+                        "2️⃣ - Channel ändern\n" +
+                        "3️⃣ - Abbrechen\n\n" +
+                        "Schreib 1, 2 oder 3");
+
+                    var choiceMsg = await WaitForMessageAsync(timeoutSeconds: 60, loadingMsg: loadingMsg);
+                    if (choiceMsg == null)
+                    {
+                        await loadingMsg.ModifyAsync(m => m.Content = "⏰ **Timeout!** Vorgang abgebrochen.");
+                        return;
+                    }
+
+                    switch (choiceMsg.Trim())
+                    {
+                        case "1":
+                            await loadingMsg.ModifyAsync(m => m.Content = "Schreib deinen neuen Twitch Username:");
+                            var newUsername = await WaitForMessageAsync(timeoutSeconds: 60, loadingMsg: loadingMsg);
+                            if (newUsername != null)
+                            {
+                                existingData.TwitchUsername = newUsername.Trim();
+                                SaveTwitchLinks(twitchLinks);
+                                await loadingMsg.ModifyAsync(m => m.Content = $"✅ Username geändert zu **{newUsername.Trim()}**");
+                            }
+                            else
+                            {
+                                await loadingMsg.ModifyAsync(m => m.Content = "⏰ **Timeout!** Vorgang abgebrochen.");
+                            }
+                            return;
+
+                        case "2":
+                            await loadingMsg.ModifyAsync(m => m.Content = "Schreib die Channel ID wo Clips gepostet werden sollen:");
+                            var newChanId = await WaitForMessageAsync(timeoutSeconds: 60, loadingMsg: loadingMsg);
+                            if (newChanId != null && ulong.TryParse(newChanId.Trim(), out var chanId))
+                            {
+                                existingData.ClipChannelId = chanId.ToString();
+                                SaveTwitchLinks(twitchLinks);
+                                await loadingMsg.ModifyAsync(m => m.Content = $"✅ Channel geändert zu <#{chanId}>");
+                            }
+                            else
+                            {
+                                await loadingMsg.ModifyAsync(m => m.Content = "❌ Ungültige Channel ID oder Timeout!");
+                            }
+                            return;
+
+                        case "3":
+                            await loadingMsg.ModifyAsync(m => m.Content = "Abgebrochen.");
+                            return;
+
+                        default:
+                            await loadingMsg.ModifyAsync(m => m.Content = "Ungültige Auswahl. Abgebrochen.");
+                            return;
+                    }
+                }
+
+                // NEW SETUP - Get channel
+                await loadingMsg.ModifyAsync(m => m.Content =
+                    "Schreib die Channel ID wo Clips gepostet werden sollen\n" +
+                    "ODER schreib **!setchannel** um einen neuen Thread-Channel zu erstellen:");
+
+                var channelInput = await WaitForMessageAsync(timeoutSeconds: 60, loadingMsg: loadingMsg);
+                if (channelInput == null)
+                {
+                    await loadingMsg.ModifyAsync(m => m.Content = "⏰ **Timeout!** Vorgang abgebrochen.");
                     return;
                 }
-            }
-            else
-            {
-                await Context.Channel.SendMessageAsync("❌ Ungültige Eingabe!");
-                return;
-            }
 
-            // Save
-            twitchLinks[guildId][userId] = new TwitchUserData
-            {
-                TwitchUsername = twitchUsername,
-                ClipChannelId = clipChannelId.ToString()
-            };
-            SaveTwitchLinks(twitchLinks);
+                ulong clipChannelId = 0;
 
-            await Context.Channel.SendMessageAsync(
-                $"✅ **Twitch Setup abgeschlossen!**\n\n" +
-                $"👤 Username: **{twitchUsername}**\n" +
-                $"📺 Clip Channel: <#{clipChannelId}>\n\n" +
-                $"Nutze `!testtwitch` um einen Test-Clip zu posten!");
+                if (channelInput.Trim().ToLower() == "!setchannel")
+                {
+                    // Create thread-only channel
+                    await loadingMsg.ModifyAsync(m => m.Content = "⏳ **Erstelle Channel...**");
+                    try
+                    {
+                        var newChan = await Context.Guild.CreateTextChannelAsync($"clips-{twitchUsername.ToLower()}");
+                        clipChannelId = newChan.Id;
+                        await loadingMsg.ModifyAsync(m => m.Content = $"✅ Channel erstellt: <#{clipChannelId}>");
+                    }
+                    catch (Exception ex)
+                    {
+                        await loadingMsg.ModifyAsync(m => m.Content = $"❌ Fehler beim Erstellen: {ex.Message}");
+                        return;
+                    }
+                }
+                else if (ulong.TryParse(channelInput.Trim(), out clipChannelId))
+                {
+                    var chan = Context.Guild.GetTextChannel(clipChannelId);
+                    if (chan == null)
+                    {
+                        await loadingMsg.ModifyAsync(m => m.Content = "❌ Channel nicht gefunden!");
+                        return;
+                    }
+                }
+                else
+                {
+                    await loadingMsg.ModifyAsync(m => m.Content = "❌ Ungültige Eingabe!");
+                    return;
+                }
+
+                // Save
+                await loadingMsg.ModifyAsync(m => m.Content = "⏳ **Speichere Daten...**");
+                twitchLinks[guildId][userId] = new TwitchUserData
+                {
+                    TwitchUsername = twitchUsername,
+                    ClipChannelId = clipChannelId.ToString()
+                };
+                SaveTwitchLinks(twitchLinks);
+
+                await loadingMsg.ModifyAsync(m => m.Content =
+                    $"✅ **Twitch Setup abgeschlossen!**\n\n" +
+                    $"👤 Username: **{twitchUsername}**\n" +
+                    $"📺 Clip Channel: <#{clipChannelId}>\n\n" +
+                    $"Nutze `!testtwitch` um einen Test-Clip zu posten!");
+            }
+            catch (Exception ex)
+            {
+                await loadingMsg.ModifyAsync(m => m.Content = $"❌ **Fehler:** {ex.Message}");
+            }
         }
 
         [Command("deletetwitch")]
@@ -315,10 +340,12 @@ namespace Mainbot.Modules
 
         #region Helper
 
-        private async Task<string?> WaitForMessageAsync(Func<SocketMessage, bool>? filter = null, int timeoutSeconds = 60)
+        private async Task<string?> WaitForMessageAsync(Func<SocketMessage, bool>? filter = null, int timeoutSeconds = 60, IUserMessage? loadingMsg = null)
         {
             var tcs = new TaskCompletionSource<string?>();
-            var timeout = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds));
+            var startTime = DateTime.UtcNow;
+            var updateInterval = 10; // Update countdown every 10 seconds
+            var lastUpdate = DateTime.UtcNow;
 
             Task Handler(SocketMessage msg)
             {
@@ -336,10 +363,47 @@ namespace Mainbot.Modules
             }
 
             Context.Client.MessageReceived += Handler;
-            var completedTask = await Task.WhenAny(tcs.Task, timeout);
+
+            // Countdown timer task
+            var countdownTask = Task.Run(async () =>
+            {
+                while (!tcs.Task.IsCompleted)
+                {
+                    await Task.Delay(1000);
+                    var elapsed = (DateTime.UtcNow - startTime).TotalSeconds;
+                    var remaining = timeoutSeconds - (int)elapsed;
+
+                    if (remaining <= 0)
+                    {
+                        tcs.TrySetResult(null);
+                        break;
+                    }
+
+                    // Update loading message every 10 seconds if provided
+                    if (loadingMsg != null && (DateTime.UtcNow - lastUpdate).TotalSeconds >= updateInterval)
+                    {
+                        try
+                        {
+                            var currentContent = (await Context.Channel.GetMessageAsync(loadingMsg.Id) as IUserMessage)?.Content ?? "";
+                            if (!currentContent.Contains("⏱️"))
+                            {
+                                await loadingMsg.ModifyAsync(m => m.Content = $"{currentContent}\n\n⏱️ **Timeout in {remaining} Sekunden...**");
+                            }
+                            else
+                            {
+                                await loadingMsg.ModifyAsync(m => m.Content = System.Text.RegularExpressions.Regex.Replace(currentContent, @"⏱️ \*\*Timeout in \d+ Sekunden\.\.\.\*\*", $"⏱️ **Timeout in {remaining} Sekunden...**"));
+                            }
+                            lastUpdate = DateTime.UtcNow;
+                        }
+                        catch { }
+                    }
+                }
+            });
+
+            await tcs.Task;
             Context.Client.MessageReceived -= Handler;
 
-            return completedTask == tcs.Task ? await tcs.Task : null;
+            return await tcs.Task;
         }
 
         #endregion
