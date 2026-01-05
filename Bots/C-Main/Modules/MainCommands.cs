@@ -310,7 +310,16 @@ namespace MainbotCSharp.Modules
 
             if (string.IsNullOrWhiteSpace(args))
             {
-                await ReplyAsync("📝 Usage: `!sendit MESSAGE_ID to CHANNEL_ID`\n\nExample: `!sendit 1234567890123456789 to 9876543210987654321`");
+                var usageEmbed = new EmbedBuilder()
+                    .WithColor(0xFFD700) // Gold/Yellow
+                    .WithTitle("📝 !sendit Command Usage")
+                    .WithDescription("Forward a message from this channel to another channel.")
+                    .AddField("Usage", "`!sendit MESSAGE_ID to CHANNEL_ID`", false)
+                    .AddField("Example", "`!sendit 1234567890123456789 to 9876543210987654321`", false)
+                    .WithFooter("You need Administrator permissions to use this command")
+                    .Build();
+
+                await ReplyAsync(embed: usageEmbed);
                 return;
             }
 
