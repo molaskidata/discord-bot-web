@@ -542,9 +542,16 @@ namespace MainbotCSharp.Modules
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task VoiceSetupAsync()
         {
-            await ReplyAsync("🎤 **Voice System Setup**\n\nPlease mention or provide the ID for:\n" +
-                           "1. Join-to-create channel\n2. Category for new channels\n3. Log channel\n\n" +
-                           "Example: `!voicesetup #join-here #voice-category #voice-logs`");
+            var usageEmbed = new EmbedBuilder()
+                .WithColor(0xFFD700) // Gold/Yellow
+                .WithTitle("🎤 Voice System Setup")
+                .WithDescription("Configure the Join-to-Create voice system for your server.")
+                .AddField("Usage", "`!voicesetup <join-channel> <category> <log-channel>`", false)
+                .AddField("Example", "`!voicesetup #join-here #voice-category #voice-logs`", false)
+                .WithFooter("You need Administrator permissions to use this command")
+                .Build();
+
+            await ReplyAsync(embed: usageEmbed);
         }
 
         [Command("voicesetup")]

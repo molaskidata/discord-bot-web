@@ -246,7 +246,16 @@ namespace MainbotCSharp.Modules
         {
             if (action == null)
             {
-                await ReplyAsync("📝 Usage: `!bumpreminder on` or `!bumpreminder off`");
+                var usageEmbed = new EmbedBuilder()
+                    .WithColor(0xFFD700) // Gold/Yellow
+                    .WithTitle("📝 !bumpreminder Command Usage")
+                    .WithDescription("Enable or disable automatic bump reminders for your server.")
+                    .AddField("Usage", "`!bumpreminder <on|off>`", false)
+                    .AddField("Example", "`!bumpreminder on` - Enable reminders\n`!bumpreminder off` - Disable reminders", false)
+                    .WithFooter("You need Administrator permissions to use this command")
+                    .Build();
+
+                await ReplyAsync(embed: usageEmbed);
                 return;
             }
 
