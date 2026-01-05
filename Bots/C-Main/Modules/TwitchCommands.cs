@@ -263,6 +263,8 @@ namespace Mainbot.Modules
             try
             {
                 // Get App Access Token
+                Console.WriteLine($"[Twitch] Getting access token with ClientID: {TwitchClientId?.Substring(0, 5)}...");
+
                 var tokenParams = new Dictionary<string, string>
                 {
                     { "client_id", TwitchClientId },
@@ -272,18 +274,40 @@ namespace Mainbot.Modules
 
                 var tokenResponse = await _httpClient.PostAsync("https://id.twitch.tv/oauth2/token",
                     new FormUrlEncodedContent(tokenParams));
+
+                if (!tokenResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await tokenResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[Twitch] Token request failed: {tokenResponse.StatusCode} - {errorContent}");
+                    await ReplyAsync($"Failed to authenticate with Twitch API: {tokenResponse.StatusCode}");
+                    return;
+                }
+
                 var tokenJson = await tokenResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"[Twitch] Token response: {tokenJson}");
                 var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenJson);
                 var accessToken = tokenData.GetProperty("access_token").GetString();
+                Console.WriteLine($"[Twitch] Got access token: {accessToken?.Substring(0, 10)}...");
 
                 // Get Broadcaster ID
+                Console.WriteLine($"[Twitch] Looking up user: {twitchUsername}");
                 var userRequest = new HttpRequestMessage(HttpMethod.Get,
                     $"https://api.twitch.tv/helix/users?login={twitchUsername}");
                 userRequest.Headers.Add("Client-ID", TwitchClientId);
                 userRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
 
                 var userResponse = await _httpClient.SendAsync(userRequest);
+
+                if (!userResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await userResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[Twitch] User lookup failed: {userResponse.StatusCode} - {errorContent}");
+                    await ReplyAsync($"Failed to lookup Twitch user: {userResponse.StatusCode}");
+                    return;
+                }
+
                 var userJson = await userResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"[Twitch] User response: {userJson}");
                 var userDataApi = JsonSerializer.Deserialize<JsonElement>(userJson);
 
                 if (!userDataApi.GetProperty("data").EnumerateArray().Any())
@@ -293,15 +317,27 @@ namespace Mainbot.Modules
                 }
 
                 var broadcasterId = userDataApi.GetProperty("data")[0].GetProperty("id").GetString();
+                Console.WriteLine($"[Twitch] Broadcaster ID: {broadcasterId}");
 
                 // Get Latest Clip
+                Console.WriteLine($"[Twitch] Fetching clips for broadcaster: {broadcasterId}");
                 var clipsRequest = new HttpRequestMessage(HttpMethod.Get,
                     $"https://api.twitch.tv/helix/clips?broadcaster_id={broadcasterId}&first=1");
                 clipsRequest.Headers.Add("Client-ID", TwitchClientId);
                 clipsRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
 
                 var clipsResponse = await _httpClient.SendAsync(clipsRequest);
+
+                if (!clipsResponse.IsSuccessStatusCode)
+                {
+                    var errorContent = await clipsResponse.Content.ReadAsStringAsync();
+                    Console.WriteLine($"[Twitch] Clips request failed: {clipsResponse.StatusCode} - {errorContent}");
+                    await ReplyAsync($"Failed to fetch clips: {clipsResponse.StatusCode}");
+                    return;
+                }
+
                 var clipsJson = await clipsResponse.Content.ReadAsStringAsync();
+                Console.WriteLine($"[Twitch] Clips response: {clipsJson}");
                 var clipsData = JsonSerializer.Deserialize<JsonElement>(clipsJson);
 
                 if (!clipsData.GetProperty("data").EnumerateArray().Any())
@@ -334,7 +370,8 @@ namespace Mainbot.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Fehler beim Abrufen des Clips: {ex.Message}");
+                Console.WriteLine($"[Twitch] Exception in TestTwitch: {ex.GetType().Name}: {ex.Message}");
+                Console.WriteLine($"[Twitch] Stack trace: {ex.StackTrace}"); await ReplyAsync($"❌ Fehler beim Abrufen des Clips: {ex.Message}");
             }
         }
 
