@@ -62,9 +62,9 @@ namespace MainbotCSharp.Modules
                         "**Yearly:** €60/year (€5/month - Save 17%!)", false)
                     .AddField("🌐 Get Premium Now",
                         "Visit our website to upgrade:\n" +
-                        "**[https://thecoffeylounge.com/premium](https://thecoffeylounge.com/premium)**\n\n" +
+                        "*https://thecoffeylounge.com/premium*\n\n" +
                         "💳 Secure payment via Stripe • Cancel anytime", false)
-                    .WithImageUrl("https://imgur.com/aw5WxpI")
+                    .WithImageUrl("https://i.imgur.com/aw5WxpI.png")
                     .WithFooter("Made by mungabee", "https://i.imgur.com/7mkVUuO.png")
                     .WithCurrentTimestamp();
 
