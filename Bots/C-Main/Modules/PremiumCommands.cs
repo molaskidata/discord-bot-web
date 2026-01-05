@@ -56,7 +56,7 @@ namespace MainbotCSharp.Modules
                         " ★ **Ticket System** - Professional support channels\n" +
                         " ★ **Priority Support** - Get help faster\n" +
                         " ★ **Early Access** - Be first to try new features", false)
-                    
+
                     .AddField("💰 **Pricing**",
                         "**Monthly:** €5.99/month\n" +
                         "**Yearly:** €60/year (€5/month - Save 17%!)", false)
@@ -64,14 +64,14 @@ namespace MainbotCSharp.Modules
                         "Visit our website to upgrade:\n" +
                         "**[https://thecoffeylounge.com/premium](https://thecoffeylounge.com/premium)**\n\n" +
                         "💳 Secure payment via Stripe • Cancel anytime", false)
-                    .WithImageUrl("link")
+                    .WithImageUrl("https://imgur.com/aw5WxpI")
                     .WithFooter("Made by mungabee", "https://i.imgur.com/7mkVUuO.png")
                     .WithCurrentTimestamp();
 
                 // Add button to website
                 var component = new ComponentBuilder()
                     .WithButton("Upgrade to Premium", style: ButtonStyle.Link,
-                        url: "https:///premium",
+                        url: "https://thecoffeylounge.com/premium",
                         emote: new Emoji("💎"))
                     .Build();
 
