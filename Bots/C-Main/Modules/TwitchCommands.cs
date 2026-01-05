@@ -48,23 +48,25 @@ namespace Mainbot.Modules
         #endregion
 
         [Command("settwitch")]
-        [Summary("Link your Twitch account and configure clip notifications")]
+        [Summary("Link Twitch account")]
         public async Task SetTwitchAsync()
         {
             var guildId = Context.Guild.Id.ToString();
             var userId = Context.User.Id.ToString();
 
-            await ReplyAsync("Write your correct Twitch username in the Channel to synchronize and connect with Discord. Format: example");
+            await Context.Channel.SendMessageAsync("Write your correct Twitch username in the Channel to synchronize and connect with Discord. Format: example");
 
-            // Wait for username
-            var username = await WaitForUserMessageAsync();
+            // Wait for username (filter: no ! prefix)
+            var username = await WaitForMessageAsync(msg => !msg.Content.StartsWith("!"));
             if (username == null)
             {
-                await ReplyAsync("⏰ Timeout! Please run the command again.");
+                await ReplyAsync("⏰ Timeout!");
                 return;
             }
 
+            var twitchUsername = username.Trim();
             var twitchLinks = LoadTwitchLinks();
+
             if (!twitchLinks.ContainsKey(guildId))
                 twitchLinks[guildId] = new Dictionary<string, TwitchUserData>();
 
@@ -72,136 +74,114 @@ namespace Mainbot.Modules
 
             if (existingData != null)
             {
-                await ReplyAsync($"You already have **{existingData.TwitchUsername}** linked.\n" +
-                               "Do you want to:\n" +
-                               "1️⃣ Update Username\n" +
-                               "2️⃣ Update Clip Channel\n" +
-                               "3️⃣ Cancel\n" +
-                               "Reply with 1, 2, or 3");
+                // User already has Twitch - ask what to update
+                await Context.Channel.SendMessageAsync(
+                    $"Du hast bereits **{existingData.TwitchUsername}** verlinkt.\n" +
+                    $"Channel: <#{existingData.ClipChannelId}>\n\n" +
+                    "Was möchtest du ändern?\n" +
+                    "1️⃣ - Username ändern\n" +
+                    "2️⃣ - Channel ändern\n" +
+                    "3️⃣ - Abbrechen\n\n" +
+                    "Schreib 1, 2 oder 3");
 
-                var choice = await WaitForUserMessageAsync();
-                if (choice == null) return;
+                var choiceMsg = await WaitForMessageAsync();
+                if (choiceMsg == null) return;
 
-                switch (choice)
+                switch (choiceMsg.Trim())
                 {
                     case "1":
-                        existingData.TwitchUsername = username;
-                        SaveTwitchLinks(twitchLinks);
-                        await ReplyAsync($"✅ Username updated to **{username}**!");
+                        await Context.Channel.SendMessageAsync("Schreib deinen neuen Twitch Username:");
+                        var newUsername = await WaitForMessageAsync();
+                        if (newUsername != null)
+                        {
+                            existingData.TwitchUsername = newUsername.Trim();
+                            SaveTwitchLinks(twitchLinks);
+                            await Context.Channel.SendMessageAsync($"✅ Username geändert zu **{newUsername.Trim()}**");
+                        }
                         return;
 
                     case "2":
-                        await ReplyAsync("Send the Channel ID where clips should be posted:");
-                        var newChannelIdStr = await WaitForUserMessageAsync();
-                        if (newChannelIdStr != null && ulong.TryParse(newChannelIdStr, out var newChannelId))
+                        await Context.Channel.SendMessageAsync("Schreib die Channel ID wo Clips gepostet werden sollen:");
+                        var newChanId = await WaitForMessageAsync();
+                        if (newChanId != null && ulong.TryParse(newChanId.Trim(), out var chanId))
                         {
-                            var newChannel = Context.Guild.GetTextChannel(newChannelId);
-                            if (newChannel != null)
-                            {
-                                existingData.ClipChannelId = newChannelId.ToString();
-                                SaveTwitchLinks(twitchLinks);
-                                await ReplyAsync($"✅ Clip channel updated to <#{newChannelId}>!");
-                            }
-                            else
-                            {
-                                await ReplyAsync("❌ Channel not found!");
-                            }
+                            existingData.ClipChannelId = chanId.ToString();
+                            SaveTwitchLinks(twitchLinks);
+                            await Context.Channel.SendMessageAsync($"✅ Channel geändert zu <#{chanId}>");
                         }
                         else
                         {
-                            await ReplyAsync("❌ Invalid channel ID!");
+                            await Context.Channel.SendMessageAsync("❌ Ungültige Channel ID!");
                         }
                         return;
 
                     case "3":
-                        await ReplyAsync("Cancelled.");
+                        await Context.Channel.SendMessageAsync("Abgebrochen.");
                         return;
 
                     default:
-                        await ReplyAsync("Invalid choice. Cancelled.");
+                        await Context.Channel.SendMessageAsync("Ungültige Auswahl. Abgebrochen.");
                         return;
                 }
             }
 
-            // New setup
-            await ReplyAsync("Send the Channel ID where clips should be posted, or type `!create` to create a new channel:");
+            // NEW SETUP - Get channel
+            await Context.Channel.SendMessageAsync(
+                "Schreib die Channel ID wo Clips gepostet werden sollen\n" +
+                "ODER schreib **!setchannel** um einen neuen Thread-Channel zu erstellen:");
 
-            var channelInput = await WaitForUserMessageAsync();
+            var channelInput = await WaitForMessageAsync();
             if (channelInput == null) return;
 
-            ulong clipChannelId;
+            ulong clipChannelId = 0;
 
-            if (channelInput.ToLower() == "!create")
+            if (channelInput.Trim().ToLower() == "!setchannel")
             {
+                // Create thread-only channel
                 try
                 {
-                    var newChannel = await Context.Guild.CreateTextChannelAsync($"clips-{username.ToLower()}", props =>
-                    {
-                        props.Topic = $"Twitch clips from {username}";
-                    });
-                    clipChannelId = newChannel.Id;
-                    await ReplyAsync($"✅ Created new channel: <#{clipChannelId}>");
+                    var newChan = await Context.Guild.CreateTextChannelAsync($"clips-{twitchUsername.ToLower()}");
+                    clipChannelId = newChan.Id;
+                    await Context.Channel.SendMessageAsync($"✅ Channel erstellt: <#{clipChannelId}>");
                 }
                 catch (Exception ex)
                 {
-                    await ReplyAsync($"❌ Failed to create channel: {ex.Message}");
+                    await Context.Channel.SendMessageAsync($"❌ Fehler beim Erstellen: {ex.Message}");
                     return;
                 }
             }
-            else if (ulong.TryParse(channelInput, out clipChannelId))
+            else if (ulong.TryParse(channelInput.Trim(), out clipChannelId))
             {
-                var channel = Context.Guild.GetTextChannel(clipChannelId);
-                if (channel == null)
+                var chan = Context.Guild.GetTextChannel(clipChannelId);
+                if (chan == null)
                 {
-                    await ReplyAsync("❌ Channel not found!");
+                    await Context.Channel.SendMessageAsync("❌ Channel nicht gefunden!");
                     return;
                 }
             }
             else
             {
-                await ReplyAsync("❌ Invalid input!");
+                await Context.Channel.SendMessageAsync("❌ Ungültige Eingabe!");
                 return;
             }
 
+            // Save
             twitchLinks[guildId][userId] = new TwitchUserData
             {
-                TwitchUsername = username,
-                ClipChannelId = clipChannelId.ToString(),
-                LinkedAt = DateTime.UtcNow
+                TwitchUsername = twitchUsername,
+                ClipChannelId = clipChannelId.ToString()
             };
             SaveTwitchLinks(twitchLinks);
 
-            var embed = new EmbedBuilder()
-                .WithColor(0x9147ff)
-                .WithTitle("🎮 Twitch Account Setup Complete")
-                .WithDescription($"**Username:** {username}\n**Clip Channel:** <#{clipChannelId}>")
-                .WithFooter("Use !testtwitch to test clip posting!")
-                .WithCurrentTimestamp()
-                .Build();
-
-            await ReplyAsync(embed: embed);
-        }
-
-        [Command("setchannel")]
-        [Summary("Create a new channel for Twitch clips")]
-        public async Task SetChannelAsync([Remainder] string channelName = "twitch-clips")
-        {
-            try
-            {
-                var newChannel = await Context.Guild.CreateTextChannelAsync(channelName, props =>
-                {
-                    props.Topic = "Twitch clips";
-                });
-                await ReplyAsync($"✅ Created new clip channel: <#{newChannel.Id}>");
-            }
-            catch (Exception ex)
-            {
-                await ReplyAsync($"❌ Failed to create channel: {ex.Message}");
-            }
+            await Context.Channel.SendMessageAsync(
+                $"✅ **Twitch Setup abgeschlossen!**\n\n" +
+                $"👤 Username: **{twitchUsername}**\n" +
+                $"📺 Clip Channel: <#{clipChannelId}>\n\n" +
+                $"Nutze `!testtwitch` um einen Test-Clip zu posten!");
         }
 
         [Command("deletetwitch")]
-        [Summary("Remove your Twitch integration")]
+        [Summary("Delete Twitch data")]
         public async Task DeleteTwitchAsync()
         {
             var guildId = Context.Guild.Id.ToString();
@@ -211,7 +191,7 @@ namespace Mainbot.Modules
 
             if (!twitchLinks.ContainsKey(guildId) || !twitchLinks[guildId].ContainsKey(userId))
             {
-                await ReplyAsync("❌ You don't have any Twitch data linked in this server.");
+                await ReplyAsync("❌ Du hast keine Twitch-Daten in diesem Server.");
                 return;
             }
 
@@ -223,7 +203,7 @@ namespace Mainbot.Modules
                 twitchLinks.Remove(guildId);
 
             SaveTwitchLinks(twitchLinks);
-            await ReplyAsync($"✅ Your Twitch data for **{username}** has been deleted! 🗑️");
+            await ReplyAsync($"✅ Deine Twitch-Daten für **{username}** wurden erfolgreich gelöscht! 🗑️");
         }
 
         [Command("testtwitch")]
@@ -238,7 +218,7 @@ namespace Mainbot.Modules
 
             if (!twitchLinks.ContainsKey(guildId) || !twitchLinks[guildId].ContainsKey(userId))
             {
-                await ReplyAsync("❌ You need to set up Twitch first with `!settwitch`");
+                await ReplyAsync("❌ Du musst zuerst `!settwitch` ausführen!");
                 return;
             }
 
@@ -249,15 +229,15 @@ namespace Mainbot.Modules
             var clipChannel = Context.Guild.GetTextChannel(clipChannelId);
             if (clipChannel == null)
             {
-                await ReplyAsync("❌ Clip channel not found!");
+                await ReplyAsync("❌ Clip-Channel nicht gefunden!");
                 return;
             }
 
-            await ReplyAsync($"🔍 Fetching latest clip from **{twitchUsername}**...");
+            await ReplyAsync($"🔍 Hole neuesten Clip von **{twitchUsername}**...");
 
             try
             {
-                // Get Access Token
+                // Get App Access Token
                 var tokenParams = new Dictionary<string, string>
                 {
                     { "client_id", TwitchClientId },
@@ -283,7 +263,7 @@ namespace Mainbot.Modules
 
                 if (!userDataApi.GetProperty("data").EnumerateArray().Any())
                 {
-                    await ReplyAsync($"❌ Twitch user **{twitchUsername}** not found!");
+                    await ReplyAsync($"❌ Twitch User **{twitchUsername}** nicht gefunden!");
                     return;
                 }
 
@@ -301,7 +281,7 @@ namespace Mainbot.Modules
 
                 if (!clipsData.GetProperty("data").EnumerateArray().Any())
                 {
-                    await ReplyAsync($"❌ No clips found for **{twitchUsername}**!");
+                    await ReplyAsync($"❌ Keine Clips für **{twitchUsername}** gefunden!");
                     return;
                 }
 
@@ -312,29 +292,30 @@ namespace Mainbot.Modules
                 var clipViews = clip.GetProperty("view_count").GetInt32();
                 var clipThumbnail = clip.GetProperty("thumbnail_url").GetString();
 
-                var clipEmbed = new EmbedBuilder()
+                // Post clip to channel
+                var embed = new EmbedBuilder()
                     .WithColor(0x9147ff)
-                    .WithAuthor(twitchUsername, iconUrl: "https://i.imgur.com/aw5WxpI.png")
+                    .WithAuthor(twitchUsername, "https://i.imgur.com/aw5WxpI.png")
                     .WithTitle($"🎬 {clipTitle}")
                     .WithUrl(clipUrl)
-                    .WithDescription($"Clipped by **{clipCreator}**\n👁️ {clipViews:N0} views")
+                    .WithDescription($"Geclippt von **{clipCreator}**\n👁️ {clipViews:N0} Views")
                     .WithImageUrl(clipThumbnail)
                     .WithFooter("Twitch Clip")
                     .WithCurrentTimestamp()
                     .Build();
 
-                await clipChannel.SendMessageAsync(embed: clipEmbed);
-                await ReplyAsync($"✅ Test successful! Clip posted to <#{clipChannelId}>");
+                await clipChannel.SendMessageAsync(embed: embed);
+                await ReplyAsync($"✅ Test erfolgreich! Clip wurde in <#{clipChannelId}> gepostet!");
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to fetch clip: {ex.Message}");
+                await ReplyAsync($"❌ Fehler beim Abrufen des Clips: {ex.Message}");
             }
         }
 
-        #region Helper Methods
+        #region Helper
 
-        private async Task<string?> WaitForUserMessageAsync(int timeoutSeconds = 60)
+        private async Task<string?> WaitForMessageAsync(Func<SocketMessage, bool>? filter = null, int timeoutSeconds = 60)
         {
             var tcs = new TaskCompletionSource<string?>();
             var timeout = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds));
@@ -344,10 +325,12 @@ namespace Mainbot.Modules
                 if (msg.Channel.Id == Context.Channel.Id &&
                     msg.Author.Id == Context.User.Id &&
                     !msg.Author.IsBot &&
-                    !string.IsNullOrWhiteSpace(msg.Content) &&
-                    !msg.Content.StartsWith("!"))
+                    !string.IsNullOrWhiteSpace(msg.Content))
                 {
-                    tcs.TrySetResult(msg.Content.Trim());
+                    if (filter == null || filter(msg))
+                    {
+                        tcs.TrySetResult(msg.Content.Trim());
+                    }
                 }
                 return Task.CompletedTask;
             }
@@ -366,7 +349,5 @@ namespace Mainbot.Modules
     {
         public string TwitchUsername { get; set; } = "";
         public string ClipChannelId { get; set; } = "";
-        public DateTime LinkedAt { get; set; }
-        public string? AccessToken { get; set; }
     }
 }
