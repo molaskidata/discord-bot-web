@@ -35,8 +35,7 @@ namespace MainbotCSharp.Modules
                     "`!gm` - Get motivated for the day\n" +
                     "`!gn` - Good night messages for you and your mates\n" +
                     "`!hi` - Say hello and get a hello from me\n" +
-                    "`!coffee` - Tell your friends it's coffee time!\n" +
-                    "`!devmeme` - Get a programming meme", false)
+                    "`!coffee` - Tell your friends it's coffee time!", false)
 
                 .AddField("★ **Security Features** 🔒 *Premium*",
                     "**All security features require Premium subscription**\n\n" +
@@ -149,7 +148,56 @@ namespace MainbotCSharp.Modules
                 "Sweet dreams! 😴💤",
                 "Sleep tight! 🌙✨",
                 "Good night and restful sleep! 😌",
-                "Dream something beautiful! 🌙💫"
+                "Dream something beautiful! 🌙💫",
+                "Nighty night! Don't let the bedbugs bite! 🛏️",
+                "Rest well, you earned it! 💪🌙",
+                "Time to recharge! See you tomorrow! 🔋✨",
+                "Off to dreamland! Safe travels! 🌠",
+                "May your pillow be soft and your dreams be sweet! 😊",
+                "Catch you on the flip side! Sleep tight! 🌙",
+                "Lights out! Time for some quality Zzz's! 💡😴",
+                "Pleasant dreams and peaceful sleep! 🌌",
+                "Good night! Hope you wake up refreshed! ☀️",
+                "Sleep well, friend! Tomorrow's a new adventure! 🎒",
+                "Night night! Don't stay up too late! ⏰",
+                "Time to hit the hay! Good night! 🌾",
+                "Sweet slumber awaits! Rest easy! 😌💤",
+                "Good night! May your dreams be as awesome as you! 🌟",
+                "Off to bed! See you in the morning sunshine! 🌅"
+            };
+
+            var random = new Random();
+            var message = messages[random.Next(messages.Length)];
+
+            await ReplyAsync(message);
+        }
+
+        [Command("hi")]
+        [Summary("Say hello")]
+        public async Task HelloAsync()
+        {
+            var messages = new[]
+            {
+                "Hey there! 👋 How's it going?",
+                "Hello! 😊 Great to see you!",
+                "Hi! 🎉 Welcome back!",
+                "Hey! 👋 What's up?",
+                "Howdy! 🤠 Nice to have you here!",
+                "Hiya! 😄 How are you doing?",
+                "Hello there! 🌟 Good to see you!",
+                "Hey hey! 👋 What brings you here today?",
+                "Hi there! 😊 Hope you're having a great day!",
+                "Greetings! 🎊 How can I help?",
+                "Yo! 🤘 What's happening?",
+                "Hello friend! 👋 How's your day going?",
+                "Hey! 😁 Long time no see!",
+                "Hi! ✨ Ready for some fun?",
+                "Hello! 🌈 Lovely to see you!",
+                "Hey there! 🎮 What's new?",
+                "Hi! 🚀 Hope you're doing awesome!",
+                "Hello! 💬 Feel free to chat!",
+                "Hey! 🎵 How's everything with you?",
+                "Hi there! 🌻 Have a wonderful day!"
             };
 
             var random = new Random();
@@ -168,7 +216,22 @@ namespace MainbotCSharp.Modules
                 "Morning! 🌅 Did you sleep well?",
                 "Good morning! ☕ Ready for a new day?",
                 "Morning! 🌞 Hope you're feeling good!",
-                "Good morning! 🌻 Let's rock this day!"
+                "Good morning! 🌻 Let's rock this day!",
+                "Rise and shine! ✨ Time to conquer the day!",
+                "Good morning! 🌈 Make today amazing!",
+                "Morning sunshine! ☀️ Ready to crush it?",
+                "Top of the morning to you! 🎩 Let's go!",
+                "Good morning! 🚀 Today's full of possibilities!",
+                "Wake up and be awesome! 💪 Good morning!",
+                "Morning! 🌄 Hope you slept like a baby!",
+                "Good morning! 🎊 Time to make magic happen!",
+                "Rise and grind! ⚡ Good morning!",
+                "Morning! 🦅 Soar high today!",
+                "Good morning! 🌺 Wishing you a fantastic day!",
+                "Wakey wakey! 🥞 Time for some breakfast!",
+                "Good morning! 🎯 Let's hit those goals!",
+                "Morning! 🌟 Shine bright today!",
+                "Good morning! 🎮 Ready to level up your day?"
             };
 
             var random = new Random();
