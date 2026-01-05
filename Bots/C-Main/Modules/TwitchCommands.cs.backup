@@ -16,6 +16,7 @@ namespace Mainbot.Modules
         private const string TWITCH_FILE = "twitch_links.json";
         private static readonly HttpClient _httpClient = new HttpClient();
 
+        // Twitch OAuth credentials (from environment or config)
         private static string TwitchClientId => Environment.GetEnvironmentVariable("TWITCH_CLIENT_ID") ?? "";
         private static string TwitchClientSecret => Environment.GetEnvironmentVariable("TWITCH_CLIENT_SECRET") ?? "";
 
@@ -56,15 +57,37 @@ namespace Mainbot.Modules
 
             await ReplyAsync("Write your correct Twitch username in the Channel to synchronize and connect with Discord. Format: example");
 
-            // Wait for username
-            var username = await WaitForUserMessageAsync();
-            if (username == null)
+            // Wait for username input using event handler
+            var tcs = new TaskCompletionSource<string>();
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(60));
+
+            Task Handler(SocketMessage msg)
+            {
+                if (msg.Channel.Id == Context.Channel.Id &&
+                    msg.Author.Id == Context.User.Id &&
+                    !msg.Author.IsBot &&
+                    !string.IsNullOrWhiteSpace(msg.Content) &&
+                    !msg.Content.StartsWith("!"))
+                {
+                    tcs.TrySetResult(msg.Content.Trim());
+                }
+                return Task.CompletedTask;
+            }
+
+            Context.Client.MessageReceived += Handler;
+
+            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+            Context.Client.MessageReceived -= Handler;
+
+            if (completedTask == timeoutTask)
             {
                 await ReplyAsync("⏰ Timeout! Please run the command again.");
                 return;
             }
 
+            var twitchUsername = await tcs.Task;
             var twitchLinks = LoadTwitchLinks();
+
             if (!twitchLinks.ContainsKey(guildId))
                 twitchLinks[guildId] = new Dictionary<string, TwitchUserData>();
 
@@ -72,6 +95,7 @@ namespace Mainbot.Modules
 
             if (existingData != null)
             {
+                // User already has Twitch linked - ask to update
                 await ReplyAsync($"You already have **{existingData.TwitchUsername}** linked.\n" +
                                "Do you want to:\n" +
                                "1️⃣ Update Username\n" +
@@ -79,21 +103,52 @@ namespace Mainbot.Modules
                                "3️⃣ Cancel\n" +
                                "Reply with 1, 2, or 3");
 
-                var choice = await WaitForUserMessageAsync();
-                if (choice == null) return;
+                var choiceTcs = new TaskCompletionSource<string>();
+                var choiceTimeout = Task.Delay(TimeSpan.FromSeconds(60));
+
+                Task ChoiceHandler(SocketMessage msg)
+                {
+                    if (msg.Channel.Id == Context.Channel.Id && msg.Author.Id == Context.User.Id && !msg.Author.IsBot)
+                        choiceTcs.TrySetResult(msg.Content.Trim());
+                    return Task.CompletedTask;
+                }
+
+                Context.Client.MessageReceived += ChoiceHandler;
+                var choiceCompleted = await Task.WhenAny(choiceTcs.Task, choiceTimeout);
+                Context.Client.MessageReceived -= ChoiceHandler;
+
+                if (choiceCompleted == choiceTimeout) return;
+                var choice = await choiceTcs.Task;
 
                 switch (choice)
                 {
                     case "1":
-                        existingData.TwitchUsername = username;
+                        existingData.TwitchUsername = twitchUsername;
                         SaveTwitchLinks(twitchLinks);
-                        await ReplyAsync($"✅ Username updated to **{username}**!");
+                        await ReplyAsync($"✅ Username updated to **{twitchUsername}**!");
                         return;
 
                     case "2":
                         await ReplyAsync("Send the Channel ID where clips should be posted:");
-                        var newChannelIdStr = await WaitForUserMessageAsync();
-                        if (newChannelIdStr != null && ulong.TryParse(newChannelIdStr, out var newChannelId))
+
+                        var chanTcs = new TaskCompletionSource<string>();
+                        var chanTimeout = Task.Delay(TimeSpan.FromSeconds(60));
+
+                        Task ChanHandler(SocketMessage msg)
+                        {
+                            if (msg.Channel.Id == Context.Channel.Id && msg.Author.Id == Context.User.Id && !msg.Author.IsBot)
+                                chanTcs.TrySetResult(msg.Content.Trim());
+                            return Task.CompletedTask;
+                        }
+
+                        Context.Client.MessageReceived += ChanHandler;
+                        var chanCompleted = await Task.WhenAny(chanTcs.Task, chanTimeout);
+                        Context.Client.MessageReceived -= ChanHandler;
+
+                        if (chanCompleted == chanTimeout) return;
+                        var newChannelInput = await chanTcs.Task;
+
+                        if (ulong.TryParse(newChannelInput, out var newChannelId))
                         {
                             var newChannel = Context.Guild.GetTextChannel(newChannelId);
                             if (newChannel != null)
@@ -111,11 +166,25 @@ namespace Mainbot.Modules
                         {
                             await ReplyAsync("❌ Invalid channel ID!");
                         }
-                        return;
+                        setupTcs = new TaskCompletionSource<string>();
+                        var setupTimeout = Task.Delay(TimeSpan.FromSeconds(60));
 
-                    case "3":
-                        await ReplyAsync("Cancelled.");
-                        return;
+                        Task SetupHandler(SocketMessage msg)
+                        {
+                            if (msg.Channel.Id == Context.Channel.Id && msg.Author.Id == Context.User.Id && !msg.Author.IsBot)
+                                setupTcs.TrySetResult(msg.Content.Trim());
+                            return Task.CompletedTask;
+                        }
+
+                        Context.Client.MessageReceived += SetupHandler;
+                        var setupCompleted = await Task.WhenAny(setupTcs.Task, setupTimeout);
+                        Context.Client.MessageReceived -= SetupHandler;
+
+                        if (setupCompleted == setupTimeout) return;
+
+                        ulong clipChannelId = 0;
+                        var channelInput = await setupTcs.Task;
+                        break;
 
                     default:
                         await ReplyAsync("Invalid choice. Cancelled.");
@@ -123,22 +192,25 @@ namespace Mainbot.Modules
                 }
             }
 
-            // New setup
-            await ReplyAsync("Send the Channel ID where clips should be posted, or type `!create` to create a new channel:");
+            // New Twitch setup
+            await ReplyAsync("Send the Channel ID where clips should be posted, or type `!create` to create a new thread-only channel:");
 
-            var channelInput = await WaitForUserMessageAsync();
-            if (channelInput == null) return;
+            var channelMsg = await NextMessageAsync(timeout: TimeSpan.FromSeconds(60));
+            if (channelMsg == null) return;
 
-            ulong clipChannelId;
+            ulong clipChannelId = 0;
+            var channelInput = channelMsg.Content.Trim();
 
             if (channelInput.ToLower() == "!create")
             {
+                // Create new thread-only channel
                 try
                 {
-                    var newChannel = await Context.Guild.CreateTextChannelAsync($"clips-{username.ToLower()}", props =>
+                    var newChannel = await Context.Guild.CreateTextChannelAsync($"clips-{twitchUsername.ToLower()}", props =>
                     {
-                        props.Topic = $"Twitch clips from {username}";
+                        props.Topic = $"Twitch clips from {twitchUsername}";
                     });
+
                     clipChannelId = newChannel.Id;
                     await ReplyAsync($"✅ Created new channel: <#{clipChannelId}>");
                 }
@@ -148,24 +220,45 @@ namespace Mainbot.Modules
                     return;
                 }
             }
-            else if (ulong.TryParse(channelInput, out clipChannelId))
+            else if (channelInput.ToLower() == "!setchannel")
             {
-                var channel = Context.Guild.GetTextChannel(clipChannelId);
-                if (channel == null)
-                {
-                    await ReplyAsync("❌ Channel not found!");
-                    return;
-                }
+                await ReplyAsync("Please run `!setchannel` command separately to create a thread-only channel.");
+                return;
             }
             else
             {
-                await ReplyAsync("❌ Invalid input!");
-                return;
+                // User provided channel ID
+                if (ulong.TryParse(channelInput, out clipChannelId))
+                {
+                    var channel = Context.Guild.GetTextChannel(clipChannelId);
+                    if (channel == null)
+                    {
+                        await ReplyAsync("❌ Channel not found! Please check the ID.");
+                        return;
+                    }
+                }
+                else
+                {
+                    await ReplyAsync("❌ Invalid channel ID!");
+                    return;
+                }
             }
 
+            // Generate Twitch OAuth URL
+            var redirectUri = "http://localhost:3000/twitch/callback"; // Adjust based on your setup
+            var scopes = "clips:edit user:read:email";
+            var state = $"{guildId}:{userId}";
+            var authUrl = $"https://id.twitch.tv/oauth2/authorize?" +
+                         $"client_id={TwitchClientId}&" +
+                         $"redirect_uri={Uri.EscapeDataString(redirectUri)}&" +
+                         $"response_type=code&" +
+                         $"scope={Uri.EscapeDataString(scopes)}&" +
+                         $"state={state}";
+
+            // Save data
             twitchLinks[guildId][userId] = new TwitchUserData
             {
-                TwitchUsername = username,
+                TwitchUsername = twitchUsername,
                 ClipChannelId = clipChannelId.ToString(),
                 LinkedAt = DateTime.UtcNow
             };
@@ -173,9 +266,12 @@ namespace Mainbot.Modules
 
             var embed = new EmbedBuilder()
                 .WithColor(0x9147ff)
-                .WithTitle("🎮 Twitch Account Setup Complete")
-                .WithDescription($"**Username:** {username}\n**Clip Channel:** <#{clipChannelId}>")
-                .WithFooter("Use !testtwitch to test clip posting!")
+                .WithTitle("🎮 Twitch Account Setup")
+                .WithDescription($"**Username:** {twitchUsername}\n" +
+                               $"**Clip Channel:** <#{clipChannelId}>\n\n" +
+                               $"Click the link below to authorize the bot:\n" +
+                               $"[Authorize Twitch]({authUrl})")
+                .WithFooter("Your clips will be automatically posted to the configured channel!")
                 .WithCurrentTimestamp()
                 .Build();
 
@@ -183,16 +279,18 @@ namespace Mainbot.Modules
         }
 
         [Command("setchannel")]
-        [Summary("Create a new channel for Twitch clips")]
+        [Summary("Create a new thread-only channel for Twitch clips")]
         public async Task SetChannelAsync([Remainder] string channelName = "twitch-clips")
         {
             try
             {
                 var newChannel = await Context.Guild.CreateTextChannelAsync(channelName, props =>
                 {
-                    props.Topic = "Twitch clips";
+                    props.Topic = "Twitch clips - Thread-only channel";
                 });
-                await ReplyAsync($"✅ Created new clip channel: <#{newChannel.Id}>");
+
+                await ReplyAsync($"✅ Created new clip channel: <#{newChannel.Id}>\n" +
+                               "You can now use this channel ID in `!settwitch` setup!");
             }
             catch (Exception ex)
             {
@@ -219,16 +317,18 @@ namespace Mainbot.Modules
             var username = userData.TwitchUsername;
 
             twitchLinks[guildId].Remove(userId);
+
             if (twitchLinks[guildId].Count == 0)
                 twitchLinks.Remove(guildId);
 
             SaveTwitchLinks(twitchLinks);
-            await ReplyAsync($"✅ Your Twitch data for **{username}** has been deleted! 🗑️");
+
+            await ReplyAsync($"✅ Your Twitch data for **{username}** has been successfully deleted! 🗑️");
         }
 
         [Command("testtwitch")]
         [Alias("testingtwitch")]
-        [Summary("Test clip posting")]
+        [Summary("Test clip posting by fetching your latest Twitch clip")]
         public async Task TestTwitchAsync()
         {
             var guildId = Context.Guild.Id.ToString();
@@ -249,7 +349,7 @@ namespace Mainbot.Modules
             var clipChannel = Context.Guild.GetTextChannel(clipChannelId);
             if (clipChannel == null)
             {
-                await ReplyAsync("❌ Clip channel not found!");
+                await ReplyAsync("❌ Clip channel not found! Please update your settings with `!settwitch`");
                 return;
             }
 
@@ -257,7 +357,8 @@ namespace Mainbot.Modules
 
             try
             {
-                // Get Access Token
+                // Get Twitch App Access Token
+                var tokenUrl = "https://id.twitch.tv/oauth2/token";
                 var tokenParams = new Dictionary<string, string>
                 {
                     { "client_id", TwitchClientId },
@@ -265,29 +366,27 @@ namespace Mainbot.Modules
                     { "grant_type", "client_credentials" }
                 };
 
-                var tokenResponse = await _httpClient.PostAsync("https://id.twitch.tv/oauth2/token",
-                    new FormUrlEncodedContent(tokenParams));
+                var tokenResponse = await _httpClient.PostAsync(tokenUrl, new FormUrlEncodedContent(tokenParams));
                 var tokenJson = await tokenResponse.Content.ReadAsStringAsync();
                 var tokenData = JsonSerializer.Deserialize<JsonElement>(tokenJson);
                 var accessToken = tokenData.GetProperty("access_token").GetString();
 
                 // Get Broadcaster ID
-                var userRequest = new HttpRequestMessage(HttpMethod.Get,
-                    $"https://api.twitch.tv/helix/users?login={twitchUsername}");
+                var userRequest = new HttpRequestMessage(HttpMethod.Get, $"https://api.twitch.tv/helix/users?login={twitchUsername}");
                 userRequest.Headers.Add("Client-ID", TwitchClientId);
                 userRequest.Headers.Add("Authorization", $"Bearer {accessToken}");
 
                 var userResponse = await _httpClient.SendAsync(userRequest);
                 var userJson = await userResponse.Content.ReadAsStringAsync();
-                var userDataApi = JsonSerializer.Deserialize<JsonElement>(userJson);
+                var userData_api = JsonSerializer.Deserialize<JsonElement>(userJson);
 
-                if (!userDataApi.GetProperty("data").EnumerateArray().Any())
+                if (!userData_api.GetProperty("data").EnumerateArray().Any())
                 {
                     await ReplyAsync($"❌ Twitch user **{twitchUsername}** not found!");
                     return;
                 }
 
-                var broadcasterId = userDataApi.GetProperty("data")[0].GetProperty("id").GetString();
+                var broadcasterId = userData_api.GetProperty("data")[0].GetProperty("id").GetString();
 
                 // Get Latest Clip
                 var clipsRequest = new HttpRequestMessage(HttpMethod.Get,
@@ -312,6 +411,7 @@ namespace Mainbot.Modules
                 var clipViews = clip.GetProperty("view_count").GetInt32();
                 var clipThumbnail = clip.GetProperty("thumbnail_url").GetString();
 
+                // Post clip to channel
                 var clipEmbed = new EmbedBuilder()
                     .WithColor(0x9147ff)
                     .WithAuthor(twitchUsername, iconUrl: "https://i.imgur.com/aw5WxpI.png")
@@ -326,47 +426,25 @@ namespace Mainbot.Modules
                 await clipChannel.SendMessageAsync(embed: clipEmbed);
                 await ReplyAsync($"✅ Test successful! Clip posted to <#{clipChannelId}>");
             }
-            catch (Exception ex)
-            {
-                await ReplyAsync($"❌ Failed to fetch clip: {ex.Message}");
-            }
-        }
-
-        #region Helper Methods
-
-        private async Task<string?> WaitForUserMessageAsync(int timeoutSeconds = 60)
-        {
-            var tcs = new TaskCompletionSource<string?>();
-            var timeout = Task.Delay(TimeSpan.FromSeconds(timeoutSeconds));
-
-            Task Handler(SocketMessage msg)
-            {
-                if (msg.Channel.Id == Context.Channel.Id &&
-                    msg.Author.Id == Context.User.Id &&
-                    !msg.Author.IsBot &&
-                    !string.IsNullOrWhiteSpace(msg.Content) &&
-                    !msg.Content.StartsWith("!"))
-                {
-                    tcs.TrySetResult(msg.Content.Trim());
-                }
-                return Task.CompletedTask;
-            }
 
             Context.Client.MessageReceived += Handler;
-            var completedTask = await Task.WhenAny(tcs.Task, timeout);
+
+            var timeoutTask = Task.Delay(timeout);
+            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+
             Context.Client.MessageReceived -= Handler;
 
             return completedTask == tcs.Task ? await tcs.Task : null;
         }
 
-        #endregion
+#endregion
     }
 
     public class TwitchUserData
     {
-        public string TwitchUsername { get; set; } = "";
-        public string ClipChannelId { get; set; } = "";
+        public string TwitchUsername { get; set; }
+        public string ClipChannelId { get; set; }
         public DateTime LinkedAt { get; set; }
-        public string? AccessToken { get; set; }
+        public string AccessToken { get; set; } // For future OAuth implementation
     }
 }

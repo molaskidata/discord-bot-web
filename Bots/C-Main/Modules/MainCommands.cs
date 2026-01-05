@@ -58,7 +58,7 @@ namespace MainbotCSharp.Modules
                     "`!ticket-status` - Show ticket system status\n" +
                     "`!ticket-transcript` - Generate transcript for ticket\n" +
                     "`!del-ticket-system` - Remove log channel configuration\n" +
-                    "`!de-munga-supportticket` - Completely deactivate ticket system", false)
+                    "`!del-munga-supportticket` - Completely deactivate ticket system", false)
 
                 .AddField("★ **Voice Features** 🔒 *Premium*",
                     "**All voice features require Premium subscription**\n\n" +
@@ -79,10 +79,7 @@ namespace MainbotCSharp.Modules
                 .AddField("★ **Utilities** ✅ *FREE*",
                     "`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n" +
                     "`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour! Run the command in the channel you want to clean up.\n" +
-                    "`!cleanupdel` - Stop the hourly auto-cleanup for this channel. Run this command in the channel where cleanup is active.\n" +
-                    "`!setupflirtlang [language]` - Set AI flirt language for this server\n" +
-                    "`!removeflirtlang` - Remove AI flirt language setting for this server\n" +
-                    "`!flirt [text]` - Flirt with AI-generated responses", false)
+                    "`!cleanupdel` - Stop the hourly auto-cleanup for this channel. Run this command in the channel where cleanup is active.", false)
 
                 .AddField("★ **Twitch** ✅ *FREE*",
                     "`!settwitch` - Link Twitch account and configure clip notifications\n" +
