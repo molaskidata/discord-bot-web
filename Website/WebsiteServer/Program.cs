@@ -187,7 +187,7 @@ app.MapPost("/api/stripe-webhook", async (HttpRequest req, ILogger<Program> log)
 
         log.LogInformation("Stripe webhook received: {EventType}", stripeEvent.Type);
 
-        if (stripeEvent.Type == Events.CheckoutSessionCompleted)
+        if (stripeEvent.Type == "checkout.session.completed")
         {
             var session = stripeEvent.Data.Object as Session;
             var metadata = session?.Metadata;
@@ -236,7 +236,7 @@ app.MapPost("/api/stripe-webhook", async (HttpRequest req, ILogger<Program> log)
                 log.LogInformation("Premium activated successfully for guild {GuildId}!", guildId);
             }
         }
-        else if (stripeEvent.Type == Events.CustomerSubscriptionDeleted)
+        else if (stripeEvent.Type == "customer.subscription.deleted")
         {
             // Handle subscription cancellation
             var subscription = stripeEvent.Data.Object as Subscription;
