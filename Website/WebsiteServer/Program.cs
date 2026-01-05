@@ -135,8 +135,8 @@ app.MapPost("/api/create-checkout-session", async (HttpRequest req, ILogger<Prog
         var guildId = doc.RootElement.GetProperty("guildId").GetString();
 
         var priceId = planType == "yearly"
-            ? "price_YEARLY_ID_HERE"  // Ersetze mit echter Stripe Price ID
-            : "price_MONTHLY_ID_HERE"; // Ersetze mit echter Stripe Price ID
+            ? "price_1SmC1uKD4iDXK2wZfi3r2YIe"  // €60/year
+            : "price_1SmC1uKD4iDXK2wZBky4cZ6c"; // €5.99/month
 
         var options = new SessionCreateOptions
         {
