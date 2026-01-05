@@ -92,13 +92,14 @@ namespace MainbotCSharp.Modules
         public async Task HelpVoiceAsync()
         {
             var embed = new EmbedBuilder()
-                .WithTitle("🎤 **Voice System Help**")
+                .WithTitle("🎤 **Voice System Help** 🔒 *Premium*")
+                .WithDescription("**All voice features require Premium subscription**")
                 .WithColor(0x40E0D0)
                 .AddField("**Admin Setup Commands**",
-                    "`!setupvoice` - Create Join-to-Create channel *(3 channels free)*\n" +
-                    "`!setupvoicelog` - Create voice log channel *(free)*\n" +
+                    "`!setupvoice` - Create Join-to-Create channel\n" +
+                    "`!setupvoicelog` - Create voice log channel\n" +
                     "`!cleanupvoice` - Clean voice log channel\n" +
-                    "`!deletevoice` - Delete entire voice system *(free)*", false)
+                    "`!deletevoice` - Delete entire voice system", false)
                 .AddField("**User Voice Commands**",
                     "`!voicename [name]` - Rename your voice channel\n" +
                     "`!voicelock` - Lock your voice channel\n" +
@@ -125,7 +126,8 @@ namespace MainbotCSharp.Modules
         public async Task HelpSecureAsync()
         {
             var embed = new EmbedBuilder()
-                .WithTitle("🛡️ **Security System Help**")
+                .WithTitle("🛡️ **Security System Help** 🔒 *Premium*")
+                .WithDescription("**All security features require Premium subscription**")
                 .WithColor(0xFF4444)
                 .AddField("**Setup Commands** *(Admin only)*",
                     "`!setsecuritymod` - Enable security system\n" +

@@ -38,7 +38,8 @@ namespace MainbotCSharp.Modules
                     "`!coffee` - Tell your friends it's coffee time!\n" +
                     "`!devmeme` - Get a programming meme", false)
 
-                .AddField("★ **Security Features** *Admin only, Premium*",
+                .AddField("★ **Security Features** 🔒 *Premium*",
+                    "**All security features require Premium subscription**\n\n" +
                     "`!setsecuritymod` - Enable the AI Security System for this server.\n" +
                     "→ The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n" +
                     "→ If a violation is detected, the user will be timed out for 2 hours and warned via DM.\n" +
@@ -58,11 +59,12 @@ namespace MainbotCSharp.Modules
                     "`!del-ticket-system` - Remove log channel configuration\n" +
                     "`!de-munga-supportticket` - Completely deactivate ticket system", false)
 
-                .AddField("★ **Voice Features** *Admin only, Premium*",
-                    "`!setupvoice` - Create Join-to-Create channel *(3 channels free)*\n" +
-                    "`!setupvoicelog` - Create voice log channel *(free)*\n" +
+                .AddField("★ **Voice Features** 🔒 *Premium*",
+                    "**All voice features require Premium subscription**\n\n" +
+                    "`!setupvoice` - Create Join-to-Create channel\n" +
+                    "`!setupvoicelog` - Create voice log channel\n" +
                     "`!cleanupvoice` - Clean voice log channel\n" +
-                    "`!deletevoice` - Delete entire voice system *(free)*\n" +
+                    "`!deletevoice` - Delete entire voice system\n" +
                     "`!voicename [name]` - Rename your voice channel\n" +
                     "`!voicelimit [0-99]` - Set user limit (0=unlimited)\n" +
                     "`!voicetemplate [gaming/study/chill]` - Apply template\n" +
