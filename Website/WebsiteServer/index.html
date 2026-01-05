@@ -1,335 +1,325 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Coffee & Codes</title>
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>☕</text></svg>">
+    <title>Code.Master() Premium - Discord Bot</title>
+    <link rel="icon" href="https://i.imgur.com/7mkVUuO.png">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Balloo+2:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <header class="site-header">
-        <div class="header-img-container">
-            <img src="https://i.imgur.com/WhFdlYv.jpg" alt="Cat left" class="header-img left">
-        </div>
-        <h1 id="main-title">Coffee and Codes</h1>
-        <div class="header-img-container">
-            <img src="https://i.imgur.com/vy9sUhr.jpg" alt="Cat right" class="header-img right">
-        </div>
-    </header>
-
-    <div class="button-container" id="homeButtonContainer">
-        <a href="/" class="nav-button active" data-page="home">🏠 Home</a>
-        <a href="/github-connect.html" class="nav-button" data-page="github-connect">🔗 GitHub Connect</a>
-        <a href="#" class="nav-button" data-page="dashboard" id="codemasterTab">!Code.Master()</a>
-        <a href="https://discord.gg/Xvqa7GFJGN" class="nav-button" target="_blank">
-            🍩 To Discord Community
-        </a>
-    </div>
-
-    <div id="page-container">
-        <!-- HOME PAGE -->
-        <div id="home-page" class="page active">
-            <div class="container">
-            <div class="column">
-            <h1 class="col-headline">Coffee & Codes</h1>
-            <div class="col-head-sep" aria-hidden="true"></div>
-            <div class="col-text">
-                <ul class="heart-list">
-                    <li>Coffee & Codes is a cozy Discord spot for casual chats, coding together, meeting new people, and sharing small everyday moments.</li>
-
-                    <li>Like a digital neighborhood café: sometimes quiet, sometimes lively.<br>
-                    We focus on code, community, and good vibes — memes and life updates are welcome, but it's all about a friendly atmosphere.</li>
-
-                    <li>We're still building the community, so it's a great time to join early. The first 25 members receive a special role. 🕊️</li>
-                </ul>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <img src="https://i.imgur.com/7mkVUuO.png" alt="Code.Master()" class="nav-logo">
+                <span class="nav-title">Code.Master()</span>
             </div>
-
-            <div class="github-button-container">
-                <a href="https://github.com/molaskidata" class="github-button" target="_blank">
-                    💻 GitHub
-                </a>
+            <div class="nav-links">
+                <a href="#features" class="nav-link">Features</a>
+                <a href="#pricing" class="nav-link">Pricing</a>
+                <a href="https://discord.gg/Xvqa7GFJGN" class="nav-link" target="_blank">Discord</a>
+                <button class="btn-login" id="loginBtn">
+                    <svg width="20" height="20" viewBox="0 0 71 55" fill="none">
+                        <path
+                            d="M60.1045 4.8978C55.5792 2.8214 50.7265 1.2916 45.6527 0.41542C45.5603 0.39851 45.468 0.440769 45.4204 0.525289C44.7963 1.6353 44.105 3.0834 43.6209 4.2216C38.1637 3.4046 32.7345 3.4046 27.3892 4.2216C26.905 3.0581 26.1886 1.6353 25.5617 0.525289C25.5141 0.443589 25.4218 0.40133 25.3294 0.41542C20.2584 1.2888 15.4057 2.8186 10.8776 4.8978C10.8384 4.9147 10.8048 4.9429 10.7825 4.9795C1.57795 18.7309 -0.943561 32.1443 0.293408 45.3914C0.299005 45.4562 0.335386 45.5182 0.385761 45.5576C6.45866 50.0174 12.3413 52.7249 18.1147 54.5195C18.2071 54.5477 18.305 54.5139 18.3638 54.4378C19.7295 52.5728 20.9469 50.6063 21.9907 48.5383C22.0523 48.4172 21.9935 48.2735 21.8676 48.2256C19.9366 47.4931 18.0979 46.6 16.3292 45.5858C16.1893 45.5041 16.1781 45.304 16.3068 45.2082C16.679 44.9293 17.0513 44.6391 17.4067 44.3461C17.471 44.2926 17.5606 44.2813 17.6362 44.3151C29.2558 49.6202 41.8354 49.6202 53.3179 44.3151C53.3935 44.2785 53.4831 44.2898 53.5502 44.3433C53.9057 44.6363 54.2779 44.9293 54.6529 45.2082C54.7816 45.304 54.7732 45.5041 54.6333 45.5858C52.8646 46.6197 51.0259 47.4931 49.0921 48.2228C48.9662 48.2707 48.9102 48.4172 48.9718 48.5383C50.038 50.6034 51.2554 52.5699 52.5959 54.435C52.6519 54.5139 52.7526 54.5477 52.845 54.5195C58.6464 52.7249 64.529 50.0174 70.6019 45.5576C70.6551 45.5182 70.6887 45.459 70.6943 45.3942C72.1747 30.0791 68.2147 16.7757 60.1968 4.9823C60.1772 4.9429 60.1437 4.9147 60.1045 4.8978ZM23.7259 37.3253C20.2276 37.3253 17.3451 34.1136 17.3451 30.1693C17.3451 26.225 20.1717 23.0133 23.7259 23.0133C27.308 23.0133 30.1626 26.2532 30.1066 30.1693C30.1066 34.1136 27.28 37.3253 23.7259 37.3253ZM47.3178 37.3253C43.8196 37.3253 40.9371 34.1136 40.9371 30.1693C40.9371 26.225 43.7636 23.0133 47.3178 23.0133C50.9 23.0133 53.7545 26.2532 53.6986 30.1693C53.6986 34.1136 50.9 37.3253 47.3178 37.3253Z"
+                            fill="currentColor" />
+                    </svg>
+                    Login with Discord
+                </button>
             </div>
         </div>
-        
-        <div class="column">
-            <h1 class="col-headline">What to Expect</h1>
-            <div class="col-head-sep" aria-hidden="true"></div>
-            <div class="col-text">
-                <ul class="heart-list">
-                    <li><strong>Roles</strong><br>
-                    Introduce yourself with reaction roles — continent, interests, or fun tags. Just click an emoji. 🔖</li>
+    </nav>
 
-                    <li><strong>Cafe Talk</strong><br>
-                    Casual conversations, small discussions, or a simple "hello" — all welcome. ☕</li>
-
-                    <li><strong>Voice & Music</strong><br>
-                    Jump into voice calls, listen to music, or chat spontaneously. 🎧</li>
-
-                    <li><strong>Media & Memes</strong><br>
-                    Share images, art, games, or funny moments — relaxed & SFW. 📸</li>
-
-                    <li><strong>Events & Giveaways</strong><br>
-                    Occasional small events or prizes — light, fun activities. 🎮</li>
-                </ul>
-            </div>
-        </div>
-        <div class="column">
-            <h1 class="col-headline">Get Involved & Verify</h1>
-            <div class="col-head-sep" aria-hidden="true"></div>
-            <div class="col-text">
-                <ul class="heart-list">
-                    <li><strong>Verify</strong><br>Click the "#🍪|Verification" channel to complete verification — quick and simple.</li>
-
-                    <li><strong>Choose Roles</strong><br>Pick emojis in "#📌|Roles" to assign your interests and tags.🌟</li>
-
-                    <li><strong>Get Started</strong><br>Jump into "#☕|Cafe-Talk" or hang out in voice channels.</li>
-
-                    <li><strong>Support</strong><br>Questions? Our team helps in "#🍪|Support".🍀</li>
-                </ul>
-            </div>
-
-            <div class="discord-profile-button-container">
-                <a href="https://discord.com/users/1105877268775051316" class="discord-profile-button" target="_blank">
-                    👤 /help
-                </a>
-            </div>
-        </div>
-        <!-- Latest posts only in Home tab -->
-        <div class="content-feed-section">
-            <div class="content-feed-header">
-                <h2 class="content-feed-title">Latest posts from "«🍩»┆Teleportation":</h2>
-            </div>
-            <div class="content-feed-card">
-                <div class="content-feed-container" id="contentFeedContainer">
-                    <div class="loading-message">
-                        Loading latest content...
-                    </div>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-content">
+                <h1 class="hero-title">
+                    Powerful Discord Bot<br>
+                    <span class="gradient-text">Built for Your Community</span>
+                </h1>
+                <p class="hero-description">
+                    Advanced moderation, voice management, and professional ticket system.<br>
+                    Everything you need to create the perfect Discord server.
+                </p>
+                <div class="hero-buttons">
+                    <button class="btn-primary" onclick="scrollToSection('pricing')">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                            <path d="M2 17l10 5 10-5" />
+                            <path d="M2 12l10 5 10-5" />
+                        </svg>
+                        Get Premium
+                    </button>
+                    <a href="https://discord.gg/Xvqa7GFJGN" class="btn-secondary" target="_blank">
+                        Join Discord
+                    </a>
                 </div>
-        </div>
-            </div>
-        </div>
-            </div>
-        </div>
-
-        <!-- DASHBOARD PAGE (moved outside Home) -->
-        <div id="dashboard-page" class="page">
-            <div class="container" style="align-items:flex-start; gap:24px;">
-                <div style="flex:1; max-width:680px;">
-                    <div class="column" id="left-dashboard">
-                        <h2 class="col-headline">Server Overview</h2>
-                        <div id="server-count" style="font-size:2.2rem; font-weight:700; margin-bottom:12px; color:#fff">Servers: —</div>
-                        <div id="commands-list" style="margin-top:10px;">
-                            <h3 style="margin:6px 0 8px 0; color:#dff3ff;">Commands (short)</h3>
-                            <div id="cmds" style="display:flex;flex-direction:column;gap:8px;color:#eaf6ff;"></div>
-                        </div>
+                <div class="hero-stats">
+                    <div class="stat">
+                        <div class="stat-value">10+</div>
+                        <div class="stat-label">Servers</div>
                     </div>
-                </div>
-
-                <div style="width:320px;">
-                    <div class="column" id="right-dashboard">
-                        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-                            <div style="font-size:0.95rem;color:#dff3ff;font-weight:600">!Code.Moser() Dashboard</div>
-                            <a href="#" class="nav-button" data-page="home" id="dashboardHomeBtn" style="padding:8px 12px;font-size:0.9rem;border-radius:12px;">🏠 Home</a>
-                        </div>
-                        <h2 class="col-headline">Bot Status</h2>
-                        <div style="display:flex;align-items:center;gap:12px;margin-top:12px;">
-                            <div id="status-dot" style="width:18px;height:18px;border-radius:50%;background:gray;box-shadow:0 0 8px rgba(0,0,0,0.6);"></div>
-                            <div id="status-text" style="font-weight:600;color:#fff;font-size:1.1rem;">—</div>
-                        </div>
-                        <div style="margin-top:18px;color:#dcefff;">
-                            <div>Uptime: <span id="uptime">—</span></div>
-                            <div>Last checked: <span id="last-checked">—</span></div>
-                        </div>
+                    <div class="stat">
+                        <div class="stat-value">99.9%</div>
+                        <div class="stat-label">Uptime</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-value">24/7</div>
+                        <div class="stat-label">Support</div>
                     </div>
                 </div>
             </div>
+            <div class="hero-image">
+                <img src="https://imgur.com/aYh8OAq.png" alt="Code.Master() Bot">
+            </div>
         </div>
-        
-        <!-- GITHUB CONNECT PAGE -->
-        <div id="github-connect-page" class="page">
-            <div class="github-connect-container">
-                <div class="github-connect-card">
-                    <div class="github-connect-icon">🔗</div>
-                    <h2 class="github-connect-title">Connect your GitHub for Discord XP & Leveling!</h2>
-                    <p class="github-connect-description">
-                        Log in with your GitHub account to link it with your Discord profile. Your GitHub activity (commits, contributions) will be used to rank you and award XP/levels in our Discord server!<br><br>
-                        Click below to securely connect your GitHub account and unlock exclusive roles and rewards.
-                    </p>
-                    <a href="#" class="connect-button" id="connectBtn">Connect GitHub Account</a>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Premium Features</h2>
+                <p class="section-description">Everything you need to manage and grow your Discord community</p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Voice Features -->
+                <div class="feature-card premium">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" />
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2" />
+                            <line x1="12" y1="19" x2="12" y2="23" />
+                            <line x1="8" y1="23" x2="16" y2="23" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Voice System</h3>
+                    <p class="feature-description">Join-to-Create channels, templates, voice stats, and complete channel
+                        control</p>
+                    <span class="premium-badge">Premium</span>
+                </div>
+
+                <!-- Security Features -->
+                <div class="feature-card premium">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Security System</h3>
+                    <p class="feature-description">AI-powered spam detection, auto-moderation, and comprehensive member
+                        protection</p>
+                    <span class="premium-badge">Premium</span>
+                </div>
+
+                <!-- Ticket System -->
+                <div class="feature-card premium">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                            <polyline points="14 2 14 8 20 8" />
+                            <line x1="16" y1="13" x2="8" y2="13" />
+                            <line x1="16" y1="17" x2="8" y2="17" />
+                            <polyline points="10 9 9 9 8 9" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Ticket System</h3>
+                    <p class="feature-description">Professional support system with transcripts and user management</p>
+                    <span class="premium-badge">Premium</span>
+                </div>
+
+                <!-- Utilities -->
+                <div class="feature-card free">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <circle cx="12" cy="12" r="10" />
+                            <line x1="12" y1="8" x2="12" y2="12" />
+                            <line x1="12" y1="16" x2="12.01" y2="16" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Utilities</h3>
+                    <p class="feature-description">Message forwarding, auto-cleanup, and custom commands</p>
+                    <span class="free-badge">Free</span>
+                </div>
+
+                <!-- Twitch Integration -->
+                <div class="feature-card free">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 2H3v16h5v4l4-4h5l4-4V2zm-10 9V7m5 4V7" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Twitch Integration</h3>
+                    <p class="feature-description">Automatic clip posting and stream notifications</p>
+                    <span class="free-badge">Free</span>
+                </div>
+
+                <!-- Birthday System -->
+                <div class="feature-card free">
+                    <div class="feature-icon">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <rect x="3" y="8" width="18" height="13" rx="2" ry="2" />
+                            <line x1="16" y1="2" x2="16" y2="5" />
+                            <line x1="8" y1="2" x2="8" y2="5" />
+                            <line x1="3" y1="10" x2="21" y2="10" />
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Birthday System</h3>
+                    <p class="feature-description">Automatic birthday celebrations for your community members</p>
+                    <span class="free-badge">Free</span>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
 
-    <div class="gallery-section">
-        <div class="gallery-container">
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+        <div class="container">
+            <div class="section-header">
+                <h2 class="section-title">Simple, Transparent Pricing</h2>
+                <p class="section-description">Unlock all premium features for your Discord server</p>
+            </div>
+
+            <div class="pricing-cards">
+                <!-- Monthly Plan -->
+                <div class="pricing-card">
+                    <div class="pricing-header">
+                        <h3 class="pricing-title">Monthly</h3>
+                        <div class="pricing-price">
+                            <span class="price-currency">€</span>
+                            <span class="price-amount">5.99</span>
+                            <span class="price-period">/month</span>
+                        </div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Full Voice System
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            AI Security System
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Professional Tickets
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Priority Support
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Cancel Anytime
+                        </li>
+                    </ul>
+                    <button class="btn-pricing" onclick="selectPlan('monthly')">
+                        Choose Monthly
+                    </button>
+                </div>
+
+                <!-- Yearly Plan (Popular) -->
+                <div class="pricing-card popular">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="pricing-header">
+                        <h3 class="pricing-title">Yearly</h3>
+                        <div class="pricing-price">
+                            <span class="price-currency">€</span>
+                            <span class="price-amount">60</span>
+                            <span class="price-period">/year</span>
+                        </div>
+                        <div class="pricing-save">Save 17% (€12/year)</div>
+                    </div>
+                    <ul class="pricing-features">
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Full Voice System
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            AI Security System
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Professional Tickets
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Priority Support
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Early Access to Features
+                        </li>
+                        <li>
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Cancel Anytime
+                        </li>
+                    </ul>
+                    <button class="btn-pricing primary" onclick="selectPlan('yearly')">
+                        Choose Yearly
+                    </button>
+                </div>
+            </div>
+
+            <div class="pricing-note">
+                💳 Secure payment via Stripe • 🔒 SSL encrypted • 🔁 Cancel anytime
+            </div>
         </div>
-    </div>    <footer class="site-footer">
-        <div class="site-footer-inner">
-            <span>© 2025 MOLA | </span>
-            <a href="terms&privacy/terms-of-service.html" target="_blank">Terms</a> |
-            <a href="terms&privacy/privacy-policy.html" target="_blank">Privacy</a> |
-            <a href="https://discord.gg/Xvqa7GFJGN" target="_blank" rel="noopener noreferrer">Coffee & Codes</a>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <img src="https://i.imgur.com/7mkVUuO.png" alt="Code.Master()" class="footer-logo">
+                    <span>Code.Master()</span>
+                </div>
+                <div class="footer-links">
+                    <a href="https://discord.gg/Xvqa7GFJGN" target="_blank">Discord</a>
+                    <a href="https://github.com/molaskidata" target="_blank">GitHub</a>
+                    <a href="/terms.html">Terms</a>
+                    <a href="/privacy.html">Privacy</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>© 2026 Code.Master() by mungabee. All rights reserved.</p>
+            </div>
         </div>
     </footer>
-    
-    <script src="shades.js"></script>
-    <script>
-        // Page Navigation
-        document.querySelectorAll('.tab-button, .nav-button').forEach(btn => {
-            btn.addEventListener('click', function() {
-                const page = this.getAttribute('data-page');
-                navigateTo(page);
-            });
-        });
 
-        // Dashboard data fetch & rendering
-        async function fetchDashboard() {
-            // Use relative path so the site domain can proxy to the bot service (via nginx)
-            const url = '/api/dashboard';
-            try {
-                const res = await fetch(url, { cache: 'no-store' });
-                if (!res.ok) throw new Error('no-data');
-                const data = await res.json();
-                renderDashboard(data);
-            } catch (e) {
-                renderDashboard({ status: 'offline', presence: 'offline', guildCount: 0, commands: [], uptime: 0, timestamp: new Date().toISOString() });
-            }
-        }
-
-        function renderDashboard(data) {
-            const dot = document.getElementById('status-dot');
-            const text = document.getElementById('status-text');
-            const sc = document.getElementById('server-count');
-            const cmds = document.getElementById('cmds');
-            const up = document.getElementById('uptime');
-            const lc = document.getElementById('last-checked');
-
-            // Map status to colors
-            let color = '#808080';
-            let label = 'Offline';
-            if (data.status === 'online' || data.presence === 'online') { color = '#2ecc71'; label = 'Online'; }
-            else if (data.presence === 'idle' || data.presence === 'dnd') { color = '#f1c40f'; label = 'Stand By'; }
-            else if (data.status === 'crashed') { color = '#e74c3c'; label = 'Crashed'; }
-            else { color = '#7f8c8d'; label = 'Offline'; }
-
-            dot.style.background = color;
-            text.textContent = label;
-            sc.textContent = `Servers: ${data.guildCount || 0}`;
-            up.textContent = formatUptime(data.uptime || 0);
-            lc.textContent = new Date(data.timestamp || Date.now()).toLocaleString();
-
-            // commands
-            cmds.innerHTML = '';
-            (data.commands || []).forEach(c => {
-                const el = document.createElement('div');
-                el.style.display = 'flex';
-                el.style.justifyContent = 'space-between';
-                el.style.gap = '12px';
-                el.innerHTML = `<div style="font-weight:700;color:#cfefff;">${c.cmd}</div><div style="color:#e6f8ff;opacity:0.9">${c.desc}</div>`;
-                cmds.appendChild(el);
-            });
-        }
-
-        function formatUptime(sec) {
-            const s = Math.floor(sec || 0);
-            const h = Math.floor(s/3600); const m = Math.floor((s%3600)/60); const ss = s%60;
-            return `${h}h ${m}m ${ss}s`;
-        }
-
-        // auto refresh when on dashboard
-        setInterval(() => {
-            const dashboardVisible = document.getElementById('dashboard-page').classList.contains('active');
-            if (dashboardVisible) fetchDashboard();
-        }, 8000);
-
-        // ensure dashboard tab activates correct view
-        document.getElementById('codemasterTab').addEventListener('click', function(e){ e.preventDefault(); navigateTo('dashboard'); fetchDashboard(); });
-
-        // Screen-size detection: sets data attribute on <body> and reacts to resize
-        function updateScreenSizeClass() {
-            const w = window.innerWidth || document.documentElement.clientWidth;
-            const b = document.body;
-            if (w < 720) b.dataset.screensize = 'small';
-            else if (w < 1200) b.dataset.screensize = 'medium';
-            else b.dataset.screensize = 'large';
-        }
-        window.addEventListener('resize', updateScreenSizeClass);
-        // run once at load
-        updateScreenSizeClass();
-
-        function navigateTo(page) {
-            // Hide all pages
-            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-            
-            // Show selected page
-            document.getElementById(page + '-page').classList.add('active');
-            
-            // Update active tab/button (tab-button and nav-button)
-            document.querySelectorAll('.tab-button, .nav-button').forEach(btn => {
-                btn.classList.remove('active');
-                if (btn.getAttribute('data-page') === page) {
-                    btn.classList.add('active');
-                }
-            });
-
-            // Update URL
-            if (page === 'home') {
-                window.history.pushState(null, '', '/');
-            } else {
-                window.history.pushState(null, '', '/' + page + '/');
-            }
-        }
-
-        // Handle browser back/forward
-        window.addEventListener('popstate', function() {
-            const path = window.location.pathname;
-            if (path.includes('github-connect')) {
-                navigateTo('github-connect');
-            } else {
-                navigateTo('home');
-            }
-        });
-
-        // GitHub Connect Button
-        document.addEventListener("DOMContentLoaded", function() {
-            const footer = document.querySelector('.site-footer-inner');
-            if (footer) {
-                footer.innerHTML = footer.innerHTML.replace(/© \d{4}/, `© ${new Date().getFullYear()}`);
-            }
-
-            // Get Discord ID from URL parameters
-            const urlParams = new URLSearchParams(window.location.search);
-            const discordId = urlParams.get('discordId');
-
-            // If Discord ID is present, IMMEDIATELY go to github-connect page
-            if (discordId) {
-                navigateTo('github-connect');
-            } else {
-                const path = window.location.pathname;
-                if (path.includes('github-connect')) {
-                    navigateTo('github-connect');
-                }
-            }
-
-            const connectBtn = document.getElementById('connectBtn');
-            
-            if (connectBtn) {
-                if (discordId) {
-                    // If Discord ID is provided, initiate GitHub OAuth
-                    connectBtn.href = `https://thecoffeylounge.com:3000/github/auth?discordId=${discordId}`;
-                } else {
-                    // Show error if no Discord ID
-                    connectBtn.textContent = 'ERROR: NO DISCORD ID PROVIDED';
-                    connectBtn.style.pointerEvents = 'none';
-                    connectBtn.style.opacity = '0.6';
-                }
-            }
-        });
-    </script>
+    <script src="script.js"></script>
 </body>
+
 </html>

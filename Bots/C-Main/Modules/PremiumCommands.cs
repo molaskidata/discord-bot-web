@@ -50,27 +50,28 @@ namespace MainbotCSharp.Modules
                         "**Upgrade to Code.Master() Premium and unlock powerful features!**\n\n" +
                         "Get access to professional tools that take your Discord server to the next level.")
                     .WithColor(0x7289DA)
-                    .AddField("💎 Premium Features",
-                        "🎤 **Voice System** - Join-to-Create, templates, stats\n" +
-                        "🛡️ **Security System** - AI-powered spam & NSFW detection\n" +
-                        "🎫 **Ticket System** - Professional support channels\n" +
-                        "⚡ **Priority Support** - Get help faster\n" +
-                        "🚀 **Early Access** - Be first to try new features", false)
-                    .AddField("💰 Pricing",
+                    .AddField("Premium Features",
+                        " ★ **Voice System** - Join-to-Create, templates, stats\n" +
+                        " ★ **Security System** - AI-powered spam & NSFW detection\n" +
+                        " ★ **Ticket System** - Professional support channels\n" +
+                        " ★ **Priority Support** - Get help faster\n" +
+                        " ★ **Early Access** - Be first to try new features", false)
+                    
+                    .AddField("💰 **Pricing**",
                         "**Monthly:** €5.99/month\n" +
                         "**Yearly:** €60/year (€5/month - Save 17%!)", false)
                     .AddField("🌐 Get Premium Now",
                         "Visit our website to upgrade:\n" +
-                        "**[https://your-domain.com/premium](https://your-domain.com/premium)**\n\n" +
+                        "**[https://thecoffeylounge.com/premium](https://thecoffeylounge.com/premium)**\n\n" +
                         "💳 Secure payment via Stripe • Cancel anytime", false)
-                    .WithImageUrl("https://imgur.com/aYh8OAq.png")
+                    .WithImageUrl("link")
                     .WithFooter("Made by mungabee", "https://i.imgur.com/7mkVUuO.png")
                     .WithCurrentTimestamp();
 
                 // Add button to website
                 var component = new ComponentBuilder()
                     .WithButton("Upgrade to Premium", style: ButtonStyle.Link,
-                        url: "https://your-domain.com/premium",
+                        url: "https:///premium",
                         emote: new Emoji("💎"))
                     .Build();
 

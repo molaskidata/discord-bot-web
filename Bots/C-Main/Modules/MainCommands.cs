@@ -76,7 +76,7 @@ namespace MainbotCSharp.Modules
                     "`!voicepermit @user` - Allow user to join\n" +
                     "`!voicedeny @user` - Block user from joining", false)
 
-                .AddField("★ **Utilities** ✅ *FREE - Admin only*",
+                .AddField("★ **Utilities** ✅ *FREE*",
                     "`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n" +
                     "`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour! Run the command in the channel you want to clean up.\n" +
                     "`!cleanupdel` - Stop the hourly auto-cleanup for this channel. Run this command in the channel where cleanup is active.\n" +
@@ -84,13 +84,13 @@ namespace MainbotCSharp.Modules
                     "`!removeflirtlang` - Remove AI flirt language setting for this server\n" +
                     "`!flirt [text]` - Flirt with AI-generated responses", false)
 
-                .AddField("★ **Twitch** ✅ *FREE - Admin only*",
+                .AddField("★ **Twitch** ✅ *FREE*",
                     "`!settwitch` - Link Twitch account and configure clip notifications\n" +
                     "`!setchannel` - Create a new thread-only channel for clips *(use during !settwitch setup)*\n" +
                     "`!testtwitch` - Test clip posting by fetching latest clip\n" +
                     "`!deletetwitch` - Delete your Twitch account data", false)
 
-                .AddField("★ **Bump Reminders** ✅ *FREE - Admin only*",
+                .AddField("★ **Bump Reminders** ✅ *FREE*",
                     "`!bumpreminder on/off` - Enable/disable bump reminders\n" +
                     "`!bumpstatus` - Show bump reminder status\n" +
                     "→ Automatically reminds you every 2 hours when server can be bumped\n" +
