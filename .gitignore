@@ -52,6 +52,10 @@ build/
 bin/
 obj/
 
+# Bot runtime data files
+**/voice_logs.json
+**/mainbot_monitor_state.json
+
 # Deployment credentials - NEVER COMMIT!
 deploy-website.ps1
 *-credentials.txt
