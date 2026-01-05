@@ -109,6 +109,12 @@ namespace MainbotCSharp.Modules
                     "`!helpbump` - Bump/Disboard help\n" +
                     "`!helpbirth` - Birthday help", false)
 
+                .AddField("🔓 **Premium**",
+                    "`!premium` - View Premium benefits and upgrade options\n" +
+                    "`!premiumstatus` - Check your server's Premium status\n" +
+                    "→ Unlock Voice, Security & Ticket features\n" +
+                    "→ €5.99/month or €60/year", false)
+
                 .WithImageUrl("https://imgur.com/aYh8OAq.png")
                 .WithFooter("Powered by mungabee /aka ozzygirl", "https://i.imgur.com/7mkVUuO.png")
                 .WithCurrentTimestamp();
