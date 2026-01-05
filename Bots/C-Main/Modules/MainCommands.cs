@@ -295,5 +295,121 @@ namespace MainbotCSharp.Modules
             embed.WithCurrentTimestamp();
             await ReplyAsync(embed: embed.Build());
         }
+
+        [Command("sendit")]
+        [Summary("Forward a message to another channel")]
+        public async Task SendItAsync([Remainder] string? args = null)
+        {
+            // Check admin permissions
+            var guildUser = Context.Guild.GetUser(Context.User.Id);
+            if (guildUser == null || !guildUser.GuildPermissions.Has(GuildPermission.Administrator))
+            {
+                await ReplyAsync("❌ This command requires Administrator permissions.");
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(args))
+            {
+                await ReplyAsync("📝 Usage: `!sendit MESSAGE_ID to CHANNEL_ID`\n\nExample: `!sendit 1234567890123456789 to 9876543210987654321`");
+                return;
+            }
+
+            // Parse: MESSAGE_ID to CHANNEL_ID
+            var parts = args.Split(new[] { " to " }, StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length != 2)
+            {
+                await ReplyAsync("❌ Invalid format! Use: `!sendit MESSAGE_ID to CHANNEL_ID`");
+                return;
+            }
+
+            var messageIdStr = parts[0].Trim();
+            var channelIdStr = parts[1].Trim();
+
+            if (!ulong.TryParse(messageIdStr, out var messageId))
+            {
+                await ReplyAsync("❌ Invalid MESSAGE_ID! Must be a valid snowflake ID.");
+                return;
+            }
+
+            if (!ulong.TryParse(channelIdStr, out var channelId))
+            {
+                await ReplyAsync("❌ Invalid CHANNEL_ID! Must be a valid snowflake ID.");
+                return;
+            }
+
+            try
+            {
+                // Fetch the message from current channel
+                var originalMessage = await Context.Channel.GetMessageAsync(messageId);
+                if (originalMessage == null)
+                {
+                    await ReplyAsync("❌ Message not found in this channel!");
+                    return;
+                }
+
+                // Get target channel
+                var targetChannel = Context.Guild.GetTextChannel(channelId);
+                if (targetChannel == null)
+                {
+                    await ReplyAsync("❌ Target channel not found or not accessible!");
+                    return;
+                }
+
+                // Check bot permissions in target channel
+                var botPerms = targetChannel.GetPermissionOverwrite(Context.Guild.CurrentUser);
+                if (botPerms?.SendMessages == PermValue.Deny)
+                {
+                    await ReplyAsync($"❌ I don't have permission to send messages in {targetChannel.Mention}!");
+                    return;
+                }
+
+                // Forward the message
+                if (originalMessage.Embeds.Count > 0)
+                {
+                    // Forward embeds
+                    foreach (var embed in originalMessage.Embeds)
+                    {
+                        if (embed is Embed embedObj)
+                        {
+                            await targetChannel.SendMessageAsync(embed: embedObj);
+                        }
+                    }
+                }
+                else
+                {
+                    // Forward text content
+                    var content = originalMessage.Content;
+                    if (string.IsNullOrWhiteSpace(content))
+                    {
+                        content = "*[Empty message or attachment only]*";
+                    }
+
+                    var forwardEmbed = new EmbedBuilder()
+                        .WithAuthor(originalMessage.Author.Username, originalMessage.Author.GetAvatarUrl())
+                        .WithDescription(content)
+                        .WithColor(Color.Blue)
+                        .WithFooter($"Forwarded from #{Context.Channel.Name}")
+                        .WithTimestamp(originalMessage.Timestamp)
+                        .Build();
+
+                    await targetChannel.SendMessageAsync(embed: forwardEmbed);
+                }
+
+                // Forward attachments if any
+                if (originalMessage.Attachments.Count > 0)
+                {
+                    foreach (var attachment in originalMessage.Attachments)
+                    {
+                        await targetChannel.SendMessageAsync($"📎 Attachment: {attachment.Url}");
+                    }
+                }
+
+                await ReplyAsync($"✅ Message forwarded to {targetChannel.Mention}!");
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Error forwarding message: {ex.Message}");
+            }
+        }
     }
 }
