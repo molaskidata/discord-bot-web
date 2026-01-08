@@ -517,11 +517,9 @@ namespace MainbotCSharp.Modules
         }
     }
 
-    [Group("security")]
     public class SecurityCommands : ModuleBase<SocketCommandContext>
     {
-        [Command("setup")]
-        [Alias("setsecuritymod")]
+        [Command("setsecuritymod")]
         [Summary("Setup security system (Admin only)")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task SecuritySetupAsync()
