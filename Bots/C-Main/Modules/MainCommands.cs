@@ -34,8 +34,7 @@ namespace MainbotCSharp.Modules
                     "`!ping` - Testing the pingspeed of the bot\n" +
                     "`!gm` - Get motivated for the day\n" +
                     "`!gn` - Good night messages for you and your mates\n" +
-                    "`!hi` - Say hello and get a hello from me\n" +
-                    "`!coffee` - Tell your friends it's coffee time!", false)
+                    "`!hi` - Say hello and get a hello from me", false)
 
                 .AddField("★ **Security Features** 🔒 *Premium*",
                     "**All security features require Premium subscription**\n\n" +
@@ -43,9 +42,9 @@ namespace MainbotCSharp.Modules
                     "→ The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n" +
                     "→ If a violation is detected, the user will be timed out for 2 hours and warned via DM.\n" +
                     "→ You can customize the word list and settings soon.\n" +
-                    "`!ban @user` - Manually ban a user\n" +
-                    "`!kick @user` - Manually kick a user\n" +
-                    "`!timeout @user [minutes]` - Manually timeout a user\n" +
+                    "`!ban @user [reason]` - Manually ban a user\n" +
+                    "`!kick @user [reason]` - Manually kick a user\n" +
+                    "`!timeout @user [min/h/d/m/y] [reason]` - Manually timeout a user\n" +
                     "`!timeoutdel @user` - Remove timeout from a user", false)
 
                 .AddField("★ **Ticket System** 🔒 *Premium*",
@@ -77,14 +76,9 @@ namespace MainbotCSharp.Modules
 
                 .AddField("★ **Utilities** ✅ *FREE*",
                     "`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n" +
-                    "`!cleanup` - Enable hourly auto-cleanup: deletes all messages in this channel every hour! Run the command in the channel you want to clean up.\n" +
-                    "`!cleanupdel` - Stop the hourly auto-cleanup for this channel. Run this command in the channel where cleanup is active.", false)
-
-                .AddField("★ **Twitch** ✅ *FREE*",
-                    "`!settwitch` - Link Twitch account and configure clip notifications\n" +
-                    "`!setchannel` - Create a new thread-only channel for clips *(use during !settwitch setup)*\n" +
-                    "`!testtwitch` - Test clip posting by fetching latest clip\n" +
-                    "`!deletetwitch` - Delete your Twitch account data", false)
+                    "`!cleanup CHANNEL_ID` - Cleans all messages in the specified channel (no limit)\n" +
+                    "`!cleanup-intervall CHANNEL_ID` - Cleans specified channel every 1 hour\n" +
+                    "`!cleanupdel CHANNEL_ID` - Stops the cleanup interval for specified channel", false)
 
                 .AddField("★ **Bump Reminders** ✅ *FREE*",
                     "`!bumpreminder on/off` - Enable/disable bump reminders\n" +
@@ -93,15 +87,14 @@ namespace MainbotCSharp.Modules
                     "→ Works with Disboard bot for server promotion", false)
 
                 .AddField("★ **Birthday** ✅ *FREE*",
-                    "`!birthdaychannel` - Set the birthday channel *Admin only*\n" +
-                    "`!birthdayset` - Save your birthday", false)
+                    "`!birthdaychannel [CHANNEL_ID or !new-birthchan]` - Set or create birthday channel *Admin only*\n" +
+                    "`!birthdayset [dd.mm.yyyy]` - Save your birthday\n" +
+                    "`!birthdaylist` - View all birthdays sorted by date", false)
 
                 .AddField("★ **Help Categories**",
                     "`!mungehelpdesk` - Shows all big help categories\n" +
                     "`!helpvoice` - Voice help\n" +
                     "`!helpsecure` - Security help\n" +
-                    "`!helptwitch` - Twitch help\n" +
-                    "`!helpgithub` - GitHub help\n" +
                     "`!helpbump` - Bump/Disboard help\n" +
                     "`!helpbirth` - Birthday help", false)
 

@@ -521,6 +521,7 @@ namespace MainbotCSharp.Modules
     public class SecurityCommands : ModuleBase<SocketCommandContext>
     {
         [Command("setup")]
+        [Alias("setsecuritymod")]
         [Summary("Setup security system (Admin only)")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task SecuritySetupAsync()
@@ -809,79 +810,73 @@ namespace MainbotCSharp.Modules
         }
 
         [Command("cleanup")]
-        [Summary("Cleanup/delete messages in current channel")]
+        [Alias("cleanup-channel")]
+        [Summary("Cleanup/delete all messages in a specific channel")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         [RequireBotPermission(GuildPermission.ManageMessages)]
-        public async Task CleanupAsync(int? amount = null)
+        public async Task CleanupAsync(ulong channelId)
         {
             try
             {
+                var textChannel = Context.Guild.GetTextChannel(channelId);
+                if (textChannel == null)
+                {
+                    await ReplyAsync("❌ Channel not found! Please provide a valid channel ID.");
+                    return;
+                }
+
+                await ReplyAsync($"🧹 Starting cleanup of {textChannel.Mention}... This may take a while.");
+
                 int totalDeleted = 0;
+                bool hasMore = true;
 
-                if (amount == null)
+                while (hasMore)
                 {
-                    // No amount specified = clear ALL messages (except pinned)
-                    var textChannel = Context.Channel as SocketTextChannel;
-                    if (textChannel == null) return;
+                    var messages = await textChannel.GetMessagesAsync(100).FlattenAsync();
+                    // Exclude pinned messages
+                    var deleteableMessages = messages.Where(x => !x.IsPinned).ToList();
 
-                    // Delete command message first
-                    try { await Context.Message.DeleteAsync(); } catch { }
-
-                    bool hasMore = true;
-                    while (hasMore)
+                    if (!deleteableMessages.Any())
                     {
-                        var messages = await textChannel.GetMessagesAsync(100).FlattenAsync();
-                        // Exclude pinned messages
-                        var deleteableMessages = messages.Where(x =>
-                            DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14) &&
-                            !x.IsPinned).ToList();
-
-                        if (!deleteableMessages.Any())
-                        {
-                            hasMore = false;
-                            break;
-                        }
-
-                        if (deleteableMessages.Count == 1)
-                        {
-                            await deleteableMessages.First().DeleteAsync();
-                            totalDeleted += 1;
-                            hasMore = false;
-                        }
-                        else
-                        {
-                            await textChannel.DeleteMessagesAsync(deleteableMessages);
-                            totalDeleted += deleteableMessages.Count;
-                        }
-
-                        // Small delay to avoid rate limits
-                        await Task.Delay(1000);
-                    }
-                }
-                else
-                {
-                    // Specific amount specified
-                    if (amount <= 0)
-                    {
-                        await ReplyAsync("❌ Amount must be greater than 0!");
-                        return;
+                        hasMore = false;
+                        break;
                     }
 
-                    var messages = await Context.Channel.GetMessagesAsync(amount.Value + 1).FlattenAsync(); // +1 to include command
-                                                                                                            // Exclude pinned messages
-                    var deleteableMessages = messages.Where(x =>
-                        DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14) &&
-                        !x.IsPinned);
+                    // Discord bulk delete only works for messages less than 14 days old
+                    var recentMessages = deleteableMessages.Where(x => DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14)).ToList();
+                    var oldMessages = deleteableMessages.Where(x => DateTimeOffset.UtcNow - x.Timestamp >= TimeSpan.FromDays(14)).ToList();
 
-                    if (Context.Channel is SocketTextChannel textChannel)
+                    // Bulk delete recent messages
+                    if (recentMessages.Count > 1)
                     {
-                        await textChannel.DeleteMessagesAsync(deleteableMessages);
-                        totalDeleted = deleteableMessages.Count() - 1; // -1 because command message is included
+                        await textChannel.DeleteMessagesAsync(recentMessages);
+                        totalDeleted += recentMessages.Count;
                     }
+                    else if (recentMessages.Count == 1)
+                    {
+                        await recentMessages.First().DeleteAsync();
+                        totalDeleted += 1;
+                    }
+
+                    // Delete old messages one by one
+                    foreach (var msg in oldMessages)
+                    {
+                        try
+                        {
+                            await msg.DeleteAsync();
+                            totalDeleted++;
+                            await Task.Delay(500); // Rate limit protection
+                        }
+                        catch { }
+                    }
+
+                    if (deleteableMessages.Count < 100) hasMore = false;
+
+                    // Small delay to avoid rate limits
+                    await Task.Delay(1000);
                 }
 
-                // Send funny cleanup message
-                var reply = await ReplyAsync($"{totalDeleted} messages were deleted :)) Thank you for using me as your cleaning lady!");
+                var reply = await ReplyAsync($"✅ {totalDeleted} messages were deleted from {textChannel.Mention}! Thank you for using me as your cleaning lady! :))");
 
                 // Delete confirmation message after 45 seconds
                 _ = Task.Delay(45000).ContinueWith(async _ =>
@@ -895,29 +890,14 @@ namespace MainbotCSharp.Modules
             }
         }
 
-        [Command("setcleanupinterval")]
+        [Command("cleanup-intervall")]
+        [Alias("setcleanupinterval")]
         [Summary("Set automatic cleanup interval for a channel (1 hour)")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task SetCleanupIntervalAsync()
+        public async Task SetCleanupIntervalAsync(ulong channelId)
         {
             try
             {
-                await ReplyAsync("In which channel should the interval be set? (provide the channel ID)");
-
-                var response = await NextMessageAsync(timeout: TimeSpan.FromMinutes(1));
-
-                if (response == null)
-                {
-                    await ReplyAsync("❌ Timeout! Please try again.");
-                    return;
-                }
-
-                if (!ulong.TryParse(response.Content.Trim(), out ulong channelId))
-                {
-                    await ReplyAsync("❌ Invalid channel ID! Please provide a valid numeric ID.");
-                    return;
-                }
-
                 var channel = Context.Guild.GetTextChannel(channelId);
                 if (channel == null)
                 {
@@ -938,9 +918,6 @@ namespace MainbotCSharp.Modules
                     .WithTimestamp(DateTimeOffset.UtcNow);
 
                 await ReplyAsync(embed: embed.Build());
-
-                // Delete user's channel ID message for privacy
-                try { await response.DeleteAsync(); } catch { }
             }
             catch (Exception ex)
             {
@@ -948,10 +925,11 @@ namespace MainbotCSharp.Modules
             }
         }
 
-        [Command("removecleanupinterval")]
-        [Summary("Remove automatic cleanup interval")]
+        [Command("cleanupdel")]
+        [Alias("removecleanupinterval")]
+        [Summary("Remove automatic cleanup interval for a channel")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task RemoveCleanupIntervalAsync()
+        public async Task RemoveCleanupIntervalAsync(ulong channelId)
         {
             try
             {
@@ -962,13 +940,20 @@ namespace MainbotCSharp.Modules
                     return;
                 }
 
+                if (currentInterval.ChannelId != channelId)
+                {
+                    await ReplyAsync($"❌ The cleanup interval is set for <#{currentInterval.ChannelId}>, not <#{channelId}>.");
+                    return;
+                }
+
                 SecurityService.RemoveCleanupInterval(Context.Guild.Id);
 
                 var embed = new EmbedBuilder()
                     .WithTitle("⏰ Cleanup Interval Removed!")
                     .WithColor(Color.Orange)
+                    .AddField("Channel", $"<#{channelId}>", true)
                     .AddField("Status", "❌ Disabled", true)
-                    .WithDescription("Automatic cleanup has been disabled for this server.")
+                    .WithDescription("Automatic cleanup has been disabled for this channel.")
                     .WithTimestamp(DateTimeOffset.UtcNow);
 
                 await ReplyAsync(embed: embed.Build());
@@ -1030,6 +1015,49 @@ namespace MainbotCSharp.Modules
             catch (Exception ex)
             {
                 await ReplyAsync($"❌ Failed to warn user: {ex.Message}");
+            }
+        }
+
+        [Command("timeoutdel")]
+        [Summary("Remove timeout from a user")]
+        [RequireUserPermission(GuildPermission.ModerateMembers)]
+        [RequireBotPermission(GuildPermission.ModerateMembers)]
+        public async Task TimeoutDeleteAsync(SocketGuildUser user)
+        {
+            try
+            {
+                if (user.Id == Context.User.Id)
+                {
+                    await ReplyAsync("❌ You cannot remove timeout from yourself!");
+                    return;
+                }
+
+                if (user.TimedOutUntil == null || user.TimedOutUntil <= DateTimeOffset.UtcNow)
+                {
+                    await ReplyAsync("❌ This user is not timed out!");
+                    return;
+                }
+
+                await user.RemoveTimeOutAsync();
+
+                var embed = new EmbedBuilder()
+                    .WithTitle("✅ Timeout Removed")
+                    .WithColor(Color.Green)
+                    .AddField("User", $"{user.Username}#{user.Discriminator}", true)
+                    .AddField("Moderator", Context.User.Username, true)
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: embed.Build());
+
+                try
+                {
+                    await user.SendMessageAsync($"Your timeout has been removed in {Context.Guild.Name}.");
+                }
+                catch { /* User has DMs disabled */ }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to remove timeout: {ex.Message}");
             }
         }
 

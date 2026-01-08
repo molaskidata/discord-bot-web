@@ -438,33 +438,179 @@ namespace MainbotCSharp.Modules
         [Command("ticket-setup")]
         [Summary("Setup ticket system (Admin only)")]
         [RequireUserPermission(GuildPermission.Administrator)]
-        public async Task SetupTicketSystemAsync(ICategoryChannel? category = null, IRole? supportRole = null)
+        public async Task SetupTicketSystemAsync()
         {
             try
             {
+                // Step 1: Ask for log channel
+                await ReplyAsync("What channel should be the ticket log channel? Write the Channel ID only in the chat or type `!new-ticketlog` and I create a ticket log channel for you. You can move it after where you want.");
+
+                var logChannelResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                if (logChannelResponse == null)
+                {
+                    await ReplyAsync("❌ Timeout! Please try again.");
+                    return;
+                }
+
+                ulong logChannelId;
+                ITextChannel logChannel;
+
+                if (logChannelResponse.Content.Trim() == "!new-ticketlog")
+                {
+                    // Create new log channel
+                    logChannel = await Context.Guild.CreateTextChannelAsync("★-ticket-log-book");
+                    logChannelId = logChannel.Id;
+                    await ReplyAsync($"✅ Ticket log channel created: {logChannel.Mention}\nThe channel was set and is now available.");
+                }
+                else if (ulong.TryParse(logChannelResponse.Content.Trim(), out logChannelId))
+                {
+                    // Use existing channel
+                    logChannel = Context.Guild.GetTextChannel(logChannelId);
+                    if (logChannel == null)
+                    {
+                        await ReplyAsync("❌ Channel not found! Please provide a valid Channel ID from this server.");
+                        return;
+                    }
+                    await ReplyAsync($"✅ Ticket log channel set: {logChannel.Mention}");
+                }
+                else
+                {
+                    await ReplyAsync("❌ Invalid input! Please provide a Channel ID or type `!new-ticketlog`.");
+                    return;
+                }
+
+                // Save log channel configuration
                 var config = new TicketConfigEntry
                 {
-                    LogChannelId = Context.Channel.Id,
-                    TicketCategoryId = category?.Id,
-                    SupportRoleId = supportRole?.Id
+                    LogChannelId = logChannelId
                 };
                 TicketService.SetConfig(Context.Guild.Id, config);
 
-                // Send setup confirmation only
-                var setupEmbed = new EmbedBuilder()
-                    .WithTitle("✅ Ticket System Configured")
-                    .WithColor(Color.Green)
-                    .AddField("Log Channel", $"<#{Context.Channel.Id}>", true)
-                    .AddField("Category", category != null ? category.Name : "Default", true)
-                    .AddField("Support Role", supportRole != null ? supportRole.Mention : "None", true)
-                    .WithDescription("Users can now create tickets using the dropdown above!");
+                // Step 2: Ask if user wants to continue with ticket message
+                await ReplyAsync("Do you wanna go on, and set the Ticket-Create Message for your Members? You only have to type: **Yes [Y]** or **No [N]**\n\nIn both options you make I will save the setted log channel for you so you only need now the ticket message and your Support Corner is ready to go!");
 
-                await ReplyAsync(embed: setupEmbed.Build());
+                var continueResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                if (continueResponse == null)
+                {
+                    await ReplyAsync("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.");
+                    return;
+                }
+
+                var answer = continueResponse.Content.Trim().ToUpper();
+                if (answer != "Y" && answer != "YES")
+                {
+                    await ReplyAsync("✅ Setup complete! Log channel has been saved. Run this command again when you want to set up the ticket message.");
+                    return;
+                }
+
+                // Step 3: Ask for ticket message channel
+                await ReplyAsync("In which channel you want to have the ticket message to send? Type the Channel ID or type `!new-ticketchan` and the bot creates the channel and sends the Ticket Embed system message in there with the help categories and ticket opening tool.");
+
+                var ticketChannelResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                if (ticketChannelResponse == null)
+                {
+                    await ReplyAsync("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.");
+                    return;
+                }
+
+                ITextChannel ticketChannel;
+
+                if (ticketChannelResponse.Content.Trim() == "!new-ticketchan")
+                {
+                    // Create new ticket channel
+                    ticketChannel = await Context.Guild.CreateTextChannelAsync("★-support-tickets");
+                    await ReplyAsync($"✅ Ticket channel created: {ticketChannel.Mention}");
+                }
+                else if (ulong.TryParse(ticketChannelResponse.Content.Trim(), out var ticketChannelId))
+                {
+                    // Use existing channel
+                    ticketChannel = Context.Guild.GetTextChannel(ticketChannelId);
+                    if (ticketChannel == null)
+                    {
+                        await ReplyAsync("❌ Channel not found! Please provide a valid Channel ID from this server.");
+                        return;
+                    }
+                }
+                else
+                {
+                    await ReplyAsync("❌ Invalid input! Please provide a Channel ID or type `!new-ticketchan`.");
+                    return;
+                }
+
+                // Send ticket embed with dropdown menu
+                var ticketEmbed = new EmbedBuilder()
+                    .WithTitle("🎫 **Support Ticket System**")
+                    .WithDescription("**Need help or want to report an issue?**\n\nSelect the category that best describes your issue from the menu below, and we'll create a private ticket channel for you.")
+                    .WithColor(0x2f3136)
+                    .AddField("📋 **Available Support Categories**",
+                        "• **Technical Issue** - Bot not working, errors, bugs\n" +
+                        "• **Spam / Scam** - Report spam or scam content\n" +
+                        "• **Abuse / Harassment** - Report user misconduct\n" +
+                        "• **Advertising / Recruitment** - Report unwanted promotion\n" +
+                        "• **Bug / Feature Request** - Report bugs or suggest features\n" +
+                        "• **Other** - General questions or other issues", false)
+                    .WithFooter("Support tickets are private and only visible to you and server staff")
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                var selectMenu = new SelectMenuBuilder()
+                    .WithPlaceholder("Select your issue type...")
+                    .WithCustomId("support_select")
+                    .WithMinValues(1)
+                    .WithMaxValues(1)
+                    .AddOption("Technical Issue", "support_technical", "Bot errors, commands not working", new Emoji("🔧"))
+                    .AddOption("Spam / Scam", "support_spam", "Report spam or scam content", new Emoji("🚫"))
+                    .AddOption("Abuse / Harassment", "support_abuse", "Report user misconduct", new Emoji("⚠️"))
+                    .AddOption("Advertising / Recruitment", "support_ad", "Unwanted promotion", new Emoji("📢"))
+                    .AddOption("Bug / Feature Request", "support_bug", "Report bugs or suggest features", new Emoji("🐛"))
+                    .AddOption("Other", "support_other", "General questions", new Emoji("❓"));
+
+                var component = new ComponentBuilder()
+                    .WithSelectMenu(selectMenu)
+                    .Build();
+
+                await ticketChannel.SendMessageAsync(embed: ticketEmbed.Build(), components: component);
+
+                // Final confirmation
+                var finalEmbed = new EmbedBuilder()
+                    .WithTitle("✅ Ticket System Setup Complete!")
+                    .WithColor(Color.Green)
+                    .AddField("Log Channel", logChannel.Mention, true)
+                    .AddField("Ticket Channel", ticketChannel.Mention, true)
+                    .WithDescription("Your ticket system is now fully configured and ready to use!")
+                    .WithTimestamp(DateTimeOffset.UtcNow);
+
+                await ReplyAsync(embed: finalEmbed.Build());
             }
             catch (Exception ex)
             {
                 await ReplyAsync($"❌ Setup failed: {ex.Message}");
             }
+        }
+
+        private async Task<SocketMessage> NextMessageAsync(TimeSpan timeout)
+        {
+            var tcs = new TaskCompletionSource<SocketMessage>();
+
+            Task Handler(SocketMessage message)
+            {
+                if (message.Channel.Id == Context.Channel.Id && message.Author.Id == Context.User.Id && !message.Author.IsBot)
+                {
+                    tcs.SetResult(message);
+                }
+                return Task.CompletedTask;
+            }
+
+            Context.Client.MessageReceived += Handler;
+
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
+            Context.Client.MessageReceived -= Handler;
+
+            if (completedTask == tcs.Task)
+            {
+                return await tcs.Task;
+            }
+
+            return null;
         }
 
         [Command("ticket-close")]

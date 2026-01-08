@@ -173,7 +173,7 @@ namespace MainbotCSharp.Modules
                         {
                             try
                             {
-                                await channel.SendMessageAsync($"🎉 **Happy Birthdayyyy** <@{userId}>! 🎂🎈");
+                                await channel.SendMessageAsync($"★ Happy fucking birthday, you gorgeous thing! <@{userId}> 🎂🎉🎈");
                             }
                             catch (Exception ex)
                             {

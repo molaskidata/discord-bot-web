@@ -180,6 +180,37 @@ namespace MainbotCSharp
                     var comp = interaction as SocketMessageComponent;
                     if (comp == null) return;
                     var customId = comp.Data.CustomId;
+
+                    // helpdesk select menu
+                    if (customId == "helpdesk_select")
+                    {
+                        var value = comp.Data.Values.FirstOrDefault();
+                        string replyText = "";
+                        switch (value)
+                        {
+                            case "help_all":
+                                replyText = "Full command list: run `!help` in your server channel to see all commands.";
+                                break;
+                            case "help_voice":
+                                replyText = "Voice help: run `!helpvoice` in your server channel for voice commands.";
+                                break;
+                            case "help_secure":
+                                replyText = "Security help: run `!helpsecure` to see moderation commands.";
+                                break;
+                            case "help_bump":
+                                replyText = "Bump help: run `!helpbump` for bump/reminder commands.";
+                                break;
+                            case "help_birth":
+                                replyText = "Birthday help: run `!helpbirth` to configure birthdays.";
+                                break;
+                            default:
+                                replyText = "No information available for this selection.";
+                                break;
+                        }
+                        await comp.RespondAsync(replyText, ephemeral: true);
+                        return;
+                    }
+
                     // support select menu
                     if (customId == "support_select")
                     {

@@ -22,7 +22,6 @@ namespace MainbotCSharp.Modules
                     "• All Commands - Complete command overview\n" +
                     "• Voice - Voice channel management\n" +
                     "• Security - Moderation & security features\n" +
-                    "• Twitch - Twitch integration commands\n" +
                     "• Bump - Disboard bump reminders\n" +
                     "• Birthday - Birthday notification system", false)
                 .WithFooter("Made by OZZYGIRL/mungabee", "https://github.com/mungabee.png")
@@ -36,7 +35,6 @@ namespace MainbotCSharp.Modules
                 .AddOption("All Commands", "help_all", "Show complete command list", new Emoji("📜"))
                 .AddOption("Voice Features", "help_voice", "Voice channel management", new Emoji("🎤"))
                 .AddOption("Security Features", "help_secure", "Moderation & security", new Emoji("🛡️"))
-                .AddOption("Twitch Integration", "help_twitch", "Twitch commands", new Emoji("🎮"))
                 .AddOption("Bump Reminders", "help_bump", "Disboard bump system", new Emoji("🔔"))
                 .AddOption("Birthday System", "help_birth", "Birthday notifications", new Emoji("🎂"));
 
@@ -151,37 +149,6 @@ namespace MainbotCSharp.Modules
                     "`!securityreport @user [reason]` - Report user to security log\n" +
                     "`!whitelist @user` - Add user to security whitelist", false)
                 .WithFooter("Security system automatically monitors new members and suspicious activity");
-
-            await ReplyAsync(embed: embed.Build());
-        }
-
-        [Command("helptwitch")]
-        [Alias("helpytwitch")]
-        [Summary("Show detailed Twitch integration help")]
-        public async Task HelpTwitchAsync()
-        {
-            var embed = new EmbedBuilder()
-                .WithTitle("🎮 **Twitch Integration Help**")
-                .WithColor(0x9146FF)
-                .AddField("**Setup Commands** *(Admin only)*",
-                    "`!settwitch` - Link Twitch account and configure clip notifications\n" +
-                    "`!setchannel` - Create a new thread-only channel for clips *(use during setup)*\n" +
-                    "`!deletetwitch` - Delete your Twitch account data", false)
-                .AddField("**Testing & Management**",
-                    "`!testtwitch` - Test clip posting by fetching latest clip\n" +
-                    "`!twitchstatus` - Show current Twitch configuration\n" +
-                    "`!twitchstats` - Show your Twitch statistics", false)
-                .AddField("**How Twitch Integration Works**",
-                    "1. **Setup**: Admin runs `!settwitch` and links Twitch account\n" +
-                    "2. **Channel**: Bot creates/uses thread-only channel for clips\n" +
-                    "3. **Auto-Post**: Bot automatically posts new clips from your Twitch\n" +
-                    "4. **Notifications**: Server gets notified of new clips and highlights", false)
-                .AddField("**Features**",
-                    "• **Automatic Clip Detection** - New clips posted automatically\n" +
-                    "• **Thread Organization** - Each clip gets its own discussion thread\n" +
-                    "• **Stream Notifications** - Alerts when you go live\n" +
-                    "• **Statistics Tracking** - View count, clip performance", false)
-                .WithFooter("Twitch integration requires admin setup and valid Twitch account");
 
             await ReplyAsync(embed: embed.Build());
         }
