@@ -443,12 +443,22 @@ namespace MainbotCSharp.Modules
             try
             {
                 // Step 1: Ask for log channel
-                await ReplyAsync("What channel should be the ticket log channel? Write the Channel ID only in the chat or type `!new-ticketlog` and I create a ticket log channel for you. You can move it after where you want.");
+                var askEmbed = new EmbedBuilder()
+                    .WithTitle("🎫 Ticket System Setup")
+                    .WithDescription("What channel should be the ticket log channel?\n\nWrite the **Channel ID** only in the chat or type `!new-ticketlog` and I create a ticket log channel for you. You can move it after where you want.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: askEmbed);
 
                 var logChannelResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
                 if (logChannelResponse == null)
                 {
-                    await ReplyAsync("❌ Timeout! Please try again.");
+                    var timeoutEmbed = new EmbedBuilder()
+                        .WithTitle("⏰ Timeout")
+                        .WithDescription("❌ Timeout! Please try again.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: timeoutEmbed);
                     return;
                 }
 
@@ -460,7 +470,12 @@ namespace MainbotCSharp.Modules
                     // Create new log channel
                     logChannel = await Context.Guild.CreateTextChannelAsync("★-ticket-log-book");
                     logChannelId = logChannel.Id;
-                    await ReplyAsync($"✅ Ticket log channel created: {logChannel.Mention}\nThe channel was set and is now available.");
+                    var createdEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Channel Created")
+                        .WithDescription($"Ticket log channel created: {logChannel.Mention}\nThe channel was set and is now available.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: createdEmbed);
                 }
                 else if (ulong.TryParse(logChannelResponse.Content.Trim(), out logChannelId))
                 {
@@ -468,14 +483,29 @@ namespace MainbotCSharp.Modules
                     logChannel = Context.Guild.GetTextChannel(logChannelId);
                     if (logChannel == null)
                     {
-                        await ReplyAsync("❌ Channel not found! Please provide a valid Channel ID from this server.");
+                        var notFoundEmbed = new EmbedBuilder()
+                            .WithTitle("❌ Not Found")
+                            .WithDescription("Channel not found! Please provide a valid Channel ID from this server.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: notFoundEmbed);
                         return;
                     }
-                    await ReplyAsync($"✅ Ticket log channel set: {logChannel.Mention}");
+                    var setEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Channel Set")
+                        .WithDescription($"Ticket log channel set: {logChannel.Mention}")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: setEmbed);
                 }
                 else
                 {
-                    await ReplyAsync("❌ Invalid input! Please provide a Channel ID or type `!new-ticketlog`.");
+                    var invalidEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Invalid Input")
+                        .WithDescription("Invalid input! Please provide a Channel ID or type `!new-ticketlog`.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: invalidEmbed);
                     return;
                 }
 
@@ -487,29 +517,54 @@ namespace MainbotCSharp.Modules
                 TicketService.SetConfig(Context.Guild.Id, config);
 
                 // Step 2: Ask if user wants to continue with ticket message
-                await ReplyAsync("Do you wanna go on, and set the Ticket-Create Message for your Members? You only have to type: **Yes [Y]** or **No [N]**\n\nIn both options you make I will save the setted log channel for you so you only need now the ticket message and your Support Corner is ready to go!");
+                var continueEmbed = new EmbedBuilder()
+                    .WithTitle("🎫 Continue Setup?")
+                    .WithDescription("Do you wanna go on, and set the Ticket-Create Message for your Members?\n\nYou only have to type: **Yes [Y]** or **No [N]**\n\nIn both options you make I will save the setted log channel for you so you only need now the ticket message and your Support Corner is ready to go!")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: continueEmbed);
 
                 var continueResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
                 if (continueResponse == null)
                 {
-                    await ReplyAsync("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.");
+                    var timeoutEmbed = new EmbedBuilder()
+                        .WithTitle("⏰ Timeout")
+                        .WithDescription("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: timeoutEmbed);
                     return;
                 }
 
                 var answer = continueResponse.Content.Trim().ToUpper();
                 if (answer != "Y" && answer != "YES")
                 {
-                    await ReplyAsync("✅ Setup complete! Log channel has been saved. Run this command again when you want to set up the ticket message.");
+                    var completeEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Setup Complete")
+                        .WithDescription("Setup complete! Log channel has been saved. Run this command again when you want to set up the ticket message.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: completeEmbed);
                     return;
                 }
 
                 // Step 3: Ask for ticket message channel
-                await ReplyAsync("In which channel you want to have the ticket message to send? Type the Channel ID or type `!new-ticketchan` and the bot creates the channel and sends the Ticket Embed system message in there with the help categories and ticket opening tool.");
+                var ticketChanEmbed = new EmbedBuilder()
+                    .WithTitle("📝 Ticket Message Channel")
+                    .WithDescription("In which channel you want to have the ticket message to send?\n\nType the **Channel ID** or type `!new-ticketchan` and the bot creates the channel and sends the Ticket Embed system message in there with the help categories and ticket opening tool.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: ticketChanEmbed);
 
                 var ticketChannelResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
                 if (ticketChannelResponse == null)
                 {
-                    await ReplyAsync("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.");
+                    var timeoutEmbed = new EmbedBuilder()
+                        .WithTitle("⏰ Timeout")
+                        .WithDescription("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: timeoutEmbed);
                     return;
                 }
 
@@ -519,7 +574,12 @@ namespace MainbotCSharp.Modules
                 {
                     // Create new ticket channel
                     ticketChannel = await Context.Guild.CreateTextChannelAsync("★-support-tickets");
-                    await ReplyAsync($"✅ Ticket channel created: {ticketChannel.Mention}");
+                    var createdEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Channel Created")
+                        .WithDescription($"Ticket channel created: {ticketChannel.Mention}")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: createdEmbed);
                 }
                 else if (ulong.TryParse(ticketChannelResponse.Content.Trim(), out var ticketChannelId))
                 {
@@ -527,13 +587,23 @@ namespace MainbotCSharp.Modules
                     ticketChannel = Context.Guild.GetTextChannel(ticketChannelId);
                     if (ticketChannel == null)
                     {
-                        await ReplyAsync("❌ Channel not found! Please provide a valid Channel ID from this server.");
+                        var notFoundEmbed = new EmbedBuilder()
+                            .WithTitle("❌ Not Found")
+                            .WithDescription("Channel not found! Please provide a valid Channel ID from this server.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: notFoundEmbed);
                         return;
                     }
                 }
                 else
                 {
-                    await ReplyAsync("❌ Invalid input! Please provide a Channel ID or type `!new-ticketchan`.");
+                    var invalidEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Invalid Input")
+                        .WithDescription("Invalid input! Please provide a Channel ID or type `!new-ticketchan`.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: invalidEmbed);
                     return;
                 }
 
@@ -583,7 +653,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Setup failed: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Setup Failed")
+                    .WithDescription($"Setup failed: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -621,7 +696,12 @@ namespace MainbotCSharp.Modules
             {
                 if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
                 {
-                    await ReplyAsync("❌ This is not a ticket channel.");
+                    var notTicketEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not a Ticket Channel")
+                        .WithDescription("This is not a ticket channel.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notTicketEmbed);
                     return;
                 }
 
@@ -633,7 +713,12 @@ namespace MainbotCSharp.Modules
 
                 if (!canClose)
                 {
-                    await ReplyAsync("❌ Only the ticket creator or support team can close this ticket.");
+                    var noPermEmbed = new EmbedBuilder()
+                        .WithTitle("❌ No Permission")
+                        .WithDescription("Only the ticket creator or support team can close this ticket.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: noPermEmbed);
                     return;
                 }
 
@@ -649,7 +734,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to close ticket: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed")
+                    .WithDescription($"Failed to close ticket: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -661,7 +751,12 @@ namespace MainbotCSharp.Modules
             {
                 if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
                 {
-                    await ReplyAsync("❌ This is not a ticket channel.");
+                    var notTicketEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not a Ticket Channel")
+                        .WithDescription("This is not a ticket channel.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notTicketEmbed);
                     return;
                 }
 
@@ -672,7 +767,12 @@ namespace MainbotCSharp.Modules
 
                 if (!canAddUser)
                 {
-                    await ReplyAsync("❌ Only the ticket creator or staff can add users.");
+                    var noPermEmbed = new EmbedBuilder()
+                        .WithTitle("❌ No Permission")
+                        .WithDescription("Only the ticket creator or staff can add users.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: noPermEmbed);
                     return;
                 }
 
@@ -691,7 +791,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to add user: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed")
+                    .WithDescription($"Failed to add user: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -703,13 +808,23 @@ namespace MainbotCSharp.Modules
             {
                 if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
                 {
-                    await ReplyAsync("❌ This is not a ticket channel.");
+                    var notTicketEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not a Ticket Channel")
+                        .WithDescription("This is not a ticket channel.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notTicketEmbed);
                     return;
                 }
 
                 if (userToRemove.Id == meta.UserId)
                 {
-                    await ReplyAsync("❌ Cannot remove the ticket creator.");
+                    var cannotRemoveEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Cannot Remove")
+                        .WithDescription("Cannot remove the ticket creator.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: cannotRemoveEmbed);
                     return;
                 }
 
@@ -720,7 +835,12 @@ namespace MainbotCSharp.Modules
 
                 if (!canRemoveUser)
                 {
-                    await ReplyAsync("❌ Only the ticket creator or staff can remove users.");
+                    var noPermEmbed = new EmbedBuilder()
+                        .WithTitle("❌ No Permission")
+                        .WithDescription("Only the ticket creator or staff can remove users.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: noPermEmbed);
                     return;
                 }
 
@@ -736,7 +856,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to remove user: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed")
+                    .WithDescription($"Failed to remove user: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -773,7 +898,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to get status: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed")
+                    .WithDescription($"Failed to get status: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -785,17 +915,39 @@ namespace MainbotCSharp.Modules
             {
                 if (!TicketService.TicketMetas.TryGetValue(Context.Channel.Id, out var meta))
                 {
-                    await ReplyAsync("❌ This is not a ticket channel.");
+                    var notTicketEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not a Ticket Channel")
+                        .WithDescription("This is not a ticket channel.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notTicketEmbed);
                     return;
                 }
 
-                await ReplyAsync("📋 Generating transcript...");
+                var generatingEmbed = new EmbedBuilder()
+                    .WithTitle("📋 Generating Transcript")
+                    .WithDescription("Generating transcript...")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: generatingEmbed);
+                
                 await TicketService.SaveTranscriptAsync(Context.Guild, Context.Channel as SocketTextChannel, meta);
-                await ReplyAsync("✅ Transcript generated and saved to logs!");
+                
+                var successEmbed = new EmbedBuilder()
+                    .WithTitle("✅ Transcript Generated")
+                    .WithDescription("Transcript generated and saved to logs!")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: successEmbed);
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to generate transcript: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed")
+                    .WithDescription($"Failed to generate transcript: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -809,16 +961,32 @@ namespace MainbotCSharp.Modules
                 var config = TicketService.GetConfig(Context.Guild.Id);
                 if (config == null)
                 {
-                    await ReplyAsync("❌ No ticket system configured for this server.");
+                    var notConfiguredEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not Configured")
+                        .WithDescription("No ticket system configured for this server.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notConfiguredEmbed);
                     return;
                 }
 
                 TicketService.RemoveConfig(Context.Guild.Id);
-                await ReplyAsync("✅ Ticket system log channel configuration removed. Ticket system is still active but won't log to a channel anymore.");
+                
+                var successEmbed = new EmbedBuilder()
+                    .WithTitle("✅ Configuration Removed")
+                    .WithDescription("Ticket system log channel configuration removed. Ticket system is still active but won't log to a channel anymore.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: successEmbed);
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to remove configuration: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed")
+                    .WithDescription($"Failed to remove configuration: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -832,7 +1000,12 @@ namespace MainbotCSharp.Modules
                 var config = TicketService.GetConfig(Context.Guild.Id);
                 if (config == null)
                 {
-                    await ReplyAsync("❌ No ticket system configured for this server.");
+                    var notConfiguredEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not Configured")
+                        .WithDescription("No ticket system configured for this server.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notConfiguredEmbed);
                     return;
                 }
 
@@ -844,11 +1017,21 @@ namespace MainbotCSharp.Modules
                     TicketService.TicketMetas.TryRemove(ticketChannelId, out _);
                 }
 
-                await ReplyAsync("✅ Ticket system completely deactivated. All ticket functions are now disabled. No channels were deleted.");
+                var successEmbed = new EmbedBuilder()
+                    .WithTitle("✅ System Deactivated")
+                    .WithDescription("Ticket system completely deactivated. All ticket functions are now disabled. No channels were deleted.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: successEmbed);
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to deactivate ticket system: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed")
+                    .WithDescription($"Failed to deactivate ticket system: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
     }

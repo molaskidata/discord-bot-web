@@ -527,12 +527,22 @@ namespace MainbotCSharp.Modules
             try
             {
                 // Step 1: Ask for security log channel
-                await ReplyAsync("What channel should be the security log channel? Write the Channel ID only in the chat or type `!new-securechan` and I will create a security channel for you.");
+                var askEmbed = new EmbedBuilder()
+                    .WithTitle("🛡️ Security System Setup")
+                    .WithDescription("What channel should be the security log channel?\n\nWrite the **Channel ID** only in the chat or type `!new-securechan` and I will create a security channel for you.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: askEmbed);
 
                 var channelResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
                 if (channelResponse == null)
                 {
-                    await ReplyAsync("❌ Timeout! Please try again.");
+                    var timeoutEmbed = new EmbedBuilder()
+                        .WithTitle("⏰ Timeout")
+                        .WithDescription("❌ Timeout! Please try again.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: timeoutEmbed);
                     return;
                 }
 
@@ -542,25 +552,45 @@ namespace MainbotCSharp.Modules
                 if (channelResponse.Content.Trim() == "!new-securechan")
                 {
                     // Ask for category
-                    await ReplyAsync("In which category should the channel be created? Write the Category ID only.");
+                    var categoryAskEmbed = new EmbedBuilder()
+                        .WithTitle("📁 Category Selection")
+                        .WithDescription("In which category should the channel be created?\n\nWrite the **Category ID** only.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: categoryAskEmbed);
 
                     var categoryResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
                     if (categoryResponse == null)
                     {
-                        await ReplyAsync("❌ Timeout! Please try again.");
+                        var timeoutEmbed = new EmbedBuilder()
+                            .WithTitle("⏰ Timeout")
+                            .WithDescription("❌ Timeout! Please try again.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: timeoutEmbed);
                         return;
                     }
 
                     if (!ulong.TryParse(categoryResponse.Content.Trim(), out var categoryId))
                     {
-                        await ReplyAsync("❌ Invalid Category ID! Please provide a valid Category ID.");
+                        var invalidEmbed = new EmbedBuilder()
+                            .WithTitle("❌ Invalid Input")
+                            .WithDescription("Invalid Category ID! Please provide a valid Category ID.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: invalidEmbed);
                         return;
                     }
 
                     var category = Context.Guild.GetCategoryChannel(categoryId);
                     if (category == null)
                     {
-                        await ReplyAsync("❌ Category not found! Please provide a valid Category ID from this server.");
+                        var notFoundEmbed = new EmbedBuilder()
+                            .WithTitle("❌ Not Found")
+                            .WithDescription("Category not found! Please provide a valid Category ID from this server.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: notFoundEmbed);
                         return;
                     }
 
@@ -570,7 +600,12 @@ namespace MainbotCSharp.Modules
                         properties.CategoryId = categoryId;
                     });
                     logChannelId = logChannel.Id;
-                    await ReplyAsync($"✅ Security channel created: {logChannel.Mention}\nThe channel was set in category: **{category.Name}**");
+                    var createdEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Channel Created")
+                        .WithDescription($"Security channel created: {logChannel.Mention}\nThe channel was set in category: **{category.Name}**")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: createdEmbed);
                 }
                 else if (ulong.TryParse(channelResponse.Content.Trim(), out logChannelId))
                 {
@@ -578,14 +613,29 @@ namespace MainbotCSharp.Modules
                     logChannel = Context.Guild.GetTextChannel(logChannelId);
                     if (logChannel == null)
                     {
-                        await ReplyAsync("❌ Channel not found! Please provide a valid Channel ID from this server.");
+                        var notFoundEmbed = new EmbedBuilder()
+                            .WithTitle("❌ Not Found")
+                            .WithDescription("Channel not found! Please provide a valid Channel ID from this server.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: notFoundEmbed);
                         return;
                     }
-                    await ReplyAsync($"✅ Security log channel set: {logChannel.Mention}");
+                    var setEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Channel Set")
+                        .WithDescription($"Security log channel set: {logChannel.Mention}")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: setEmbed);
                 }
                 else
                 {
-                    await ReplyAsync("❌ Invalid input! Please provide a Channel ID or type `!new-securechan`.");
+                    var invalidEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Invalid Input")
+                        .WithDescription("Invalid input! Please provide a Channel ID or type `!new-securechan`.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: invalidEmbed);
                     return;
                 }
 
@@ -621,7 +671,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Setup failed: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Setup Failed")
+                    .WithDescription($"Setup failed: {ex.Message}")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -769,13 +824,23 @@ namespace MainbotCSharp.Modules
             {
                 if (user.Id == Context.User.Id)
                 {
-                    await ReplyAsync("❌ You cannot kick yourself!");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Cannot Kick")
+                        .WithDescription("You cannot kick yourself!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
                 if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
                 {
-                    await ReplyAsync("❌ You cannot kick users with equal or higher roles!");
+                    var hierarchyEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Cannot Kick")
+                        .WithDescription("You cannot kick users with equal or higher roles!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: hierarchyEmbed);
                     return;
                 }
 
@@ -813,13 +878,23 @@ namespace MainbotCSharp.Modules
             {
                 if (user.Id == Context.User.Id)
                 {
-                    await ReplyAsync("❌ You cannot ban yourself!");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Cannot Ban")
+                        .WithDescription("You cannot ban yourself!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
                 if (user.Hierarchy >= (Context.User as SocketGuildUser)?.Hierarchy)
                 {
-                    await ReplyAsync("❌ You cannot ban users with equal or higher roles!");
+                    var hierarchyEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Cannot Ban")
+                        .WithDescription("You cannot ban users with equal or higher roles!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: hierarchyEmbed);
                     return;
                 }
 
@@ -911,11 +986,21 @@ namespace MainbotCSharp.Modules
             {
                 if (amount <= 0 || amount > 1000)
                 {
-                    await ReplyAsync("❌ Please provide a number between 1 and 1000.");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Invalid Amount")
+                        .WithDescription("Please provide a number between 1 and 1000.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
-                await ReplyAsync($"🧹 Deleting {amount} messages... Please wait.");
+                var deletingEmbed = new EmbedBuilder()
+                    .WithTitle("🧹 Cleaning Messages")
+                    .WithDescription($"Deleting {amount} messages... Please wait.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: deletingEmbed);
 
                 var messages = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync(); // +1 for the command message
                 var deleteableMessages = messages.Where(x => 
@@ -961,11 +1046,21 @@ namespace MainbotCSharp.Modules
                 var textChannel = Context.Guild.GetTextChannel(channelId);
                 if (textChannel == null)
                 {
-                    await ReplyAsync("❌ Channel not found! Please provide a valid channel ID.");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Channel Not Found")
+                        .WithDescription("Channel not found! Please provide a valid channel ID.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
-                await ReplyAsync($"🧹 Starting cleanup of {textChannel.Mention}... This may take a while.");
+                var startEmbed = new EmbedBuilder()
+                    .WithTitle("🧹 Starting Cleanup")
+                    .WithDescription($"Starting cleanup of {textChannel.Mention}... This may take a while.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: startEmbed);
 
                 int totalDeleted = 0;
                 bool hasMore = true;
@@ -1041,7 +1136,12 @@ namespace MainbotCSharp.Modules
                 var channel = Context.Guild.GetTextChannel(channelId);
                 if (channel == null)
                 {
-                    await ReplyAsync("❌ Channel not found! Make sure the channel ID is correct and the bot has access to it.");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Channel Not Found")
+                        .WithDescription("Channel not found! Make sure the channel ID is correct and the bot has access to it.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
@@ -1076,7 +1176,12 @@ namespace MainbotCSharp.Modules
                 var currentInterval = SecurityService.GetCleanupInterval(Context.Guild.Id);
                 if (currentInterval == null)
                 {
-                    await ReplyAsync("❌ No cleanup interval is currently set for this server.");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not Configured")
+                        .WithDescription("No cleanup interval is currently set for this server.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
@@ -1113,7 +1218,12 @@ namespace MainbotCSharp.Modules
             {
                 if (user.Id == Context.User.Id)
                 {
-                    await ReplyAsync("❌ You cannot warn yourself!");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Cannot Warn")
+                        .WithDescription("You cannot warn yourself!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
@@ -1168,13 +1278,23 @@ namespace MainbotCSharp.Modules
             {
                 if (user.Id == Context.User.Id)
                 {
-                    await ReplyAsync("❌ You cannot remove timeout from yourself!");
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Cannot Remove Timeout")
+                        .WithDescription("You cannot remove timeout from yourself!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: errorEmbed);
                     return;
                 }
 
                 if (user.TimedOutUntil == null || user.TimedOutUntil <= DateTimeOffset.UtcNow)
                 {
-                    await ReplyAsync("❌ This user is not timed out!");
+                    var notTimedOutEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Not Timed Out")
+                        .WithDescription("This user is not timed out!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notTimedOutEmbed);
                     return;
                 }
 

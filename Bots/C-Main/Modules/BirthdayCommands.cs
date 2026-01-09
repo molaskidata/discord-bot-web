@@ -16,7 +16,12 @@ namespace MainbotCSharp.Modules
         {
             if (string.IsNullOrWhiteSpace(arg))
             {
-                await ReplyAsync("❌ Please provide either a channel ID or use `!new-birthchan` to create a new channel.\n\n**Usage:**\n`!birthdaychannel CHANNEL_ID` - Use existing channel\n`!birthdaychannel !new-birthchan` - Create new channel");
+                var usageEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Missing Input")
+                    .WithDescription("Please provide either a channel ID or use `!new-birthchan` to create a new channel.\n\n**Usage:**\n`!birthdaychannel CHANNEL_ID` - Use existing channel\n`!birthdaychannel !new-birthchan` - Create new channel")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: usageEmbed);
                 return;
             }
 
@@ -54,7 +59,12 @@ namespace MainbotCSharp.Modules
                     var channel = Context.Guild.GetTextChannel(channelId);
                     if (channel == null)
                     {
-                        await ReplyAsync("❌ Channel not found! Please provide a valid channel ID from this server.");
+                        var notFoundEmbed = new EmbedBuilder()
+                            .WithTitle("❌ Channel Not Found")
+                            .WithDescription("Channel not found! Please provide a valid channel ID from this server.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: notFoundEmbed);
                         return;
                     }
 

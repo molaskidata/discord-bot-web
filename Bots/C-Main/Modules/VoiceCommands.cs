@@ -353,7 +353,12 @@ namespace MainbotCSharp.Modules
             var ownerInfo = VoiceService.GetActiveChannelByOwner(Context.User.Id);
             if (ownerInfo == null)
             {
-                await ReplyAsync("❌ You don't own an active voice channel.");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ No Channel")
+                    .WithDescription("You don't own an active voice channel.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
                 return;
             }
 
@@ -370,14 +375,24 @@ namespace MainbotCSharp.Modules
 
             if (channelId == 0)
             {
-                await ReplyAsync("❌ Cannot find your channel.");
+                var notFoundEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Not Found")
+                    .WithDescription("Cannot find your channel.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: notFoundEmbed);
                 return;
             }
 
             var channel = Context.Guild.GetVoiceChannel(channelId);
             if (channel == null)
             {
-                await ReplyAsync("❌ Channel not found.");
+                var channelNotFoundEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Not Found")
+                    .WithDescription("Channel not found.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: channelNotFoundEmbed);
                 return;
             }
 
@@ -398,7 +413,12 @@ namespace MainbotCSharp.Modules
         {
             if (limit < 0 || limit > 99)
             {
-                await ReplyAsync("❌ Limit must be between 0-99 (0 = unlimited)");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Invalid Limit")
+                    .WithDescription("Limit must be between 0-99 (0 = unlimited)")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
                 return;
             }
 
@@ -406,7 +426,12 @@ namespace MainbotCSharp.Modules
             var ownerInfo = VoiceService.GetActiveChannelByOwner(Context.User.Id);
             if (ownerInfo == null)
             {
-                await ReplyAsync("❌ You don't own an active voice channel.");
+                var noChannelEmbed = new EmbedBuilder()
+                    .WithTitle("❌ No Channel")
+                    .WithDescription("You don't own an active voice channel.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: noChannelEmbed);
                 return;
             }
 
@@ -423,7 +448,12 @@ namespace MainbotCSharp.Modules
             var channel = Context.Guild.GetVoiceChannel(channelId);
             if (channel == null)
             {
-                await ReplyAsync("❌ Channel not found.");
+                var notFoundEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Not Found")
+                    .WithDescription("Channel not found.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: notFoundEmbed);
                 return;
             }
 
@@ -446,7 +476,12 @@ namespace MainbotCSharp.Modules
             var ownerInfo = VoiceService.GetActiveChannelByOwner(Context.User.Id);
             if (ownerInfo == null)
             {
-                await ReplyAsync("❌ You don't own an active voice channel.");
+                var noChannelEmbed = new EmbedBuilder()
+                    .WithTitle("❌ No Channel")
+                    .WithDescription("You don't own an active voice channel.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: noChannelEmbed);
                 return;
             }
 
@@ -463,7 +498,12 @@ namespace MainbotCSharp.Modules
             var channel = Context.Guild.GetVoiceChannel(channelId);
             if (channel == null)
             {
-                await ReplyAsync("❌ Channel not found.");
+                var notFoundEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Not Found")
+                    .WithDescription("Channel not found.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: notFoundEmbed);
                 return;
             }
 
@@ -480,7 +520,13 @@ namespace MainbotCSharp.Modules
                 overwrites.Add(ownerOverwrite);
 
                 await channel.ModifyAsync(p => p.PermissionOverwrites = overwrites);
-                await ReplyAsync("🔒 **Channel is now private**");
+                
+                var successEmbed = new EmbedBuilder()
+                    .WithTitle("🔒 Channel is Now Private")
+                    .WithDescription("Your voice channel has been made private.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: successEmbed);
 
                 svc.ActiveChannels[channelId].IsPrivate = true;
                 VoiceService.SetConfig(svc);
@@ -499,7 +545,12 @@ namespace MainbotCSharp.Modules
             var ownerInfo = VoiceService.GetActiveChannelByOwner(Context.User.Id);
             if (ownerInfo == null)
             {
-                await ReplyAsync("❌ You don't own an active voice channel.");
+                var noChannelEmbed = new EmbedBuilder()
+                    .WithTitle("❌ No Channel")
+                    .WithDescription("You don't own an active voice channel.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: noChannelEmbed);
                 return;
             }
 
@@ -516,7 +567,12 @@ namespace MainbotCSharp.Modules
             var channel = Context.Guild.GetVoiceChannel(channelId);
             if (channel == null)
             {
-                await ReplyAsync("❌ Channel not found.");
+                var notFoundEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Not Found")
+                    .WithDescription("Channel not found.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: notFoundEmbed);
                 return;
             }
 
@@ -526,7 +582,13 @@ namespace MainbotCSharp.Modules
                 overwrites.RemoveAll(o => o.TargetId == Context.Guild.EveryoneRole.Id);
 
                 await channel.ModifyAsync(p => p.PermissionOverwrites = overwrites);
-                await ReplyAsync("🔓 **Channel is now public**");
+                
+                var successEmbed = new EmbedBuilder()
+                    .WithTitle("🔓 Channel is Now Public")
+                    .WithDescription("Your voice channel has been made public.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: successEmbed);
 
                 svc.ActiveChannels[channelId].IsPrivate = false;
                 VoiceService.SetConfig(svc);

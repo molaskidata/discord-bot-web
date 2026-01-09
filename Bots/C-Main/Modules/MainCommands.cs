@@ -255,16 +255,31 @@ namespace MainbotCSharp.Modules
             if (action.ToLower() == "on")
             {
                 BumpReminderService.SetBumpReminder(Context.Guild.Id, Context.Channel.Id);
-                await ReplyAsync("✅ Bump reminders have been activated! You will be notified when the server can be bumped again.");
+                var onEmbed = new EmbedBuilder()
+                    .WithTitle("✅ Bump Reminders Activated")
+                    .WithDescription("Bump reminders have been activated! You will be notified when the server can be bumped again.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: onEmbed);
             }
             else if (action.ToLower() == "off")
             {
                 BumpReminderService.RemoveBumpReminder(Context.Guild.Id);
-                await ReplyAsync("❌ Bump reminders have been deactivated.");
+                var offEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Bump Reminders Deactivated")
+                    .WithDescription("Bump reminders have been deactivated.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: offEmbed);
             }
             else
             {
-                await ReplyAsync("❌ Invalid option. Use `on` or `off`.");
+                var invalidEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Invalid Option")
+                    .WithDescription("Invalid option. Use `on` or `off`.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: invalidEmbed);
             }
         }
 
@@ -354,15 +369,25 @@ namespace MainbotCSharp.Modules
                 var originalMessage = await Context.Channel.GetMessageAsync(messageId);
                 if (originalMessage == null)
                 {
-                    await ReplyAsync("❌ Message not found in this channel!");
+                    var notFoundEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Message Not Found")
+                        .WithDescription("Message not found in this channel!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: notFoundEmbed);
                     return;
                 }
 
                 // Get target channel
-                var targetChannel = Context.Guild.GetTextChannel(channelId);
+                var targetChannel = Context.Guild.GetTextChannel(targetChannelId);
                 if (targetChannel == null)
                 {
-                    await ReplyAsync("❌ Target channel not found or not accessible!");
+                    var chanNotFoundEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Channel Not Found")
+                        .WithDescription("Target channel not found or not accessible!")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: chanNotFoundEmbed);
                     return;
                 }
 

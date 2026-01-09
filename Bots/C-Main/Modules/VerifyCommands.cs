@@ -441,7 +441,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to verify: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed to Verify")
+                    .WithDescription("Failed to verify user.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
@@ -486,7 +491,12 @@ namespace MainbotCSharp.Modules
             }
             catch (Exception ex)
             {
-                await ReplyAsync($"❌ Failed to unverify: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Failed to Unverify")
+                    .WithDescription("Failed to unverify user.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: errorEmbed);
             }
         }
 
