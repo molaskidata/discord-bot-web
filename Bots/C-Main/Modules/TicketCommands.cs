@@ -711,9 +711,13 @@ namespace MainbotCSharp.Modules
                         return;
                     }
 
-                    // Update config with ticket category
-                    config.TicketCategoryId = ticketCategoryId;
-                    TicketService.SetConfig(Context.Guild.Id, config);
+                    // Reload config to ensure we have the latest version
+                    var currentConfig = TicketService.GetConfig(Context.Guild.Id);
+                    if (currentConfig != null)
+                    {
+                        currentConfig.TicketCategoryId = ticketCategoryId;
+                        TicketService.SetConfig(Context.Guild.Id, currentConfig);
+                    }
 
                     var categorySetEmbed = new EmbedBuilder()
                         .WithTitle("✅ Category Set")
@@ -734,12 +738,13 @@ namespace MainbotCSharp.Modules
                 }
 
                 // Final confirmation
+                var finalConfig = TicketService.GetConfig(Context.Guild.Id);
                 var finalEmbed = new EmbedBuilder()
                     .WithTitle("✅ Ticket System Setup Complete!")
                     .WithColor(Color.Green)
                     .AddField("Log Channel", logChannel.Mention, true)
                     .AddField("Ticket Channel", ticketChannel.Mention, true)
-                    .AddField("Ticket Category", $"<#{config.TicketCategoryId}>", true)
+                    .AddField("Ticket Category", finalConfig?.TicketCategoryId.HasValue == true ? $"<#{finalConfig.TicketCategoryId}>" : "Not set", true)
                     .WithDescription("Your ticket system is now fully configured and ready to use!")
                     .WithTimestamp(DateTimeOffset.UtcNow);
 
