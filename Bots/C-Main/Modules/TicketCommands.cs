@@ -677,12 +677,69 @@ namespace MainbotCSharp.Modules
 
                 await ticketChannel.SendMessageAsync(embed: ticketEmbed.Build(), components: component);
 
+                // Step 3: Ask for ticket category (where actual tickets will be created)
+                var ticketCategoryEmbed = new EmbedBuilder()
+                    .WithTitle("📁 Ticket Creation Category")
+                    .WithDescription("In which **Category** should the bot create the individual support tickets when users open them?\n\nType the **Category ID** where all new tickets will be created.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await ReplyAsync(embed: ticketCategoryEmbed);
+
+                var ticketCategoryResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                if (ticketCategoryResponse == null)
+                {
+                    var timeoutEmbed = new EmbedBuilder()
+                        .WithTitle("⏰ Timeout")
+                        .WithDescription("❌ Timeout! Setup is incomplete. Tickets will be created at the top of the server. You can run this command again to complete the setup.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: timeoutEmbed);
+                    return;
+                }
+
+                if (ulong.TryParse(ticketCategoryResponse.Content.Trim(), out var ticketCategoryId))
+                {
+                    var ticketCategory = Context.Guild.GetCategoryChannel(ticketCategoryId);
+                    if (ticketCategory == null)
+                    {
+                        var notFoundEmbed = new EmbedBuilder()
+                            .WithTitle("❌ Not Found")
+                            .WithDescription("Category not found! Please provide a valid Category ID from this server. Tickets will be created at the top of the server.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: notFoundEmbed);
+                        return;
+                    }
+
+                    // Update config with ticket category
+                    config.TicketCategoryId = ticketCategoryId;
+                    TicketService.SetConfig(Context.Guild.Id, config);
+
+                    var categorySetEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Category Set")
+                        .WithDescription($"Tickets will be created in category: **{ticketCategory.Name}**")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: categorySetEmbed);
+                }
+                else
+                {
+                    var invalidEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Invalid Input")
+                        .WithDescription("Invalid input! Please provide a valid Category ID. Tickets will be created at the top of the server.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: invalidEmbed);
+                    return;
+                }
+
                 // Final confirmation
                 var finalEmbed = new EmbedBuilder()
                     .WithTitle("✅ Ticket System Setup Complete!")
                     .WithColor(Color.Green)
                     .AddField("Log Channel", logChannel.Mention, true)
                     .AddField("Ticket Channel", ticketChannel.Mention, true)
+                    .AddField("Ticket Category", $"<#{config.TicketCategoryId}>", true)
                     .WithDescription("Your ticket system is now fully configured and ready to use!")
                     .WithTimestamp(DateTimeOffset.UtcNow);
 
