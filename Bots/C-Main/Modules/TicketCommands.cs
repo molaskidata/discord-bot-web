@@ -89,6 +89,8 @@ namespace MainbotCSharp.Modules
                 var config = GetConfig(guild.Id);
                 var channelName = $"ticket-{user.Username}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
 
+                Console.WriteLine($"[TicketDebug] Starting ticket creation for {user.Username} in guild {guild.Name}");
+
                 var overwrites = new List<Overwrite>
                 {
                     new Overwrite(guild.EveryoneRole.Id, PermissionTarget.Role, new OverwritePermissions(viewChannel: PermValue.Deny)),
@@ -110,6 +112,8 @@ namespace MainbotCSharp.Modules
                     Console.WriteLine($"[TicketDebug] Found category: {(cat != null ? cat.Name : "NOT FOUND")} (ID: {config.TicketCategoryId.Value})");
                 }
 
+                Console.WriteLine($"[TicketDebug] Creating channel with name: {channelName}");
+
                 var restChannel = await guild.CreateTextChannelAsync(channelName, properties =>
                 {
                     if (config?.TicketCategoryId.HasValue == true)
@@ -118,9 +122,17 @@ namespace MainbotCSharp.Modules
                     properties.PermissionOverwrites = overwrites;
                 });
 
+                Console.WriteLine($"[TicketDebug] Channel created successfully: {restChannel.Name} (ID: {restChannel.Id})");
+
                 // Convert RestTextChannel to SocketTextChannel
                 var channel = guild.GetTextChannel(restChannel.Id);
-                if (channel == null) return null;
+                if (channel == null) 
+                {
+                    Console.WriteLine($"[TicketDebug] ERROR: Could not get SocketTextChannel for {restChannel.Id}");
+                    return null;
+                }
+
+                Console.WriteLine($"[TicketDebug] SocketTextChannel obtained: {channel.Name}");
 
                 // Store ticket metadata
                 TicketMetas[channel.Id] = new TicketMeta
@@ -130,6 +142,8 @@ namespace MainbotCSharp.Modules
                     GuildId = guild.Id,
                     Username = user.Username
                 };
+
+                Console.WriteLine($"[TicketDebug] Ticket metadata stored for channel {channel.Id}");
 
                 // Send initial ticket message with close button
                 var embed = new EmbedBuilder()
@@ -145,22 +159,29 @@ namespace MainbotCSharp.Modules
                     .WithButton("🔒 Close Ticket", "ticket_close", ButtonStyle.Danger)
                     .WithButton("📋 Add User", "ticket_add_user", ButtonStyle.Secondary);
 
+                Console.WriteLine($"[TicketDebug] Attempting to send initial message to {channel.Name}");
+
                 try
                 {
-                    await channel.SendMessageAsync($"{user.Mention}", embed: embed.Build(), components: components.Build());
-                    Console.WriteLine($"[TicketDebug] Initial message sent successfully to {channel.Name}");
+                    var message = await channel.SendMessageAsync($"{user.Mention}", embed: embed.Build(), components: components.Build());
+                    Console.WriteLine($"[TicketDebug] Initial message sent successfully to {channel.Name} (Message ID: {message.Id})");
                 }
                 catch (Exception msgEx)
                 {
                     Console.WriteLine($"[TicketDebug] Failed to send initial message: {msgEx.Message}");
+                    Console.WriteLine($"[TicketDebug] Full exception: {msgEx}");
                     // Try without components as fallback
                     try
                     {
-                        await channel.SendMessageAsync($"{user.Mention}", embed: embed.Build());
+                        var fallbackMessage = await channel.SendMessageAsync($"{user.Mention}", embed: embed.Build());
+                        Console.WriteLine($"[TicketDebug] Fallback message sent successfully (Message ID: {fallbackMessage.Id})");
                     }
                     catch (Exception fallbackEx)
                     {
                         Console.WriteLine($"[TicketDebug] Fallback message also failed: {fallbackEx.Message}");
+                        Console.WriteLine($"[TicketDebug] Full fallback exception: {fallbackEx}");
+                        // Return null if we can't send any message
+                        return null;
                     }
                 }
 
