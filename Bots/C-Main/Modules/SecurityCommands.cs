@@ -686,13 +686,18 @@ namespace MainbotCSharp.Modules
 
             Task Handler(SocketMessage message)
             {
+                Console.WriteLine($"[NextMessageAsync] Message received: Author={message.Author.Id}, Channel={message.Channel.Id}, Content='{message.Content}', IsBot={message.Author.IsBot}");
+                Console.WriteLine($"[NextMessageAsync] Expected: Author={Context.User.Id}, Channel={Context.Channel.Id}");
+                
                 if (message.Channel.Id == Context.Channel.Id && message.Author.Id == Context.User.Id && !message.Author.IsBot)
                 {
+                    Console.WriteLine("[NextMessageAsync] Match! Setting result.");
                     tcs.SetResult(message);
                 }
                 return Task.CompletedTask;
             }
 
+            Console.WriteLine($"[NextMessageAsync] Registering handler for User={Context.User.Id}, Channel={Context.Channel.Id}");
             Context.Client.MessageReceived += Handler;
 
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
@@ -700,9 +705,11 @@ namespace MainbotCSharp.Modules
 
             if (completedTask == tcs.Task)
             {
+                Console.WriteLine("[NextMessageAsync] Task completed successfully");
                 return await tcs.Task;
             }
 
+            Console.WriteLine("[NextMessageAsync] Timeout reached");
             return null;
         }
 
@@ -1382,9 +1389,12 @@ namespace MainbotCSharp.Modules
                 await ReplyAsync(embed: warningEmbed.Build());
 
                 // Wait for user response
+                Console.WriteLine($"[CLEANUP-ULTRA] Waiting for response from user {Context.User.Id} in channel {Context.Channel.Id}");
                 var response = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                
                 if (response == null)
                 {
+                    Console.WriteLine("[CLEANUP-ULTRA] No response received - timeout!");
                     var timeoutEmbed = new EmbedBuilder()
                         .WithTitle("⏰ Timeout")
                         .WithDescription("Server cleanup cancelled due to timeout.")
@@ -1393,6 +1403,7 @@ namespace MainbotCSharp.Modules
                     return;
                 }
 
+                Console.WriteLine($"[CLEANUP-ULTRA] Received response: '{response.Content}'");
                 var answer = response.Content.Trim().ToUpperInvariant();
 
                 if (answer == "N" || answer == "NO")
