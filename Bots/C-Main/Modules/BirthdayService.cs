@@ -14,6 +14,7 @@ namespace MainbotCSharp.Modules
     {
         public ulong ChannelId { get; set; }
         public Dictionary<ulong, string> Users { get; set; } = new Dictionary<ulong, string>();
+        public HashSet<string> AnnouncedToday { get; set; } = new HashSet<string>(); // Track announced birthdays today
     }
 
     public static class BirthdayService
@@ -144,6 +145,7 @@ namespace MainbotCSharp.Modules
 
             var today = DateTime.Now;
             var todayString = today.ToString("dd/MM");
+            var todayKey = today.ToString("yyyy-MM-dd");
 
             foreach (var kvp in _guildBirthdays)
             {
@@ -171,9 +173,25 @@ namespace MainbotCSharp.Modules
 
                         if (birthdayDayMonth == todayString)
                         {
+                            var announceKey = $"{todayKey}_{userId}";
+                            
+                            // Skip if already announced today
+                            if (data.AnnouncedToday.Contains(announceKey))
+                                continue;
+
                             try
                             {
-                                await channel.SendMessageAsync($"★ Happy fucking birthday, you gorgeous thing! <@{userId}> 🎂🎉🎈");
+                                var embed = new EmbedBuilder()
+                                    .WithTitle("🎉 Happy Birthday! 🎂")
+                                    .WithDescription($"★ Happy fucking birthday, you gorgeous thing! <@{userId}> 🎂🎉🎈")
+                                    .WithColor(0x800080) // Purple
+                                    .WithCurrentTimestamp()
+                                    .Build();
+
+                                await channel.SendMessageAsync(embed: embed);
+                                
+                                // Mark as announced
+                                data.AnnouncedToday.Add(announceKey);
                             }
                             catch (Exception ex)
                             {
@@ -181,6 +199,9 @@ namespace MainbotCSharp.Modules
                             }
                         }
                     }
+                    
+                    // Clean up old announcement tracking (keep only today's)
+                    data.AnnouncedToday.RemoveWhere(key => !key.StartsWith(todayKey));
                 }
                 catch (Exception ex)
                 {
