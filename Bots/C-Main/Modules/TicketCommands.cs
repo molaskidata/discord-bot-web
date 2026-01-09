@@ -50,6 +50,8 @@ namespace MainbotCSharp.Modules
 
         public static TicketConfigEntry? GetConfig(ulong guildId)
         {
+            // Always reload config from disk to ensure latest settings
+            _cfg = LoadTicketsConfig();
             if (_cfg.TryGetValue(guildId, out var e)) return e; return null;
         }
 
