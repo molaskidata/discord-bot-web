@@ -77,6 +77,7 @@ namespace MainbotCSharp.Modules
 
         public static async Task<SocketTextChannel?> CreateTicketChannelAsync(SocketGuild guild, SocketUser user, string category)
         {
+
             try
             {
                 var config = GetConfig(guild.Id);
@@ -93,6 +94,14 @@ namespace MainbotCSharp.Modules
                 {
                     overwrites.Add(new Overwrite(config.SupportRoleId.Value, PermissionTarget.Role,
                         new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow, readMessageHistory: PermValue.Allow)));
+                }
+
+                // DEBUG: Log category ID and found category name
+                if (config?.TicketCategoryId.HasValue == true)
+                {
+                    var cat = guild.GetCategoryChannel(config.TicketCategoryId.Value);
+                    Console.WriteLine($"[TicketDebug] TicketCategoryId: {config.TicketCategoryId.Value}");
+                    Console.WriteLine($"[TicketDebug] Found category: {(cat != null ? cat.Name : "NOT FOUND")} (ID: {config.TicketCategoryId.Value})");
                 }
 
                 var restChannel = await guild.CreateTextChannelAsync(channelName, properties =>
