@@ -205,69 +205,19 @@ namespace MainbotCSharp
                         return;
                     }
 
-                    // support select menu
+                    // support select menu - use the proper ticket service
                     if (customId == "support_select")
                     {
-                        var value = comp.Data.Values.FirstOrDefault();
-                        var selectionMap = new System.Collections.Generic.Dictionary<string, string>
-                        {
-                            { "support_technical", "Technical Issue" },
-                            { "support_spam", "Spam / Scam" },
-                            { "support_abuse", "Abuse / Harassment" },
-                            { "support_ad", "Advertising / Recruitment" },
-                            { "support_bug", "Bug / Feature Request" },
-                            { "support_other", "Other" }
-                        };
-                        string label;
-                        if (value != null && selectionMap.TryGetValue(value, out var mappedLabel))
-                        {
-                            label = mappedLabel;
-                        }
-                        else
-                        {
-                            label = value ?? "Unknown";
-                        }
-                        // create ticket channel
-                        var guild = (comp.Channel as SocketGuildChannel)?.Guild;
-                        if (guild == null) { await comp.RespondAsync("Cannot create ticket: guild not found", ephemeral: true); return; }
-                        var user = comp.User;
-                        var chanName = $"ticket-{user.Username.ToLowerInvariant().Replace('\u0020', '-')}-{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() % 10000}";
-                        var overwrites = new System.Collections.Generic.List<Overwrite>();
-                        // deny @everyone
-                        overwrites.Add(new Overwrite(guild.EveryoneRole.Id, PermissionTarget.Role, new OverwritePermissions(viewChannel: PermValue.Deny)));
-                        // allow user
-                        overwrites.Add(new Overwrite(user.Id, PermissionTarget.User, new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow, readMessageHistory: PermValue.Allow)));
-                        // allow administrators
-                        foreach (var r in guild.Roles.Where(r => r.Permissions.Administrator))
-                        {
-                            overwrites.Add(new Overwrite(r.Id, PermissionTarget.Role, new OverwritePermissions(viewChannel: PermValue.Allow, sendMessages: PermValue.Allow, readMessageHistory: PermValue.Allow)));
-                        }
-                        // create channel
-                        var ticketChan = await guild.CreateTextChannelAsync(chanName, prop => { prop.PermissionOverwrites = overwrites; });
-                        var embed = new EmbedBuilder().WithColor(Color.DarkGrey).WithTitle($"Ticket: {label}").WithDescription($"Opened by <@{user.Id}> ({user.Id})\n\nPlease describe your issue.").WithFooter("Category: " + label);
-                        var row = new ComponentBuilder()
-                            .WithButton("Close Ticket", "ticket_close", ButtonStyle.Danger)
-                            .WithButton("Log Ticket", "ticket_log", ButtonStyle.Secondary)
-                            .WithButton("Save Transcript", "ticket_save", ButtonStyle.Primary);
-                        await ticketChan.SendMessageAsync($"<@{user.Id}>", embed: embed.Build(), components: row.Build());
-                        MainbotCSharp.Modules.TicketService.TicketMetas.TryAdd(ticketChan.Id, new MainbotCSharp.Modules.TicketService.TicketMeta { GuildId = guild.Id, UserId = user.Id, Category = label });
-                        await comp.RespondAsync($"✅ Ticket created: {ticketChan.Mention}", ephemeral: true);
+                        await TicketService.HandleSelectMenuInteraction(comp);
                         return;
                     }
 
-                    // handle ticket buttons
-                    if (customId == "ticket_close" || customId == "ticket_log" || customId == "ticket_save")
+                    // handle ticket buttons - use the proper ticket service
+                    if (customId.StartsWith("ticket_"))
                     {
-                        var channel = (comp.Channel as SocketGuildChannel)?.Guild?.GetTextChannel(comp.Channel.Id);
-                        if (channel == null) { await comp.RespondAsync("This button can only be used inside a ticket channel.", ephemeral: true); return; }
-                        if (!MainbotCSharp.Modules.TicketService.TicketMetas.TryGetValue(channel.Id, out var meta)) { await comp.RespondAsync("This button is only available inside a ticket channel.", ephemeral: true); return; }
-
-                        if (customId == "ticket_close")
-                        {
-                            await comp.RespondAsync("Closing ticket...", ephemeral: true);
-                            _ = Task.Run(async () => { await Task.Delay(1000); try { await channel.DeleteAsync(); } catch { } MainbotCSharp.Modules.TicketService.TicketMetas.TryRemove(channel.Id, out _); });
-                            return;
-                        }
+                        await TicketService.HandleButtonInteraction(comp);
+                        return;
+                    }
 
                         var cfg = MainbotCSharp.Modules.TicketService.GetConfig(meta.GuildId);
                         if (cfg == null) { await comp.RespondAsync("No log channel configured. Ask an admin to run `!ticket-setup`.", ephemeral: true); return; }

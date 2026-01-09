@@ -162,8 +162,18 @@ namespace MainbotCSharp.Modules
                 var selectedValue = component.Data.Values.FirstOrDefault();
                 if (string.IsNullOrEmpty(selectedValue)) return;
 
-                var category = selectedValue.Replace("support_", "").Replace("_", " ");
-                category = char.ToUpper(category[0]) + category.Substring(1);
+                // Map the selected value to the proper category name
+                var categoryMap = new System.Collections.Generic.Dictionary<string, string>
+                {
+                    { "support_technical", "Technical Issue" },
+                    { "support_spam", "Spam / Scam" },
+                    { "support_abuse", "Abuse / Harassment" },
+                    { "support_ad", "Advertising / Recruitment" },
+                    { "support_bug", "Bug / Feature Request" },
+                    { "support_other", "Other" }
+                };
+
+                var category = categoryMap.TryGetValue(selectedValue, out var mappedCategory) ? mappedCategory : "Other";
 
                 // Check if user already has an active ticket
                 var guild = (component.User as SocketGuildUser)?.Guild;
