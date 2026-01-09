@@ -37,7 +37,7 @@ namespace PiratBotCSharp.Modules
 
     // === MAINBOT SERVICES COPIED ===
     public class SecurityConfigEntry { public bool Enabled { get; set; } = false; public ulong? LogChannelId { get; set; } = null; }
-    public class TicketConfigEntry { public ulong LogChannelId { get; set; } }
+
 
     public class VoiceConfig
     {
@@ -73,17 +73,17 @@ namespace PiratBotCSharp.Modules
         private const string SECURITY_FILE = "pirate_security.json";
         private const string VOICE_CONFIG_FILE = "pirate_voice_config.json";
         private const string VOICE_LOG_FILE = "pirate_voice_logs.json";
-        private const string TICKETS_CONFIG_FILE = "pirate_tickets_config.json";
+
 
         private static Dictionary<ulong, PiratePlayerData> _players = LoadPirateData();
         private static Dictionary<ulong, BattleshipGame> _battleships = LoadBattleshipData();
         private static Dictionary<ulong, SecurityConfigEntry> _security = LoadSecurityConfig();
         private static VoiceConfig _voiceConfig = LoadVoiceConfig();
         private static VoiceLogs _voiceLogs = LoadVoiceLogs();
-        private static Dictionary<ulong, TicketConfigEntry> _tickets = LoadTicketsConfig();
+
 
         public static ConcurrentDictionary<ulong, Dictionary<ulong, long>> AfkTracker = new();
-        public static ConcurrentDictionary<ulong, TicketMeta> TicketMetas = new();
+
 
         private static readonly string[] WordLists = new[] {
             "anal","anus","arsch","boobs","clit","dick","fuck","fucking","hure","nackt","nudes","nipple","porn","pussy","sex","slut","tits","vagina",
