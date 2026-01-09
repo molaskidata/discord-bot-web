@@ -124,15 +124,29 @@ namespace MainbotCSharp.Modules
 
                 Console.WriteLine($"[TicketDebug] Channel created successfully: {restChannel.Name} (ID: {restChannel.Id})");
 
-                // Convert RestTextChannel to SocketTextChannel
-                var channel = guild.GetTextChannel(restChannel.Id);
-                if (channel == null) 
+                // Wait a moment for Discord to fully initialize the channel
+                await Task.Delay(1500);
+                Console.WriteLine($"[TicketDebug] Waited for channel initialization");
+
+                // Try to get the SocketTextChannel multiple times if needed
+                SocketTextChannel? channel = null;
+                for (int i = 0; i < 5; i++)
                 {
-                    Console.WriteLine($"[TicketDebug] ERROR: Could not get SocketTextChannel for {restChannel.Id}");
-                    return null;
+                    channel = guild.GetTextChannel(restChannel.Id);
+                    if (channel != null) 
+                    {
+                        Console.WriteLine($"[TicketDebug] SocketTextChannel obtained on attempt {i + 1}: {channel.Name}");
+                        break;
+                    }
+                    Console.WriteLine($"[TicketDebug] Attempt {i + 1} failed, retrying...");
+                    await Task.Delay(500);
                 }
 
-                Console.WriteLine($"[TicketDebug] SocketTextChannel obtained: {channel.Name}");
+                if (channel == null) 
+                {
+                    Console.WriteLine($"[TicketDebug] ERROR: Could not get SocketTextChannel after 5 attempts for {restChannel.Id}");
+                    return null;
+                }
 
                 // Store ticket metadata
                 TicketMetas[channel.Id] = new TicketMeta
