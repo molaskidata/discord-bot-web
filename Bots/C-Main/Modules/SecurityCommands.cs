@@ -526,28 +526,96 @@ namespace MainbotCSharp.Modules
         {
             try
             {
+                // Step 1: Ask for security log channel
+                await ReplyAsync("What channel should be the security log channel? Write the Channel ID only in the chat or type `!new-securechan` and I will create a security channel for you.");
+
+                var channelResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                if (channelResponse == null)
+                {
+                    await ReplyAsync("❌ Timeout! Please try again.");
+                    return;
+                }
+
+                ulong logChannelId;
+                ITextChannel logChannel;
+
+                if (channelResponse.Content.Trim() == "!new-securechan")
+                {
+                    // Ask for category
+                    await ReplyAsync("In which category should the channel be created? Write the Category ID only.");
+
+                    var categoryResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                    if (categoryResponse == null)
+                    {
+                        await ReplyAsync("❌ Timeout! Please try again.");
+                        return;
+                    }
+
+                    if (!ulong.TryParse(categoryResponse.Content.Trim(), out var categoryId))
+                    {
+                        await ReplyAsync("❌ Invalid Category ID! Please provide a valid Category ID.");
+                        return;
+                    }
+
+                    var category = Context.Guild.GetCategoryChannel(categoryId);
+                    if (category == null)
+                    {
+                        await ReplyAsync("❌ Category not found! Please provide a valid Category ID from this server.");
+                        return;
+                    }
+
+                    // Create new security channel
+                    logChannel = await Context.Guild.CreateTextChannelAsync("★-security-log", properties =>
+                    {
+                        properties.CategoryId = categoryId;
+                    });
+                    logChannelId = logChannel.Id;
+                    await ReplyAsync($"✅ Security channel created: {logChannel.Mention}\nThe channel was set in category: **{category.Name}**");
+                }
+                else if (ulong.TryParse(channelResponse.Content.Trim(), out logChannelId))
+                {
+                    // Use existing channel
+                    logChannel = Context.Guild.GetTextChannel(logChannelId);
+                    if (logChannel == null)
+                    {
+                        await ReplyAsync("❌ Channel not found! Please provide a valid Channel ID from this server.");
+                        return;
+                    }
+                    await ReplyAsync($"✅ Security log channel set: {logChannel.Mention}");
+                }
+                else
+                {
+                    await ReplyAsync("❌ Invalid input! Please provide a Channel ID or type `!new-securechan`.");
+                    return;
+                }
+
+                // Enable security
                 var config = new SecurityConfigEntry
                 {
                     Enabled = true,
-                    LogChannelId = Context.Channel.Id
+                    LogChannelId = logChannelId
                 };
 
                 SecurityService.SetConfig(Context.Guild.Id, config);
 
+                // Send confirmation embed
                 var embed = new EmbedBuilder()
-                    .WithTitle("🛡️ Security System Enabled")
+                    .WithTitle("🛡️ Security System Enabled!")
                     .WithColor(Color.Green)
-                    .WithDescription("Security monitoring is now active!")
-                    .AddField("Log Channel", $"<#{Context.Channel.Id}>", true)
+                    .WithDescription("Security monitoring is now active for your server!")
+                    .AddField("Log Channel", $"<#{logChannelId}>", true)
+                    .AddField("Status", "✅ Active", true)
                     .AddField("Features",
                         "• Invite link detection\n" +
                         "• Spam detection\n" +
                         "• NSFW content filter\n" +
                         "• Inappropriate language filter\n" +
-                        "• **NEW:** Suspicious user detection\n" +
-                        "• **NEW:** Account age verification (< 20 days)\n" +
-                        "• **NEW:** Username pattern analysis\n" +
-                        "• **NEW:** Profile picture checks", false);
+                        "• Suspicious user detection\n" +
+                        "• Account age verification (< 20 days)\n" +
+                        "• Username pattern analysis\n" +
+                        "• Profile picture checks", false)
+                    .WithFooter("Security system is now protecting your server!")
+                    .WithTimestamp(DateTimeOffset.UtcNow);
 
                 await ReplyAsync(embed: embed.Build());
             }
@@ -555,6 +623,32 @@ namespace MainbotCSharp.Modules
             {
                 await ReplyAsync($"❌ Setup failed: {ex.Message}");
             }
+        }
+
+        private async Task<SocketMessage> NextMessageAsync(TimeSpan timeout)
+        {
+            var tcs = new TaskCompletionSource<SocketMessage>();
+
+            Task Handler(SocketMessage message)
+            {
+                if (message.Channel.Id == Context.Channel.Id && message.Author.Id == Context.User.Id && !message.Author.IsBot)
+                {
+                    tcs.SetResult(message);
+                }
+                return Task.CompletedTask;
+            }
+
+            Context.Client.MessageReceived += Handler;
+
+            var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
+            Context.Client.MessageReceived -= Handler;
+
+            if (completedTask == tcs.Task)
+            {
+                return await tcs.Task;
+            }
+
+            return null;
         }
 
         [Command("suspicious-check")]
@@ -808,11 +902,59 @@ namespace MainbotCSharp.Modules
         }
 
         [Command("cleanup")]
+        [Summary("Delete a specific number of messages in current channel")]
+        [RequireUserPermission(GuildPermission.ManageMessages)]
+        [RequireBotPermission(GuildPermission.ManageMessages)]
+        public async Task CleanupAsync(int amount)
+        {
+            try
+            {
+                if (amount <= 0 || amount > 1000)
+                {
+                    await ReplyAsync("❌ Please provide a number between 1 and 1000.");
+                    return;
+                }
+
+                await ReplyAsync($"🧹 Deleting {amount} messages... Please wait.");
+
+                var messages = await Context.Channel.GetMessagesAsync(amount + 1).FlattenAsync(); // +1 for the command message
+                var deleteableMessages = messages.Where(x => 
+                    DateTimeOffset.UtcNow - x.Timestamp < TimeSpan.FromDays(14) &&
+                    !x.IsPinned).ToList();
+
+                int totalDeleted = 0;
+
+                if (deleteableMessages.Count > 1)
+                {
+                    await (Context.Channel as ITextChannel).DeleteMessagesAsync(deleteableMessages);
+                    totalDeleted = deleteableMessages.Count;
+                }
+                else if (deleteableMessages.Count == 1)
+                {
+                    await deleteableMessages.First().DeleteAsync();
+                    totalDeleted = 1;
+                }
+
+                var reply = await ReplyAsync($"✅ {totalDeleted} messages were deleted! Thank you for using me as your cleaning lady! :))");
+
+                // Delete confirmation message after 10 seconds
+                _ = Task.Delay(10000).ContinueWith(async _ =>
+                {
+                    try { await reply.DeleteAsync(); } catch { }
+                });
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync($"❌ Failed to delete messages: {ex.Message}");
+            }
+        }
+
+        [Command("cleanup")]
         [Alias("cleanup-channel")]
         [Summary("Cleanup/delete all messages in a specific channel")]
         [RequireUserPermission(GuildPermission.ManageMessages)]
         [RequireBotPermission(GuildPermission.ManageMessages)]
-        public async Task CleanupAsync(ulong channelId)
+        public async Task CleanupChannelAsync(ulong channelId)
         {
             try
             {
@@ -923,8 +1065,8 @@ namespace MainbotCSharp.Modules
             }
         }
 
-        [Command("cleanupdel")]
-        [Alias("removecleanupinterval")]
+        [Command("delcleanup-intervall")]
+        [Alias("cleanupdel", "removecleanupinterval")]
         [Summary("Remove automatic cleanup interval for a channel")]
         [RequireUserPermission(GuildPermission.Administrator)]
         public async Task RemoveCleanupIntervalAsync(ulong channelId)

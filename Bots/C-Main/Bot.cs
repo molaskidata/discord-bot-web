@@ -150,24 +150,21 @@ namespace MainbotCSharp
 
             var context = new SocketCommandContext(_client, message);
 
-            // Start typing indicator for ALL commands
-            using (context.Channel.EnterTypingState())
+            // Execute command without typing indicator to avoid blocking message reading
+            var commandTask = _commands.ExecuteAsync(context, argPos, _services);
+            var timeoutTask = Task.Delay(TimeSpan.FromSeconds(120)); // 120 second timeout
+
+            var completedTask = await Task.WhenAny(commandTask, timeoutTask);
+
+            if (completedTask == timeoutTask)
             {
-                var commandTask = _commands.ExecuteAsync(context, argPos, _services);
-                var timeoutTask = Task.Delay(TimeSpan.FromSeconds(120)); // 120 second timeout
-
-                var completedTask = await Task.WhenAny(commandTask, timeoutTask);
-
-                if (completedTask == timeoutTask)
-                {
-                    // Command took too long
-                    await context.Channel.SendMessageAsync("Command timeout exceeded (120 seconds). Please try again or contact an administrator if the issue persists.");
-                }
-                else
-                {
-                    // Wait for command to complete
-                    await commandTask;
-                }
+                // Command took too long
+                await context.Channel.SendMessageAsync("Command timeout exceeded (120 seconds). Please try again or contact an administrator if the issue persists.");
+            }
+            else
+            {
+                // Wait for command to complete
+                await commandTask;
             }
         }
 
