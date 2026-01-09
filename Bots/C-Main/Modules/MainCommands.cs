@@ -77,8 +77,7 @@ namespace MainbotCSharp.Modules
                     "`!voiceunban @user` - Unban user from your channel\n" +
                     "`!voicetemplate [name]` - Save/load voice channel template\n" +
                     "`!voicestats` - View voice activity statistics\n" +
-                    "`!voicehelp` - Detailed voice system help +
-                    "`!voicedeny @user` - Block user from joining", false)
+                    "`!voicehelp` - Detailed voice system help", false)
 
                 .AddField("★ **Utilities** ✅ *FREE*",
                     "`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message to another channel", false)
