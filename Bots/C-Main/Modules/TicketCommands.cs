@@ -548,8 +548,69 @@ namespace MainbotCSharp.Modules
 
                 if (ticketChannelResponse.Content.Trim().ToLower() == "new-ticketchan")
                 {
-                    // Create new ticket channel
-                    ticketChannel = await Context.Guild.CreateTextChannelAsync("★-support-tickets");
+                    // Ask for category before creating new ticket channel
+                    var categoryEmbed = new EmbedBuilder()
+                        .WithTitle("📁 Select Category")
+                        .WithDescription("In which **Category** do you want to create the ticket channel?\n\nType the **Category ID** or type `none` to create the channel without a category.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await ReplyAsync(embed: categoryEmbed);
+
+                    var categoryResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                    if (categoryResponse == null)
+                    {
+                        var timeoutEmbed = new EmbedBuilder()
+                            .WithTitle("⏰ Timeout")
+                            .WithDescription("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.")
+                            .WithColor(0x40E0D0)
+                            .Build();
+                        await ReplyAsync(embed: timeoutEmbed);
+                        return;
+                    }
+
+                    ulong? categoryId = null;
+                    if (categoryResponse.Content.Trim().ToLower() != "none")
+                    {
+                        if (ulong.TryParse(categoryResponse.Content.Trim(), out var parsedCategoryId))
+                        {
+                            var category = Context.Guild.GetCategoryChannel(parsedCategoryId);
+                            if (category == null)
+                            {
+                                var notFoundEmbed = new EmbedBuilder()
+                                    .WithTitle("❌ Not Found")
+                                    .WithDescription("Category not found! Please provide a valid Category ID from this server.")
+                                    .WithColor(0x40E0D0)
+                                    .Build();
+                                await ReplyAsync(embed: notFoundEmbed);
+                                return;
+                            }
+                            categoryId = parsedCategoryId;
+                        }
+                        else
+                        {
+                            var invalidEmbed = new EmbedBuilder()
+                                .WithTitle("❌ Invalid Input")
+                                .WithDescription("Invalid input! Please provide a valid Category ID or type `none`.")
+                                .WithColor(0x40E0D0)
+                                .Build();
+                            await ReplyAsync(embed: invalidEmbed);
+                            return;
+                        }
+                    }
+
+                    // Create new ticket channel with category
+                    if (categoryId.HasValue)
+                    {
+                        ticketChannel = await Context.Guild.CreateTextChannelAsync("★-support-tickets", prop =>
+                        {
+                            prop.CategoryId = categoryId.Value;
+                        });
+                    }
+                    else
+                    {
+                        ticketChannel = await Context.Guild.CreateTextChannelAsync("★-support-tickets");
+                    }
+
                     var createdEmbed = new EmbedBuilder()
                         .WithTitle("✅ Channel Created")
                         .WithDescription($"Ticket channel created: {ticketChannel.Mention}")
@@ -587,7 +648,7 @@ namespace MainbotCSharp.Modules
                 var ticketEmbed = new EmbedBuilder()
                     .WithTitle("🎫 **Support Ticket System**")
                     .WithDescription("**Need help or want to report an issue?**\n\nSelect the category that best describes your issue from the menu below, and we'll create a private ticket channel for you.")
-                    .WithColor(0x2f3136)
+                    .WithColor(0x1D80A3)
                     .AddField("📋 **Available Support Categories**",
                         "• **Technical Issue** - Bot not working, errors, bugs\n" +
                         "• **Spam / Scam** - Report spam or scam content\n" +
