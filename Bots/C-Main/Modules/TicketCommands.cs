@@ -81,7 +81,7 @@ namespace MainbotCSharp.Modules
             public string? Username { get; set; }
         }
 
-        public static async Task<SocketTextChannel?> CreateTicketChannelAsync(SocketGuild guild, SocketUser user, string category)
+        public static async Task<(bool success, SocketTextChannel? channel, ulong channelId)> CreateTicketChannelAsync(SocketGuild guild, SocketUser user, string category)
         {
 
             try
@@ -179,7 +179,7 @@ namespace MainbotCSharp.Modules
                 if (socketChannel != null)
                 {
                     Console.WriteLine($"[TicketDebug] Returning SocketTextChannel: {socketChannel.Name}");
-                    return socketChannel;
+                    return (true, socketChannel, restChannel.Id);
                 }
                 else
                 {
@@ -191,18 +191,18 @@ namespace MainbotCSharp.Modules
                     if (socketChannel != null)
                     {
                         Console.WriteLine($"[TicketDebug] SocketTextChannel found after additional wait: {socketChannel.Name}");
-                        return socketChannel;
+                        return (true, socketChannel, restChannel.Id);
                     }
                     
                     Console.WriteLine($"[TicketDebug] SocketTextChannel still not available, but ticket was created successfully via REST");
-                    // We'll handle this in the calling function - return null but the ticket IS created
-                    return null;
+                    // Return success=true even if SocketTextChannel is not available
+                    return (true, null, restChannel.Id);
                 }
             }
             catch (Exception ex)
             {
                 Console.WriteLine($"Error creating ticket: {ex.Message}");
-                return null;
+                return (false, null, 0);
             }
         }
 
@@ -247,42 +247,24 @@ namespace MainbotCSharp.Modules
 
                 await component.DeferAsync();
 
-                var channel = await CreateTicketChannelAsync(guild, component.User, category);
+                var (success, channel, channelId) = await CreateTicketChannelAsync(guild, component.User, category);
                 
-                // Check if ticket was created successfully (even if SocketTextChannel is null)
-                bool ticketCreated = false;
-                if (channel != null)
+                if (success)
                 {
-                    // SocketTextChannel available
-                    await component.FollowupAsync($"✅ Ticket created: {channel.Mention}", ephemeral: true);
-                    ticketCreated = true;
-                }
-                else
-                {
-                    // Check if ticket exists in metadata (REST creation succeeded)
-                    var recentTicket = TicketMetas.Values.FirstOrDefault(t => 
-                        t.UserId == component.User.Id && 
-                        t.GuildId == guild.Id &&
-                        (DateTime.UtcNow - t.CreatedAt).TotalMinutes < 2); // Created within last 2 minutes
-
-                    if (recentTicket != null)
+                    // Ticket was created successfully
+                    if (channel != null)
                     {
-                        // Find the channel by ID
-                        var ticketChannel = guild.GetChannel(TicketMetas.FirstOrDefault(kvp => kvp.Value == recentTicket).Key);
-                        if (ticketChannel != null)
-                        {
-                            await component.FollowupAsync($"✅ Ticket created: <#{ticketChannel.Id}>", ephemeral: true);
-                            ticketCreated = true;
-                            channel = ticketChannel as SocketTextChannel; // Set for logging
-                        }
+                        await component.FollowupAsync($"✅ Ticket created: {channel.Mention}", ephemeral: true);
                     }
-                }
+                    else
+                    {
+                        // Use channel ID if SocketTextChannel is not available
+                        await component.FollowupAsync($"✅ Ticket created: <#{channelId}>", ephemeral: true);
+                    }
 
-                if (ticketCreated)
-                {
                     // Log ticket creation
                     var config = GetConfig(guild.Id);
-                    if (config != null && channel != null)
+                    if (config != null)
                     {
                         var logChannel = guild.GetTextChannel(config.LogChannelId);
                         if (logChannel != null)
@@ -292,7 +274,7 @@ namespace MainbotCSharp.Modules
                                 .WithColor(Color.Green)
                                 .AddField("User", component.User.Mention, true)
                                 .AddField("Category", category, true)
-                                .AddField("Channel", channel.Mention, true)
+                                .AddField("Channel", channel != null ? channel.Mention : $"<#{channelId}>", true)
                                 .WithTimestamp(DateTimeOffset.UtcNow);
 
                             await logChannel.SendMessageAsync(embed: logEmbed.Build());
@@ -301,6 +283,8 @@ namespace MainbotCSharp.Modules
                 }
                 else
                 {
+                    // Only show failed message if there was a real error (success = false)
+                    Console.WriteLine($"[TicketDebug] Ticket creation actually failed");
                     var failedEmbed = new EmbedBuilder()
                         .WithTitle("❌ Failed")
                         .WithDescription("Failed to create ticket. Please try again or contact an administrator.")
@@ -312,6 +296,17 @@ namespace MainbotCSharp.Modules
             catch (Exception ex)
             {
                 Console.WriteLine($"Error handling select menu: {ex.Message}");
+                // Only send error message if there was an actual exception
+                try
+                {
+                    var errorEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Error")
+                        .WithDescription("An error occurred while creating your ticket. Please try again.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await component.FollowupAsync(embed: errorEmbed, ephemeral: true);
+                }
+                catch { /* Ignore if we can't send error message */ }
             }
         }
 
