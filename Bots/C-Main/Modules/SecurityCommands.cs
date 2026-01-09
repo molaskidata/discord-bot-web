@@ -683,14 +683,18 @@ namespace MainbotCSharp.Modules
         private async Task<SocketMessage> NextMessageAsync(TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<SocketMessage>();
-            Console.WriteLine($"[NextMessageAsync-SECURITY] Waiting for message from User={Context.User.Id} in Channel={Context.Channel.Id}");
+            var expectedUserId = Context.User.Id;
+            var expectedChannelId = Context.Channel.Id;
+            var client = Context.Client; // Capture client reference before awaiting
+            
+            Console.WriteLine($"[NextMessageAsync-SECURITY] Waiting for message from User={expectedUserId} in Channel={expectedChannelId}");
 
             Task Handler(SocketMessage message)
             {
                 Console.WriteLine($"[NextMessageAsync-SECURITY] Handler triggered: Author={message.Author.Id}, Channel={message.Channel.Id}, Content='{message.Content}'");
-                Console.WriteLine($"[NextMessageAsync-SECURITY] Expecting: Author={Context.User.Id}, Channel={Context.Channel.Id}");
+                Console.WriteLine($"[NextMessageAsync-SECURITY] Expecting: Author={expectedUserId}, Channel={expectedChannelId}");
                 
-                if (message.Channel.Id == Context.Channel.Id && message.Author.Id == Context.User.Id && !message.Author.IsBot)
+                if (message.Channel.Id == expectedChannelId && message.Author.Id == expectedUserId && !message.Author.IsBot)
                 {
                     Console.WriteLine("[NextMessageAsync-SECURITY] MATCH! Setting result.");
                     tcs.TrySetResult(message);
@@ -702,11 +706,11 @@ namespace MainbotCSharp.Modules
                 return Task.CompletedTask;
             }
 
-            Console.WriteLine($"[NextMessageAsync-SECURITY] Registering handler for User={Context.User.Id}, Channel={Context.Channel.Id}");
-            Context.Client.MessageReceived += Handler;
+            Console.WriteLine($"[NextMessageAsync-SECURITY] Registering handler for User={expectedUserId}, Channel={expectedChannelId}");
+            client.MessageReceived += Handler;
 
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
-            Context.Client.MessageReceived -= Handler;
+            client.MessageReceived -= Handler;
 
             if (completedTask == tcs.Task)
             {
