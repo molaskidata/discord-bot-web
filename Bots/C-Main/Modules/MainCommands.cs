@@ -379,7 +379,7 @@ namespace MainbotCSharp.Modules
                 }
 
                 // Get target channel
-                var targetChannel = Context.Guild.GetTextChannel(targetChannelId);
+                var targetChannel = Context.Guild.GetTextChannel(channelId);
                 if (targetChannel == null)
                 {
                     var chanNotFoundEmbed = new EmbedBuilder()
