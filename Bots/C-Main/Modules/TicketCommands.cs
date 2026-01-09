@@ -641,12 +641,21 @@ namespace MainbotCSharp.Modules
         private async Task<SocketMessage> NextMessageAsync(TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<SocketMessage>();
+            Console.WriteLine($"[NextMessageAsync-TICKET] Waiting for message from User={Context.User.Id} in Channel={Context.Channel.Id}");
 
             Task Handler(SocketMessage message)
             {
+                Console.WriteLine($"[NextMessageAsync-TICKET] Handler triggered: Author={message.Author.Id}, Channel={message.Channel.Id}, Content='{message.Content}'");
+                Console.WriteLine($"[NextMessageAsync-TICKET] Expecting: Author={Context.User.Id}, Channel={Context.Channel.Id}");
+                
                 if (message.Channel.Id == Context.Channel.Id && message.Author.Id == Context.User.Id && !message.Author.IsBot)
                 {
-                    tcs.SetResult(message);
+                    Console.WriteLine("[NextMessageAsync-TICKET] MATCH! Setting result.");
+                    tcs.TrySetResult(message);
+                }
+                else
+                {
+                    Console.WriteLine("[NextMessageAsync-TICKET] No match.");
                 }
                 return Task.CompletedTask;
             }
@@ -658,9 +667,11 @@ namespace MainbotCSharp.Modules
 
             if (completedTask == tcs.Task)
             {
+                Console.WriteLine("[NextMessageAsync-TICKET] Task completed successfully!");
                 return await tcs.Task;
             }
 
+            Console.WriteLine("[NextMessageAsync-TICKET] Timeout reached!");
             return null;
         }
 

@@ -683,21 +683,26 @@ namespace MainbotCSharp.Modules
         private async Task<SocketMessage> NextMessageAsync(TimeSpan timeout)
         {
             var tcs = new TaskCompletionSource<SocketMessage>();
+            Console.WriteLine($"[NextMessageAsync-SECURITY] Waiting for message from User={Context.User.Id} in Channel={Context.Channel.Id}");
 
             Task Handler(SocketMessage message)
             {
-                Console.WriteLine($"[NextMessageAsync] Message received: Author={message.Author.Id}, Channel={message.Channel.Id}, Content='{message.Content}', IsBot={message.Author.IsBot}");
-                Console.WriteLine($"[NextMessageAsync] Expected: Author={Context.User.Id}, Channel={Context.Channel.Id}");
+                Console.WriteLine($"[NextMessageAsync-SECURITY] Handler triggered: Author={message.Author.Id}, Channel={message.Channel.Id}, Content='{message.Content}'");
+                Console.WriteLine($"[NextMessageAsync-SECURITY] Expecting: Author={Context.User.Id}, Channel={Context.Channel.Id}");
                 
                 if (message.Channel.Id == Context.Channel.Id && message.Author.Id == Context.User.Id && !message.Author.IsBot)
                 {
-                    Console.WriteLine("[NextMessageAsync] Match! Setting result.");
-                    tcs.SetResult(message);
+                    Console.WriteLine("[NextMessageAsync-SECURITY] MATCH! Setting result.");
+                    tcs.TrySetResult(message);
+                }
+                else
+                {
+                    Console.WriteLine("[NextMessageAsync-SECURITY] No match.");
                 }
                 return Task.CompletedTask;
             }
 
-            Console.WriteLine($"[NextMessageAsync] Registering handler for User={Context.User.Id}, Channel={Context.Channel.Id}");
+            Console.WriteLine($"[NextMessageAsync-SECURITY] Registering handler for User={Context.User.Id}, Channel={Context.Channel.Id}");
             Context.Client.MessageReceived += Handler;
 
             var completedTask = await Task.WhenAny(tcs.Task, Task.Delay(timeout));
@@ -705,11 +710,11 @@ namespace MainbotCSharp.Modules
 
             if (completedTask == tcs.Task)
             {
-                Console.WriteLine("[NextMessageAsync] Task completed successfully");
+                Console.WriteLine("[NextMessageAsync-SECURITY] Task completed successfully");
                 return await tcs.Task;
             }
 
-            Console.WriteLine("[NextMessageAsync] Timeout reached");
+            Console.WriteLine("[NextMessageAsync-SECURITY] Timeout reached");
             return null;
         }
 
