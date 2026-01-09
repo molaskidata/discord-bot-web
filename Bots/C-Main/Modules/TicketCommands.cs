@@ -722,7 +722,7 @@ namespace MainbotCSharp.Modules
 
                     var categorySetEmbed = new EmbedBuilder()
                         .WithTitle("✅ Category Set")
-                        .WithDescription($"Tickets will be created in category: **{ticketCategory.Name}**")
+                        .WithDescription($"Tickets will be created in category: <#{ticketCategoryId}>")
                         .WithColor(0x40E0D0)
                         .Build();
                     await ReplyAsync(embed: categorySetEmbed);
