@@ -218,24 +218,6 @@ namespace MainbotCSharp
                         await TicketService.HandleButtonInteraction(comp);
                         return;
                     }
-
-                        var cfg = MainbotCSharp.Modules.TicketService.GetConfig(meta.GuildId);
-                        if (cfg == null) { await comp.RespondAsync("No log channel configured. Ask an admin to run `!ticket-setup`.", ephemeral: true); return; }
-
-                        // build transcript
-                        var messages = await channel.GetMessagesAsync(100).FlattenAsync();
-                        var transcript = string.Join('\n', messages.Reverse().Select(m => $"[{m.Timestamp}] {m.Author} ({m.Author.Id}): {m.Content}"));
-                        var filename = $"ticket_{meta.GuildId}_{channel.Id}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.txt";
-                        try { System.IO.File.WriteAllText(filename, transcript); } catch { }
-                        var logChan = channel.Guild.GetTextChannel(cfg.LogChannelId);
-                        if (logChan != null)
-                        {
-                            try { await logChan.SendFileAsync(filename, $"Ticket transcript from {channel.Name} (created by <@{meta.UserId}>):"); } catch { }
-                        }
-                        try { System.IO.File.Delete(filename); } catch { }
-                        await comp.RespondAsync("✅ Ticket transcript saved to log channel.", ephemeral: true);
-                        return;
-                    }
                 }
             }
             catch (Exception ex)
