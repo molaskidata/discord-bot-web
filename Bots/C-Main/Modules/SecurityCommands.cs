@@ -1370,63 +1370,21 @@ namespace MainbotCSharp.Modules
             try
             {
                 var warningEmbed = new EmbedBuilder()
-                    .WithTitle("⚠️ DANGER: SERVER CLEANUP")
-                    .WithDescription("**Are you sure you want to clean your whole server?**\n\n" +
-                                   "If you use this command, **ALL Categories and Channels will be DELETED** and **can't be undone!**\n\n" +
+                    .WithTitle("⚠️ WARNING: SERVER CLEANUP STARTING")
+                    .WithDescription("**ALL Categories and Channels will be DELETED!**\n\n" +
                                    "**This includes:**\n" +
                                    "• All text channels\n" +
                                    "• All voice channels\n" +
                                    "• All categories\n" +
                                    "• All stage channels\n" +
                                    "• All forum channels\n\n" +
-                                   "**Type your response:**\n" +
-                                   "`Y` - Yes, I am sure! DELETE EVERYTHING!\n" +
-                                   "`N` - No, cancel this operation!")
+                                   "This action is IRREVERSIBLE!")
                     .WithColor(Color.Red)
-                    .WithFooter("⚠️ This action is IRREVERSIBLE! Think carefully!")
                     .WithCurrentTimestamp();
 
                 await ReplyAsync(embed: warningEmbed.Build());
 
-                // Wait for user response
-                Console.WriteLine($"[CLEANUP-ULTRA] Waiting for response from user {Context.User.Id} in channel {Context.Channel.Id}");
-                var response = await NextMessageAsync(TimeSpan.FromMinutes(1));
-                
-                if (response == null)
-                {
-                    Console.WriteLine("[CLEANUP-ULTRA] No response received - timeout!");
-                    var timeoutEmbed = new EmbedBuilder()
-                        .WithTitle("⏰ Timeout")
-                        .WithDescription("Server cleanup cancelled due to timeout.")
-                        .WithColor(Color.Orange);
-                    await ReplyAsync(embed: timeoutEmbed.Build());
-                    return;
-                }
-
-                Console.WriteLine($"[CLEANUP-ULTRA] Received response: '{response.Content}'");
-                var answer = response.Content.Trim().ToUpperInvariant();
-
-                if (answer == "N" || answer == "NO")
-                {
-                    var cancelledEmbed = new EmbedBuilder()
-                        .WithTitle("✅ Cancelled")
-                        .WithDescription("Server cleanup has been cancelled. Nothing was deleted.")
-                        .WithColor(Color.Green);
-                    await ReplyAsync(embed: cancelledEmbed.Build());
-                    return;
-                }
-
-                if (answer != "Y" && answer != "YES")
-                {
-                    var invalidEmbed = new EmbedBuilder()
-                        .WithTitle("❌ Invalid Response")
-                        .WithDescription("Please type `Y` or `N`. Server cleanup cancelled.")
-                        .WithColor(Color.Red);
-                    await ReplyAsync(embed: invalidEmbed.Build());
-                    return;
-                }
-
-                // User confirmed with Y - START DELETION
+                // START DELETION IMMEDIATELY
                 var startEmbed = new EmbedBuilder()
                     .WithTitle("🗑️ Server Cleanup Started")
                     .WithDescription("Starting to delete all channels and categories... This may take a while.")

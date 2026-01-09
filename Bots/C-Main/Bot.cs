@@ -113,6 +113,9 @@ namespace MainbotCSharp
 
         private async Task HandleMessageAsync(SocketMessage rawMessage)
         {
+            // DEBUG: Log all received messages
+            Console.WriteLine($"[DEBUG] Message received: Author={rawMessage.Author.Username} ({rawMessage.Author.Id}), Channel={rawMessage.Channel.Id}, Content='{rawMessage.Content}', IsBot={rawMessage.Author.IsBot}");
+            
             // Handle Disboard bump detection for bump reminders
             try
             {
@@ -146,7 +149,10 @@ namespace MainbotCSharp
             int argPos = 0;
             // prefix '!' or mention
             if (!(message.HasCharPrefix('!', ref argPos) || message.HasMentionPrefix(_client.CurrentUser, ref argPos)))
+            {
+                Console.WriteLine($"[DEBUG] Message '{message.Content}' doesn't have command prefix, but MessageReceived event was fired");
                 return;
+            }
 
             var context = new SocketCommandContext(_client, message);
 

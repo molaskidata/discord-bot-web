@@ -516,39 +516,15 @@ namespace MainbotCSharp.Modules
                 };
                 TicketService.SetConfig(Context.Guild.Id, config);
 
-                // Step 2: Ask if user wants to continue with ticket message
+                // Continue automatically to ticket message setup
                 var continueEmbed = new EmbedBuilder()
-                    .WithTitle("🎫 Continue Setup?")
-                    .WithDescription("Do you wanna go on, and set the Ticket-Create Message for your Members?\n\nYou only have to type: **Yes [Y]** or **No [N]**\n\nIn both options you make I will save the setted log channel for you so you only need now the ticket message and your Support Corner is ready to go!")
+                    .WithTitle("🎫 Continuing Setup")
+                    .WithDescription("Log channel has been saved. Now setting up the ticket message...")
                     .WithColor(0x40E0D0)
                     .Build();
                 await ReplyAsync(embed: continueEmbed);
 
-                var continueResponse = await NextMessageAsync(TimeSpan.FromMinutes(1));
-                if (continueResponse == null)
-                {
-                    var timeoutEmbed = new EmbedBuilder()
-                        .WithTitle("⏰ Timeout")
-                        .WithDescription("❌ Timeout! Log channel has been saved. You can run this command again to set up the ticket message.")
-                        .WithColor(0x40E0D0)
-                        .Build();
-                    await ReplyAsync(embed: timeoutEmbed);
-                    return;
-                }
-
-                var answer = continueResponse.Content.Trim().ToUpper();
-                if (answer != "Y" && answer != "YES")
-                {
-                    var completeEmbed = new EmbedBuilder()
-                        .WithTitle("✅ Setup Complete")
-                        .WithDescription("Setup complete! Log channel has been saved. Run this command again when you want to set up the ticket message.")
-                        .WithColor(0x40E0D0)
-                        .Build();
-                    await ReplyAsync(embed: completeEmbed);
-                    return;
-                }
-
-                // Step 3: Ask for ticket message channel
+                // Step 2: Ask for ticket message channel
                 var ticketChanEmbed = new EmbedBuilder()
                     .WithTitle("📝 Ticket Message Channel")
                     .WithDescription("In which channel you want to have the ticket message to send?\n\nType the **Channel ID** or type `!new-ticketchan` and the bot creates the channel and sends the Ticket Embed system message in there with the help categories and ticket opening tool.")
