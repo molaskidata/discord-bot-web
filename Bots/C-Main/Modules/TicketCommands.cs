@@ -143,7 +143,7 @@ namespace MainbotCSharp.Modules
                                    $"**Created:** <t:{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}:F>\n\n" +
                                    "Please describe your issue in detail. A support team member will assist you shortly.")
                     .WithColor(0x40E0D0)
-                    .WithFooter("This ticket will auto-close after 24 hours of inactivity.");
+                    .WithFooter("This ticket will auto-close after 42 hours of inactivity.");
 
                 var components = new ComponentBuilder()
                     .WithButton("🔒 Close Ticket", "ticket_close", ButtonStyle.Danger)
@@ -171,10 +171,10 @@ namespace MainbotCSharp.Modules
                     }
                 }
 
-                // Start auto-close timer (24 hours)
-                StartAutoCloseTimer(restChannel.Id, TimeSpan.FromHours(24));
+                // Start auto-close timer (42 hours)
+                StartAutoCloseTimer(restChannel.Id, TimeSpan.FromHours(42));
 
-                // Try to return SocketTextChannel, but fallback to creating a wrapper if needed
+                // Try to return SocketTextChannel, but create dummy if needed for success indication
                 var socketChannel = guild.GetTextChannel(restChannel.Id);
                 if (socketChannel != null)
                 {
@@ -183,8 +183,19 @@ namespace MainbotCSharp.Modules
                 }
                 else
                 {
-                    Console.WriteLine($"[TicketDebug] SocketTextChannel still not available, but REST operations succeeded");
-                    // Return null since we can't get the socket channel, but the ticket was created successfully
+                    Console.WriteLine($"[TicketDebug] SocketTextChannel not available, but ticket created successfully");
+                    
+                    // Wait a bit more and try once more
+                    await Task.Delay(1000);
+                    socketChannel = guild.GetTextChannel(restChannel.Id);
+                    if (socketChannel != null)
+                    {
+                        Console.WriteLine($"[TicketDebug] SocketTextChannel found after additional wait: {socketChannel.Name}");
+                        return socketChannel;
+                    }
+                    
+                    Console.WriteLine($"[TicketDebug] SocketTextChannel still not available, but ticket was created successfully via REST");
+                    // We'll handle this in the calling function - return null but the ticket IS created
                     return null;
                 }
             }
@@ -237,13 +248,41 @@ namespace MainbotCSharp.Modules
                 await component.DeferAsync();
 
                 var channel = await CreateTicketChannelAsync(guild, component.User, category);
+                
+                // Check if ticket was created successfully (even if SocketTextChannel is null)
+                bool ticketCreated = false;
                 if (channel != null)
                 {
+                    // SocketTextChannel available
                     await component.FollowupAsync($"✅ Ticket created: {channel.Mention}", ephemeral: true);
+                    ticketCreated = true;
+                }
+                else
+                {
+                    // Check if ticket exists in metadata (REST creation succeeded)
+                    var recentTicket = TicketMetas.Values.FirstOrDefault(t => 
+                        t.UserId == component.User.Id && 
+                        t.GuildId == guild.Id &&
+                        (DateTime.UtcNow - t.CreatedAt).TotalMinutes < 2); // Created within last 2 minutes
 
+                    if (recentTicket != null)
+                    {
+                        // Find the channel by ID
+                        var ticketChannel = guild.GetChannel(TicketMetas.FirstOrDefault(kvp => kvp.Value == recentTicket).Key);
+                        if (ticketChannel != null)
+                        {
+                            await component.FollowupAsync($"✅ Ticket created: <#{ticketChannel.Id}>", ephemeral: true);
+                            ticketCreated = true;
+                            channel = ticketChannel as SocketTextChannel; // Set for logging
+                        }
+                    }
+                }
+
+                if (ticketCreated)
+                {
                     // Log ticket creation
                     var config = GetConfig(guild.Id);
-                    if (config != null)
+                    if (config != null && channel != null)
                     {
                         var logChannel = guild.GetTextChannel(config.LogChannelId);
                         if (logChannel != null)
