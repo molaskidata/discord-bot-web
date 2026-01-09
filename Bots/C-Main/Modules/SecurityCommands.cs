@@ -529,7 +529,7 @@ namespace MainbotCSharp.Modules
                 // Step 1: Ask for security log channel
                 var askEmbed = new EmbedBuilder()
                     .WithTitle("🛡️ Security System Setup")
-                    .WithDescription("What channel should be the security log channel?\n\nWrite the **Channel ID** only in the chat or type `!new-securechan` and I will create a security channel for you.")
+                    .WithDescription("What channel should be the security log channel?\n\nWrite the **Channel ID** only in the chat or type `new-securechan` and I will create a security channel for you.")
                     .WithColor(0x40E0D0)
                     .Build();
                 await ReplyAsync(embed: askEmbed);
@@ -549,7 +549,7 @@ namespace MainbotCSharp.Modules
                 ulong logChannelId;
                 ITextChannel logChannel;
 
-                if (channelResponse.Content.Trim() == "!new-securechan")
+                if (channelResponse.Content.Trim().ToLower() == "new-securechan")
                 {
                     // Ask for category
                     var categoryAskEmbed = new EmbedBuilder()

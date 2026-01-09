@@ -445,7 +445,7 @@ namespace MainbotCSharp.Modules
                 // Step 1: Ask for log channel
                 var askEmbed = new EmbedBuilder()
                     .WithTitle("🎫 Ticket System Setup")
-                    .WithDescription("What channel should be the ticket log channel?\n\nWrite the **Channel ID** only in the chat or type `!new-ticketlog` and I create a ticket log channel for you. You can move it after where you want.")
+                    .WithDescription("What channel should be the ticket log channel?\n\nWrite the **Channel ID** only in the chat or type `new-ticketlog` and I create a ticket log channel for you. You can move it after where you want.")
                     .WithColor(0x40E0D0)
                     .Build();
                 await ReplyAsync(embed: askEmbed);
@@ -465,7 +465,7 @@ namespace MainbotCSharp.Modules
                 ulong logChannelId;
                 ITextChannel logChannel;
 
-                if (logChannelResponse.Content.Trim() == "!new-ticketlog")
+                if (logChannelResponse.Content.Trim().ToLower() == "new-ticketlog")
                 {
                     // Create new log channel
                     logChannel = await Context.Guild.CreateTextChannelAsync("★-ticket-log-book");
@@ -527,7 +527,7 @@ namespace MainbotCSharp.Modules
                 // Step 2: Ask for ticket message channel
                 var ticketChanEmbed = new EmbedBuilder()
                     .WithTitle("📝 Ticket Message Channel")
-                    .WithDescription("In which channel you want to have the ticket message to send?\n\nType the **Channel ID** or type `!new-ticketchan` and the bot creates the channel and sends the Ticket Embed system message in there with the help categories and ticket opening tool.")
+                    .WithDescription("In which channel you want to have the ticket message to send?\n\nType the **Channel ID** or type `new-ticketchan` and the bot creates the channel and sends the Ticket Embed system message in there with the help categories and ticket opening tool.")
                     .WithColor(0x40E0D0)
                     .Build();
                 await ReplyAsync(embed: ticketChanEmbed);
@@ -546,7 +546,7 @@ namespace MainbotCSharp.Modules
 
                 ITextChannel ticketChannel;
 
-                if (ticketChannelResponse.Content.Trim() == "!new-ticketchan")
+                if (ticketChannelResponse.Content.Trim().ToLower() == "new-ticketchan")
                 {
                     // Create new ticket channel
                     ticketChannel = await Context.Guild.CreateTextChannelAsync("★-support-tickets");
