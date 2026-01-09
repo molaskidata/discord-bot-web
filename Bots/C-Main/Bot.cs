@@ -25,7 +25,12 @@ namespace MainbotCSharp
                 GatewayIntents = GatewayIntents.Guilds | GatewayIntents.GuildMessages | GatewayIntents.MessageContent | GatewayIntents.GuildVoiceStates
             };
             _client = new DiscordSocketClient(config);
-            _commands = new CommandService();
+            
+            var commandConfig = new CommandServiceConfig
+            {
+                DefaultRunMode = RunMode.Async  // Run commands asynchronously to prevent blocking
+            };
+            _commands = new CommandService(commandConfig);
 
             _services = new ServiceCollection()
                 .AddSingleton(_client)
