@@ -38,47 +38,50 @@ namespace MainbotCSharp.Modules
 
                 .AddField("★ **Security Features** 🔒 *Premium*",
                     "**All security features require Premium subscription**\n\n" +
-                    "`!setsecuritymod` - Enable the AI Security System for this server.\n" +
-                    "→ The security system will automatically monitor all messages for spam, NSFW, invite links, and offensive language in multiple languages.\n" +
-                    "→ If a violation is detected, the user will be timed out for 2 hours and warned via DM.\n" +
-                    "→ You can customize the word list and settings soon.\n" +
-                    "`!ban @user [reason]` - Manually ban a user\n" +
-                    "`!kick @user [reason]` - Manually kick a user\n" +
-                    "`!timeout @user [min/h/d/m/y] [reason]` - Manually timeout a user\n" +
-                    "`!timeoutdel @user` - Remove timeout from a user", false)
+                    "`!setsecuritymod` - Interactive setup: Enable security system with log channel\n" +
+                    "`!disable` - Disable security system\n" +
+                    "`!status` - Check security system status\n" +
+                    "`!suspicious-check @user` - Check user for suspicious indicators\n" +
+                    "`!ban @user [days] [reason]` - Ban user and delete messages\n" +
+                    "`!kick @user [reason]` - Kick user from server\n" +
+                    "`!timeout @user [minutes] [reason]` - Timeout user\n" +
+                    "`!timeoutdel @user` - Remove timeout from user\n" +
+                    "`!warn @user [reason]` - Warn a user\n" +
+                    "`!unban [userId] [reason]` - Unban a user by ID\n" +
+                    "`!cleanup [number]` - Delete specific amount of messages (1-1000)\n" +
+                    "`!cleanup [channelId]` - Clean ALL messages in channel\n" +
+                    "`!cleanup-intervall [channelId]` - Auto-clean channel every hour\n" +
+                    "`!delcleanup-intervall [channelId]` - Stop auto-cleanup", false)
 
                 .AddField("★ **Ticket System** 🔒 *Premium*",
                     "**All ticket features require Premium subscription**\n\n" +
-                    "`!ticket-setup` - Configure ticket system with log channel\n" +
+                    "`!ticket-setup` - Interactive setup: Configure ticket system\n" +
+                    "`!munga-supportticket` - Post support ticket menu for users\n" +
                     "`!ticket-close` - Close the current ticket\n" +
                     "`!ticket-add @user` - Add user to ticket\n" +
                     "`!ticket-remove @user` - Remove user from ticket\n" +
                     "`!ticket-status` - Show ticket system status\n" +
                     "`!ticket-transcript` - Generate transcript for ticket\n" +
                     "`!del-ticket-system` - Remove log channel configuration\n" +
-                    "`!del-munga-supportticket` - Completely deactivate ticket system", false)
+                    "`!de-munga-supportticket` - Completely deactivate ticket system", false)
 
                 .AddField("★ **Voice Features** 🔒 *Premium*",
-                    "**All voice features require Premium subscription**\n\n" +
-                    "`!setupvoice` - Create Join-to-Create channel\n" +
-                    "`!setupvoicelog` - Create voice log channel\n" +
-                    "`!cleanupvoice` - Clean voice log channel\n" +
-                    "`!deletevoice` - Delete entire voice system\n" +
+                    "**voicesetup [categoryId]` - Create Join-to-Create voice system\n" +
                     "`!voicename [name]` - Rename your voice channel\n" +
                     "`!voicelimit [0-99]` - Set user limit (0=unlimited)\n" +
-                    "`!voicetemplate [gaming/study/chill]` - Apply template\n" +
+                    "`!voiceprivate` - Make your channel private\n" +
+                    "`!voicepublic` - Make your channel public\n" +
                     "`!voicelock / !voiceunlock` - Lock/unlock your channel\n" +
                     "`!voicekick @user` - Kick user from your channel\n" +
-                    "`!voicestats` - View voice activity stats\n" +
-                    "`!voiceprivate` - Make channel private\n" +
-                    "`!voicepermit @user` - Allow user to join\n" +
+                    "`!voiceban @user` - Ban user from your channel\n" +
+                    "`!voiceunban @user` - Unban user from your channel\n" +
+                    "`!voicetemplate [name]` - Save/load voice channel template\n" +
+                    "`!voicestats` - View voice activity statistics\n" +
+                    "`!voicehelp` - Detailed voice system help +
                     "`!voicedeny @user` - Block user from joining", false)
 
                 .AddField("★ **Utilities** ✅ *FREE*",
-                    "`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message\n" +
-                    "`!cleanup CHANNEL_ID` - Cleans all messages in the specified channel (no limit)\n" +
-                    "`!cleanup-intervall CHANNEL_ID` - Cleans specified channel every 1 hour\n" +
-                    "`!cleanupdel CHANNEL_ID` - Stops the cleanup interval for specified channel", false)
+                    "`!sendit MESSAGE_ID to CHANNEL_ID` - Forward a message to another channel", false)
 
                 .AddField("★ **Bump Reminders** ✅ *FREE*",
                     "`!bumpreminder on/off` - Enable/disable bump reminders\n" +
@@ -87,19 +90,25 @@ namespace MainbotCSharp.Modules
                     "→ Works with Disboard bot for server promotion", false)
 
                 .AddField("★ **Birthday** ✅ *FREE*",
-                    "`!birthdaychannel [CHANNEL_ID or !new-birthchan]` - Set or create birthday channel *Admin only*\n" +
-                    "`!birthdayset [dd.mm.yyyy]` - Save your birthday\n" +
-                    "`!birthdaylist` - View all birthdays sorted by date", false)
+                    "`!birthdaychannel [CHANNEL_ID or !new-birthchan]` - Set/create birthday channel *(Admin)*\n" +
+                    "`!birthdayset [dd.mm.yyyy]` - Save your birthday (format: 25.12.1995)\n" +
+                    "`!birthdayremove` / `!mybirthdayremove` - Remove your birthday\n" +
+                    "`!mybirthdayinfo` - View your saved birthday\n" +
+                    "`!birthdaylist` - View all birthdays sorted by date *(Admin)*", false)
 
                 .AddField("★ **Help Categories**",
-                    "`!mungehelpdesk` - Shows all big help categories\n" +
-                    "`!helpvoice` - Voice help\n" +
-                    "`!helpsecure` - Security help\n" +
-                    "`!helpbump` - Bump/Disboard help\n" +
-                    "`!helpbirth` - Birthday help", false)
+                    "`!mungahelpdesk` - Interactive help menu with all categories\n" +
+                    "`!munga-supportticket` - Create support ticket menu\n" +
+                    "`!helpvoice` - Detailed voice system help\n" +
+                    "`!helpsecure` - Detailed security system help\n" +
+                    "`!helpbump` - Detailed bump reminder help\n" +
+                    "`!helpbirth` - Detailed birthday system help\n" +
+                    "`!helpall` - Show this complete command list", false)
 
                 .AddField("🔓 **Premium**",
                     "`!premium` - View Premium benefits and upgrade options\n" +
+                    "`!activatepremium [key]` - Activate Premium with key *(Admin)*\n" +
+                    "`!deactivatepremium` - Deactivate Premium subscription *(Admin)*\n" +
                     "`!premiumstatus` - Check your server's Premium status\n" +
                     "→ Unlock Voice, Security & Ticket features\n" +
                     "→ €5.99/month or €60/year", false)
