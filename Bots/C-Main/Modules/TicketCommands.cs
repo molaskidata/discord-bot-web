@@ -145,7 +145,24 @@ namespace MainbotCSharp.Modules
                     .WithButton("🔒 Close Ticket", "ticket_close", ButtonStyle.Danger)
                     .WithButton("📋 Add User", "ticket_add_user", ButtonStyle.Secondary);
 
-                await channel.SendMessageAsync(embed: embed.Build(), components: components.Build());
+                try
+                {
+                    await channel.SendMessageAsync($"{user.Mention}", embed: embed.Build(), components: components.Build());
+                    Console.WriteLine($"[TicketDebug] Initial message sent successfully to {channel.Name}");
+                }
+                catch (Exception msgEx)
+                {
+                    Console.WriteLine($"[TicketDebug] Failed to send initial message: {msgEx.Message}");
+                    // Try without components as fallback
+                    try
+                    {
+                        await channel.SendMessageAsync($"{user.Mention}", embed: embed.Build());
+                    }
+                    catch (Exception fallbackEx)
+                    {
+                        Console.WriteLine($"[TicketDebug] Fallback message also failed: {fallbackEx.Message}");
+                    }
+                }
 
                 // Start auto-close timer (24 hours)
                 StartAutoCloseTimer(channel.Id, TimeSpan.FromHours(24));
