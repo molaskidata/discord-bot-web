@@ -147,7 +147,8 @@ namespace MainbotCSharp.Modules
 
                 var components = new ComponentBuilder()
                     .WithButton("🔒 Close Ticket", "ticket_close", ButtonStyle.Danger)
-                    .WithButton("📋 Add User", "ticket_add_user", ButtonStyle.Secondary);
+                    .WithButton("📋 Add User", "ticket_add_user", ButtonStyle.Secondary)
+                    .WithButton("📝 Script-Ticket", "ticket_script", ButtonStyle.Primary);
 
                 Console.WriteLine($"[TicketDebug] Attempting to send initial message to REST channel {restChannel.Name}");
 
@@ -322,6 +323,9 @@ namespace MainbotCSharp.Modules
                     case "ticket_add_user":
                         await HandleAddUser(component);
                         break;
+                    case "ticket_script":
+                        await HandleScriptTicket(component);
+                        break;
                     case "ticket_confirm_close":
                         await HandleConfirmClose(component);
                         break;
@@ -340,18 +344,16 @@ namespace MainbotCSharp.Modules
         {
             if (!TicketMetas.TryGetValue(component.Channel.Id, out var meta)) return;
 
-            // Only ticket creator or support role can close
+            // Only administrators can close tickets
             var user = component.User as SocketGuildUser;
             var config = GetConfig(meta.GuildId);
-            bool canClose = user.Id == meta.UserId ||
-                           user.GuildPermissions.Administrator ||
-                           (config?.SupportRoleId.HasValue == true && user.Roles.Any(r => r.Id == config.SupportRoleId.Value));
+            bool canClose = user.GuildPermissions.Administrator;
 
             if (!canClose)
             {
                 var noPermissionEmbed = new EmbedBuilder()
                     .WithTitle("❌ No Permission")
-                    .WithDescription("Only the ticket creator or support team can close this ticket.")
+                    .WithDescription("Only administrators can close tickets.")
                     .WithColor(0x40E0D0)
                     .Build();
                 await component.RespondAsync(embed: noPermissionEmbed, ephemeral: true);
@@ -395,15 +397,13 @@ namespace MainbotCSharp.Modules
             if (!TicketMetas.TryGetValue(component.Channel.Id, out var meta)) return;
 
             var user = component.User as SocketGuildUser;
-            bool canAddUser = user.Id == meta.UserId ||
-                             user.GuildPermissions.Administrator ||
-                             user.GuildPermissions.ManageChannels;
+            bool canAddUser = user.GuildPermissions.Administrator;
 
             if (!canAddUser)
             {
                 var noPermissionEmbed = new EmbedBuilder()
                     .WithTitle("❌ No Permission")
-                    .WithDescription("Only the ticket creator or staff can add users.")
+                    .WithDescription("Only administrators can add users to tickets.")
                     .WithColor(0x40E0D0)
                     .Build();
                 await component.RespondAsync(embed: noPermissionEmbed, ephemeral: true);
@@ -416,6 +416,85 @@ namespace MainbotCSharp.Modules
                 .WithColor(0x40E0D0)
                 .Build();
             await component.RespondAsync(embed: addUserEmbed, ephemeral: true);
+        }
+
+        private static async Task HandleScriptTicket(SocketMessageComponent component)
+        {
+            if (!TicketMetas.TryGetValue(component.Channel.Id, out var meta)) return;
+
+            var user = component.User as SocketGuildUser;
+            bool canScript = user.GuildPermissions.Administrator;
+
+            if (!canScript)
+            {
+                var noPermissionEmbed = new EmbedBuilder()
+                    .WithTitle("❌ No Permission")
+                    .WithDescription("Only administrators can create ticket scripts.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await component.RespondAsync(embed: noPermissionEmbed, ephemeral: true);
+                return;
+            }
+
+            var scriptEmbed = new EmbedBuilder()
+                .WithTitle("📝 Script-Ticket")
+                .WithDescription("Creating a transcript of this ticket conversation...")
+                .WithColor(0x40E0D0)
+                .Build();
+            await component.RespondAsync(embed: scriptEmbed, ephemeral: true);
+
+            // Create transcript
+            var channel = component.Channel as SocketTextChannel;
+            if (channel == null) return;
+
+            try
+            {
+                var config = GetConfig(meta.GuildId);
+                if (config == null)
+                {
+                    var noConfigEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Configuration Error")
+                        .WithDescription("No log channel configured. Ask an admin to run `!ticket-setup`.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await component.FollowupAsync(embed: noConfigEmbed, ephemeral: true);
+                    return;
+                }
+
+                // Build transcript
+                var messages = await channel.GetMessagesAsync(100).FlattenAsync();
+                var transcript = string.Join('\n', messages.Reverse().Select(m => 
+                    $"[{m.Timestamp:yyyy-MM-dd HH:mm:ss}] {m.Author.Username}: {m.Content}"));
+                
+                var filename = $"ticket-script_{meta.GuildId}_{channel.Id}_{DateTimeOffset.UtcNow.ToUnixTimeMilliseconds()}.txt";
+                System.IO.File.WriteAllText(filename, transcript);
+
+                var logChannel = channel.Guild.GetTextChannel(config.LogChannelId);
+                if (logChannel != null)
+                {
+                    await logChannel.SendFileAsync(filename, $"📋 Ticket transcript from **{channel.Name}** (created by <@{meta.UserId}>)");
+                    
+                    var successEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Script Created")
+                        .WithDescription("Ticket transcript has been saved to the log channel.")
+                        .WithColor(0x40E0D0)
+                        .Build();
+                    await component.FollowupAsync(embed: successEmbed, ephemeral: true);
+                }
+
+                // Clean up file
+                try { System.IO.File.Delete(filename); } catch { }
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error creating ticket script: {ex.Message}");
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Error")
+                    .WithDescription("Failed to create ticket script. Please try again.")
+                    .WithColor(0x40E0D0)
+                    .Build();
+                await component.FollowupAsync(embed: errorEmbed, ephemeral: true);
+            }
         }
 
         public static async Task CloseTicketChannel(SocketTextChannel channel, SocketUser closedBy)
