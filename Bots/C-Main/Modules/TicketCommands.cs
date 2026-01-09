@@ -509,11 +509,10 @@ namespace MainbotCSharp.Modules
                     return;
                 }
 
-                // Save log channel configuration
-                var config = new TicketConfigEntry
-                {
-                    LogChannelId = logChannelId
-                };
+
+                // Load or create config, update log channel, and save
+                var config = TicketService.GetConfig(Context.Guild.Id) ?? new TicketConfigEntry();
+                config.LogChannelId = logChannelId;
                 TicketService.SetConfig(Context.Guild.Id, config);
 
                 // Continue automatically to ticket message setup
