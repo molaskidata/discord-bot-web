@@ -1353,5 +1353,145 @@ namespace MainbotCSharp.Modules
                 await ReplyAsync($"❌ Failed to unban user: {ex.Message}");
             }
         }
+
+        [Command("cleanup-server-ultra")]
+        [Summary("Delete ALL channels and categories from the server (DANGEROUS!)")]
+        [RequireUserPermission(GuildPermission.Administrator)]
+        [RequireBotPermission(GuildPermission.ManageChannels)]
+        public async Task CleanupServerUltraAsync()
+        {
+            try
+            {
+                var warningEmbed = new EmbedBuilder()
+                    .WithTitle("⚠️ DANGER: SERVER CLEANUP")
+                    .WithDescription("**Are you sure you want to clean your whole server?**\n\n" +
+                                   "If you use this command, **ALL Categories and Channels will be DELETED** and **can't be undone!**\n\n" +
+                                   "**This includes:**\n" +
+                                   "• All text channels\n" +
+                                   "• All voice channels\n" +
+                                   "• All categories\n" +
+                                   "• All stage channels\n" +
+                                   "• All forum channels\n\n" +
+                                   "**Type your response:**\n" +
+                                   "`Y` - Yes, I am sure! DELETE EVERYTHING!\n" +
+                                   "`N` - No, cancel this operation!")
+                    .WithColor(Color.Red)
+                    .WithFooter("⚠️ This action is IRREVERSIBLE! Think carefully!")
+                    .WithCurrentTimestamp();
+
+                await ReplyAsync(embed: warningEmbed.Build());
+
+                // Wait for user response
+                var response = await NextMessageAsync(TimeSpan.FromMinutes(1));
+                if (response == null)
+                {
+                    var timeoutEmbed = new EmbedBuilder()
+                        .WithTitle("⏰ Timeout")
+                        .WithDescription("Server cleanup cancelled due to timeout.")
+                        .WithColor(Color.Orange);
+                    await ReplyAsync(embed: timeoutEmbed.Build());
+                    return;
+                }
+
+                var answer = response.Content.Trim().ToUpperInvariant();
+
+                if (answer == "N" || answer == "NO")
+                {
+                    var cancelledEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Cancelled")
+                        .WithDescription("Server cleanup has been cancelled. Nothing was deleted.")
+                        .WithColor(Color.Green);
+                    await ReplyAsync(embed: cancelledEmbed.Build());
+                    return;
+                }
+
+                if (answer != "Y" && answer != "YES")
+                {
+                    var invalidEmbed = new EmbedBuilder()
+                        .WithTitle("❌ Invalid Response")
+                        .WithDescription("Please type `Y` or `N`. Server cleanup cancelled.")
+                        .WithColor(Color.Red);
+                    await ReplyAsync(embed: invalidEmbed.Build());
+                    return;
+                }
+
+                // User confirmed with Y - START DELETION
+                var startEmbed = new EmbedBuilder()
+                    .WithTitle("🗑️ Server Cleanup Started")
+                    .WithDescription("Starting to delete all channels and categories... This may take a while.")
+                    .WithColor(Color.Red);
+                await ReplyAsync(embed: startEmbed.Build());
+
+                int deletedChannels = 0;
+                int deletedCategories = 0;
+                int failedDeletions = 0;
+
+                // Get all channels and categories
+                var allChannels = Context.Guild.Channels.ToList();
+
+                // First delete all non-category channels
+                foreach (var channel in allChannels.Where(c => !(c is SocketCategoryChannel)))
+                {
+                    try
+                    {
+                        await channel.DeleteAsync();
+                        deletedChannels++;
+                        await Task.Delay(500); // Rate limit protection
+                    }
+                    catch (Exception ex)
+                    {
+                        failedDeletions++;
+                        Console.WriteLine($"Failed to delete channel {channel.Name}: {ex.Message}");
+                    }
+                }
+
+                // Then delete all categories
+                foreach (var channel in allChannels.Where(c => c is SocketCategoryChannel))
+                {
+                    try
+                    {
+                        await channel.DeleteAsync();
+                        deletedCategories++;
+                        await Task.Delay(500); // Rate limit protection
+                    }
+                    catch (Exception ex)
+                    {
+                        failedDeletions++;
+                        Console.WriteLine($"Failed to delete category {channel.Name}: {ex.Message}");
+                    }
+                }
+
+                // Send completion message via DM since all channels are deleted
+                try
+                {
+                    var completionEmbed = new EmbedBuilder()
+                        .WithTitle("✅ Server Cleanup Complete")
+                        .WithDescription($"**Server cleanup finished!**\n\n" +
+                                       $"📊 **Statistics:**\n" +
+                                       $"• Deleted Channels: {deletedChannels}\n" +
+                                       $"• Deleted Categories: {deletedCategories}\n" +
+                                       $"• Failed Deletions: {failedDeletions}\n\n" +
+                                       $"**Server:** {Context.Guild.Name}\n" +
+                                       $"**Executed by:** {Context.User.Username}")
+                        .WithColor(Color.Green)
+                        .WithCurrentTimestamp();
+
+                    await Context.User.SendMessageAsync(embed: completionEmbed.Build());
+                }
+                catch
+                {
+                    // If DM fails, user has DMs disabled
+                    Console.WriteLine($"Server cleanup completed. {deletedChannels} channels and {deletedCategories} categories deleted.");
+                }
+            }
+            catch (Exception ex)
+            {
+                var errorEmbed = new EmbedBuilder()
+                    .WithTitle("❌ Error")
+                    .WithDescription($"An error occurred during server cleanup: {ex.Message}")
+                    .WithColor(Color.Red);
+                await ReplyAsync(embed: errorEmbed.Build());
+            }
+        }
     }
 }
